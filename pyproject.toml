@@ -1,0 +1,18 @@
+[project]
+name = "epochalyst"
+version = "0.0.1"
+authors = [
+    { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
+    { name = "Emiel Witting", email = "emiel.witting@gmail.com" },
+    { name = "Hugo de Heer", email = "hugodeheer1234@gmail.com" },
+    { name = "Jeffrey Lim", email = "jeffrey-lim@outlook.com" },
+    { name = "Tolga Kopar", email = "cahittolgakopar@gmail.com" },
+]
+description = "This package contains the code for team Epoch's pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
