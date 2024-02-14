@@ -1,10 +1,10 @@
 """The cache full block is responsible for storing the full block of data to disk."""
+import os
 import sys
 from dataclasses import dataclass
 
 import dask.array as da
 
-from epochalyst.pipeline.caching import store_raw
 from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
 from epochalyst.pipeline.caching.error import CachePipelineError
 
@@ -38,14 +38,16 @@ class CacheColumnBlock(BaseCacheBlock):
         column = self._data_exists(X[:, self.column])
 
         # Return the data if it already exists
-        if array is not None:
-            concatenated_array = da.concatenate([X[:, :self.column], array[:, None]], axis=1).rechunk()
+        if column is not None:
+            concatenated_array = da.concatenate([X[:, :self.column], column[:, None]], axis=1).rechunk()
             return concatenated_array
 
         # Store the data
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
         da.to_npy_stack(self.data_path, X[:, self.column])
 
-        # Create the new array
-        concatenated_array = da.concatenate([X[:, : self.column], column[:, None]], axis=1)
+        # Override dask array with the stored data to decrease task graph size
+        X[:, self.column] = da.from_npy_stack(self.data_path)
 
         return X

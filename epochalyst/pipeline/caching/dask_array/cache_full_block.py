@@ -1,4 +1,5 @@
 """The cache full block is responsible for storing the full block of data to disk."""
+import os
 import sys
 from dataclasses import dataclass
 
@@ -38,6 +39,11 @@ class CacheFullBlock(BaseCacheBlock):
             return array
         
         # Store the data
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
         da.to_npy_stack(self.data_path, X)
+
+        # Override dask array with the stored data to decrease task graph size
+        X = da.from_npy_stack(self.data_path)
 
         return X

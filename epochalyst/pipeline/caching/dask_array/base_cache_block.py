@@ -1,8 +1,8 @@
 """This module contains the BaseCacheBlock class for caching blocks."""
 from abc import abstractmethod
 import glob
-import os
 import sys
+
 import numpy as np
 
 from epochalyst.pipeline.caching.error import CachePipelineError
@@ -43,6 +43,20 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         """
         pass
 
+    def set_path(self, data_path: str) -> None:
+        """Set the data path.
+
+        :param data_path: The data path
+        """
+        self.data_path = data_path
+
+    def get_data_path(self) -> str:
+        """Get the data path.
+
+        :return: The data path
+        """
+        return self.data_path
+
     def _data_exists(self, dask_array: da.Array, type=np.float32) -> da.Array | None:
         """Check if the data exists.
 
@@ -70,3 +84,5 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
                 array = array.rechunk({0: "auto", 1: -1, 2: -1})
 
         return array
+
+  
