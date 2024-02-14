@@ -2,6 +2,7 @@
 from abc import abstractmethod
 import glob
 import sys
+from typing import Any
 
 import numpy as np
 
@@ -15,6 +16,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import dask.array as da
 from epochalyst.logging.logger import logger
 from dataclasses import dataclass
+
 
 @dataclass
 class BaseCacheBlock(BaseEstimator, TransformerMixin):
@@ -57,9 +59,13 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         """
         return self.data_path
 
-    def _data_exists(self, dask_array: da.Array, type=np.float32) -> da.Array | None:
+    def _data_exists(
+        self, dask_array: da.Array, type: type[np.floating[Any]] = np.float32
+    ) -> da.Array | None:
         """Check if the data exists.
 
+        :param dask_array: The dask array to check against.
+        :param type: The type of the data.
         :return: The data if it exists, None otherwise.
         """
         if glob.glob(f"{self.data_path}/*.npy"):
@@ -72,7 +78,8 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
             # Check if the shape of the data on disk matches the shape of the dask array
             if array.shape != dask_array.shape:
                 logger.warning(
-                    f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}")
+                    f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}"
+                )
                 raise CachePipelineError(
                     f"Shape of data on disk ({array.shape}) does not match shape of dask array ({dask_array.shape})",
                 )
@@ -84,5 +91,3 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
                 array = array.rechunk({0: "auto", 1: -1, 2: -1})
 
         return array
-
-  

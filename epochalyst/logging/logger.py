@@ -7,7 +7,11 @@ logger = logging.getLogger("logger")
 logger.setLevel(logging.DEBUG)
 
 
-def log_exception(exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType | None) -> None:
+def log_exception(
+    exc_type: type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: TracebackType | None,
+) -> None:
     """Log any uncaught exceptions except KeyboardInterrupts.
 
     Based on https://stackoverflow.com/a/16993115.
@@ -20,7 +24,11 @@ def log_exception(exc_type: type[BaseException], exc_value: BaseException, exc_t
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
 
-    logger.error("A wild %s appeared!", exc_type.__name__, exc_info=(exc_type, exc_value, exc_traceback))
+    logger.error(
+        "A wild %s appeared!",
+        exc_type.__name__,
+        exc_info=(exc_type, exc_value, exc_traceback),
+    )
 
 
 sys.excepthook = log_exception
