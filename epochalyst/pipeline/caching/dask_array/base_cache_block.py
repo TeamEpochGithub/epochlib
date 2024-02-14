@@ -8,10 +8,7 @@ import numpy as np
 
 from epochalyst.pipeline.caching.error import CachePipelineError
 
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
+from epochalyst._core._imports._self import Self
 from sklearn.base import BaseEstimator, TransformerMixin
 import dask.array as da
 from epochalyst.logging.logger import logger
@@ -43,9 +40,8 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         :param X: The data to transform
         :return: The transformed data
         """
-        pass
 
-    def set_path(self, data_path: str) -> None:
+    def set_data_path(self, data_path: str) -> None:
         """Set the data path.
 
         :param data_path: The data path
@@ -85,9 +81,6 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
                 )
 
             # Rechunk the array
-            if array.ndim == 4:
-                array = array.rechunk({0: "auto", 1: -1, 2: -1, 3: -1})
-            elif array.ndim == 3:
-                array = array.rechunk({0: "auto", 1: -1, 2: -1})
+            array = array.rechunk({0: "auto"})
 
         return array
