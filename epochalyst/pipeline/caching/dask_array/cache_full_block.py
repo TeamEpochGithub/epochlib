@@ -1,17 +1,11 @@
 """The cache full block is responsible for storing the full block of data to disk."""
 import os
-import sys
 from dataclasses import dataclass
 
 import dask.array as da
 
 from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
 from epochalyst.pipeline.caching.error import CachePipelineError
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
 
 
 @dataclass
@@ -30,14 +24,14 @@ class CacheFullBlock(BaseCacheBlock):
         # Check if the data path is set
         if not self.data_path:
             raise CachePipelineError("data_path is required")
-        
+
         # Check if data is already stored
         array = self._data_exists(X)
 
         # Return the data if it already exists
         if array is not None:
             return array
-        
+
         # Store the data
         if not os.path.exists(self.data_path):
             os.makedirs(self.data_path)

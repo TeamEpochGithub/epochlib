@@ -2,19 +2,18 @@
 from abc import abstractmethod
 import glob
 import sys
+from typing import Any
 
 import numpy as np
 
 from epochalyst.pipeline.caching.error import CachePipelineError
 
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
+from epochalyst._core._imports._self import Self
 from sklearn.base import BaseEstimator, TransformerMixin
 import dask.array as da
 from epochalyst.logging.logger import logger
 from dataclasses import dataclass
+
 
 @dataclass
 class BaseCacheBlock(BaseEstimator, TransformerMixin):
@@ -41,9 +40,8 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         :param X: The data to transform
         :return: The transformed data
         """
-        pass
 
-    def set_path(self, data_path: str) -> None:
+    def set_data_path(self, data_path: str) -> None:
         """Set the data path.
 
         :param data_path: The data path
@@ -57,9 +55,13 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         """
         return self.data_path
 
-    def _data_exists(self, dask_array: da.Array, type=np.float32) -> da.Array | None:
+    def _data_exists(
+        self, dask_array: da.Array, type: type[np.floating[Any]] = np.float32
+    ) -> da.Array | None:
         """Check if the data exists.
 
+        :param dask_array: The dask array to check against.
+        :param type: The type of the data.
         :return: The data if it exists, None otherwise.
         """
         if glob.glob(f"{self.data_path}/*.npy"):
@@ -72,17 +74,13 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
             # Check if the shape of the data on disk matches the shape of the dask array
             if array.shape != dask_array.shape:
                 logger.warning(
-                    f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}")
+                    f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}"
+                )
                 raise CachePipelineError(
                     f"Shape of data on disk ({array.shape}) does not match shape of dask array ({dask_array.shape})",
                 )
 
             # Rechunk the array
-            if array.ndim == 4:
-                array = array.rechunk({0: "auto", 1: -1, 2: -1, 3: -1})
-            elif array.ndim == 3:
-                array = array.rechunk({0: "auto", 1: -1, 2: -1})
+            array = array.rechunk({0: "auto"})
 
         return array
-
-  

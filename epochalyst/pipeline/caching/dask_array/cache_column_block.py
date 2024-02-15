@@ -1,17 +1,11 @@
 """The cache full block is responsible for storing the full block of data to disk."""
 import os
-import sys
 from dataclasses import dataclass
 
 import dask.array as da
 
 from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
 from epochalyst.pipeline.caching.error import CachePipelineError
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
 
 
 @dataclass
@@ -39,7 +33,9 @@ class CacheColumnBlock(BaseCacheBlock):
 
         # Return the data if it already exists
         if column is not None:
-            concatenated_array = da.concatenate([X[:, :self.column], column[:, None]], axis=1).rechunk()
+            concatenated_array = da.concatenate(
+                [X[:, : self.column], column[:, None]], axis=1
+            ).rechunk()
             return concatenated_array
 
         # Store the data
