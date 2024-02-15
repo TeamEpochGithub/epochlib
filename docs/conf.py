@@ -12,7 +12,7 @@ from typing import Any, Final
 from pygit2 import Repository  # type: ignore[import-untyped, import-not-found]
 
 # TODO(Jeffrey): Replace this with GitHub URL later
-REPO_URL: Final[str] = f"https://gitlab.ewi.tudelft.nl/dreamteam-epoch/epoch-iv/q2-detect-kelp/-/blob/{Repository('.').head.shorthand}/"
+REPO_URL: Final[str] = f"https://github.com/TeamEpochGithub/epochalyst"
 
 sys.path.insert(0, Path("../..").resolve().as_posix())
 
