@@ -1,7 +1,4 @@
-import sys
-
-
-if sys.version_info < (3, 11):
+try:
     from typing_extensions import Self
-else:
-    from typing import Self
+except ImportError:
+    from typing import Self  # noqa: F401

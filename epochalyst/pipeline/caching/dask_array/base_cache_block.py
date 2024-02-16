@@ -1,7 +1,6 @@
 """This module contains the BaseCacheBlock class for caching blocks."""
 from abc import abstractmethod
 import glob
-import sys
 from typing import Any
 
 import numpy as np
@@ -23,6 +22,7 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
     """
 
     data_path: str
+    verbose: bool = True
 
     def fit(self, X: da.Array, y: da.Array | None = None) -> Self:  # noqa: ARG002
         """Do nothing. Exists for Pipeline compatibility.
@@ -65,7 +65,11 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         :return: The data if it exists, None otherwise.
         """
         if glob.glob(f"{self.data_path}/*.npy"):
-            logger.info(f"Loading npy data from {self.data_path}")
+            # Logger if verbose
+            if self.verbose:
+                logger.info(f"Loading npy data from {self.data_path}")
+
+            # Read the data from disk using dask
             array = da.from_npy_stack(self.data_path).astype(type)
         else:
             return None
@@ -73,9 +77,10 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         if array is not None:
             # Check if the shape of the data on disk matches the shape of the dask array
             if array.shape != dask_array.shape:
-                logger.warning(
-                    f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}"
-                )
+                if self.verbose:
+                    logger.warning(
+                        f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}"
+                    )
                 raise CachePipelineError(
                     f"Shape of data on disk ({array.shape}) does not match shape of dask array ({dask_array.shape})",
                 )

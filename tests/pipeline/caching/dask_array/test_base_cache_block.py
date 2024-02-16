@@ -1,43 +1,37 @@
-import sys
 import dask.array as da
 import pytest
 
+from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
 
 from epochalyst.pipeline.caching.error import CachePipelineError
 from tests.util import remove_cache_files
 
+
 class TestBaseCacheBlock:
-    
-    def test_blockinit(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
+    def test_blockinit(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
         assert self.block is not None
 
-    def test_get_data_path(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
+    def test_get_data_path(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
         assert self.block.get_data_path() == "tests/cache"
 
-    def test_set_data_path(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
+    def test_set_data_path(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
         self.block.set_data_path("tests/cache2")
         assert self.block.get_data_path() == "tests/cache2"
 
-    def test_fit(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
+    def test_fit(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
         assert self.block.fit(None) == self.block
-    
-    def test_data_exists_none(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
-        self.block = BaseCacheBlock("tests/cache")
-        assert self.block._data_exists("tests/cache") == None
 
-    def test_data_exists_data(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
+    def test_data_exists_none(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
-        
+        assert self.block._data_exists(None) is None
+
+    def test_data_exists_data(self) -> None:
+        self.block = BaseCacheBlock("tests/cache")
+
         # Create numpy array with ones
         data = da.ones((100, 100))
 
@@ -50,10 +44,9 @@ class TestBaseCacheBlock:
         # Delete the data from path
         remove_cache_files()
 
-    def test_data_exists_corrupt(self):
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
+    def test_data_exists_corrupt(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
-        
+
         # Create numpy array with ones
         data = da.ones((100, 100))
 
@@ -68,9 +61,3 @@ class TestBaseCacheBlock:
 
         # Delete the data from path
         remove_cache_files()
-
-    def test_python_10(self, monkeypatch):
-        monkeypatch.setattr(sys, 'version_info', (3, 10))
-        from epochalyst.pipeline.caching.dask_array.base_cache_block import BaseCacheBlock
-        assert BaseCacheBlock is not None
-        
