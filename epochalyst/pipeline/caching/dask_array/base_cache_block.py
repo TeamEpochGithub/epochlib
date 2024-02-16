@@ -34,7 +34,7 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         return self
 
     @abstractmethod
-    def transform(self, X: da.Array) -> da.Array:
+    def transform(self, X: da.Array | None) -> da.Array | None:
         """Transform the data.
 
         :param X: The data to transform
@@ -48,7 +48,7 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         """
         self.data_path = data_path
 
-    def get_data_path(self) -> str:
+    def get_data_path(self) -> str | None:
         """Get the data path.
 
         :return: The data path
