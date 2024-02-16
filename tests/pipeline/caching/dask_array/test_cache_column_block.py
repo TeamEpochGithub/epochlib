@@ -12,11 +12,16 @@ class TestCacheColumnBlock:
         self.block = CacheColumnBlock("tests/cache")
         assert self.block is not None
 
+    def test_data_none(self) -> None:
+        self.block = CacheColumnBlock("tests/cache")
+        assert self.block.transform(None) is None
+
     def test_data_path_none(self) -> None:
         self.block = CacheColumnBlock("tests/cache")
         self.block.data_path = None
         with pytest.raises(CachePipelineError):
-            self.block.transform(None)
+            x = da.ones((100, 100))
+            self.block.transform(x)
 
     def test_data_path_empty(self) -> None:
         self.block = CacheColumnBlock("tests/cache")

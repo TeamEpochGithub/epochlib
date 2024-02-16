@@ -21,10 +21,10 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
     :param data_path: The path where the data will be stored.
     """
 
-    data_path: str
+    data_path: str | None = None
     verbose: bool = True
 
-    def fit(self, X: da.Array, y: da.Array | None = None) -> Self:  # noqa: ARG002
+    def fit(self, X: da.Array | None, y: da.Array | None = None) -> Self:  # noqa: ARG002
         """Do nothing. Exists for Pipeline compatibility.
 
         :param X: UNUSED data to fit.
@@ -56,7 +56,7 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         return self.data_path
 
     def _data_exists(
-        self, dask_array: da.Array, type: type[np.floating[Any]] = np.float32
+        self, dask_array: da.Array | None, type: type[np.floating[Any]] = np.float32
     ) -> da.Array | None:
         """Check if the data exists.
 
@@ -64,6 +64,11 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         :param type: The type of the data.
         :return: The data if it exists, None otherwise.
         """
+
+        # Check if there is data
+        if dask_array is None:
+            return None
+
         if glob.glob(f"{self.data_path}/*.npy"):
             # Logger if verbose
             if self.verbose:

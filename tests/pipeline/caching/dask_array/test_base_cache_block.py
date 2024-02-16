@@ -38,8 +38,10 @@ class TestBaseCacheBlock:
         # Save the data
         da.to_npy_stack("tests/cache", data)
 
-        assert self.block._data_exists(data) is not None
-        assert self.block._data_exists(data).shape == (100, 100)
+        existing_data = self.block._data_exists(data)
+
+        assert existing_data is not None
+        assert existing_data.shape == (100, 100)
 
         # Delete the data from path
         remove_cache_files()
