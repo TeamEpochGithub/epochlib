@@ -18,11 +18,15 @@ class CacheColumnBlock(BaseCacheBlock):
 
     column: int = -1
 
-    def transform(self, X: da.Array) -> da.Array:
+    def transform(self, X: da.Array | None) -> da.Array | None:
         """Save the data or load it if it already exists.
 
         :param X: The data to save
         """
+
+        # Check if the data is None
+        if X is None:
+            return X
 
         # Check if the data path is set
         if not self.data_path:

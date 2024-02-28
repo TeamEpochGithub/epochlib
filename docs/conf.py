@@ -9,10 +9,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Final
 
-from pygit2 import Repository  # type: ignore[import-untyped, import-not-found]
-
 # TODO(Jeffrey): Replace this with GitHub URL later
-REPO_URL: Final[str] = f"https://github.com/TeamEpochGithub/epochalyst"
+REPO_URL: Final[str] = "https://github.com/TeamEpochGithub/epochalyst"
 
 sys.path.insert(0, Path("../..").resolve().as_posix())
 
@@ -94,7 +92,10 @@ templates_path: Final[list[str]] = ["_templates"]
 exclude_patterns: Final[list[str]] = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme: Final[str] = "sphinxawesome_theme"
-html_theme_options: Final[dict[str, str]] = {"logo_light": "./_static/images/logo/Epoch_Icon_Dark.png", "logo_dark": "./_static/images/logo/Epoch_Icon_Light.png"}
+html_theme_options: Final[dict[str, str]] = {
+    "logo_light": "./_static/images/logo/Epoch_Icon_Dark.png",
+    "logo_dark": "./_static/images/logo/Epoch_Icon_Light.png",
+}
 html_favicon: Final[str] = "./_static/images/logo/Epoch_Icon_Light.png"
 html_static_path: Final[list[str]] = ["_static"]
 html_use_smartypants: Final[bool] = True

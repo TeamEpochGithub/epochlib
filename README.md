@@ -2,12 +2,13 @@
 
 This package contains many modules and classes necessary to construct the src code for machine learning competitions.
 
+Epochalyst: A fusion of "Epoch" and "Catalyst," this name positions your pipeline as a catalyst in the field of machine learning, sparking significant advancements and transformations.
 
-# Pytest coverage report
+## Pytest coverage report
 
 To generate pytest coverage report run
 
-```
+```python
 pytest --cov=epochalyst --cov-report=html:coverage_re
 ```
 

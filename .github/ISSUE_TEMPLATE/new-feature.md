@@ -1,20 +1,11 @@
----
-name: New Feature
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+# Bug Report Template
 
----
+- Issue Description
+- Steps to Reproduce
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+1. Step one
+2. Step two
+3. Step three
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
-
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Additional context**
-Add any other context or screenshots about the feature request here.
+- Expected Result
+- Actual Result
