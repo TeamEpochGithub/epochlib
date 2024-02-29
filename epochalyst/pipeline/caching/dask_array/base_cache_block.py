@@ -8,13 +8,12 @@ import numpy as np
 from epochalyst.pipeline.caching.error import CachePipelineError
 
 from epochalyst._core._imports._self import Self
-from sklearn.base import BaseEstimator, TransformerMixin
 import dask.array as da
 from dataclasses import dataclass
 
 
 @dataclass
-class BaseCacheBlock(BaseEstimator, TransformerMixin):
+class BaseCacheBlock():
     """BaseCacheBlock is the base class for caching blocks.
 
     :param data_path: The path where the data will be stored.
