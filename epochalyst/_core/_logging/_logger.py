@@ -3,46 +3,46 @@ from typing import Any
 
 
 class _Logger:
-
     @abstractmethod
     def log_to_terminal(self, message: str) -> None:
         """Log terminal method, if no logging override with empty.
-        
+
         :param message: The message to log."""
         raise NotImplementedError(
             f"Log terminal method not implemented for {self.__class__.__name__}"
         )
-    
+
     @abstractmethod
     def log_to_debug(self, message: str) -> None:
         """Log debug method, if no logging override with empty.
-        
+
         :param message: The message to log."""
         raise NotImplementedError(
             f"Log debug method not implemented for {self.__class__}"
         )
-    
+
     @abstractmethod
     def log_to_warning(self, message: str) -> None:
         """Log warning method, if no logging override with empty.
-        
+
         :param message: The message to log."""
         raise NotImplementedError(
             f"Log warning method not implemented for {self.__class__}"
         )
-    
+
     @abstractmethod
-    def log_to_external(self, message: dict[str, Any], **kwargs) -> None:
+    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
         """Log external method, if no logging override with empty.
-        
+
         :param message: The message to log."""
         raise NotImplementedError(
-            f"Log external method not implemented for {self.__class__}")
-    
+            f"Log external method not implemented for {self.__class__}"
+        )
+
     @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None:
         """Define metric for external.
-        
+
         :param metric: The metric to define.
         :param metric_type: The type of the metric."""
         raise NotImplementedError(

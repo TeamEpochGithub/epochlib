@@ -10,7 +10,6 @@ from epochalyst.pipeline.caching.error import CachePipelineError
 from epochalyst._core._imports._self import Self
 from sklearn.base import BaseEstimator, TransformerMixin
 import dask.array as da
-from epochalyst.logging.logger import logger
 from dataclasses import dataclass
 
 
@@ -71,8 +70,6 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
 
         if glob.glob(f"{self.data_path}/*.npy"):
             # Logger if verbose
-            if self.verbose:
-                logger.info(f"Loading npy data from {self.data_path}")
 
             # Read the data from disk using dask
             array = da.from_npy_stack(self.data_path).astype(type)
@@ -82,10 +79,6 @@ class BaseCacheBlock(BaseEstimator, TransformerMixin):
         if array is not None:
             # Check if the shape of the data on disk matches the shape of the dask array
             if array.shape != dask_array.shape:
-                if self.verbose:
-                    logger.warning(
-                        f"Shape of data on disk does not match shape of dask array, cache corrupt at {self.data_path}"
-                    )
                 raise CachePipelineError(
                     f"Shape of data on disk ({array.shape}) does not match shape of dask array ({dask_array.shape})",
                 )

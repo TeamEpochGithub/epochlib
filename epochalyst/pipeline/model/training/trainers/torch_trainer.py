@@ -18,12 +18,13 @@ from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 from torch.utils.data import DataLoader, Dataset
+import numpy.typing as npt
 
 
 @dataclass
 class TorchTrainer(Trainer, _Logger):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
-    
+
     :param model: The model to train.
     :param optimizer: Optimizer to use for training.
     :param scheduler: Learning rate scheduler
@@ -47,7 +48,7 @@ class TorchTrainer(Trainer, _Logger):
         """Post init method for the TorchTrainer class."""
 
         self.save_model_to_disk = True
-        self.best_model_state_dict = None
+        self.best_model_state_dict: dict[Any, Any] = {}
 
         # Set optimizer
         self.initialized_optimizer = self.optimizer(self.model.parameters())
@@ -75,7 +76,16 @@ class TorchTrainer(Trainer, _Logger):
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
 
-    def train(self, x: np.ndarray, y: np.ndarray, train_indices: list[int], test_indices: list[int], cache_size: int = -1, *, save_model: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    def train(
+        self,
+        x: npt.NDArray[np.float32],
+        y: npt.NDArray[np.float32],
+        train_indices: list[int],
+        test_indices: list[int],
+        cache_size: int = -1,
+        *,
+        save_model: bool = True,
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         """Train the model.
 
         :param x: The input to the system.
@@ -88,15 +98,19 @@ class TorchTrainer(Trainer, _Logger):
         """
         self.save_model_to_disk = save_model
         if self._model_exists():
-            self.log_to_terminal(f"Model exists in tm/{self.get_hash()}.pt, loading model")
+            self.log_to_terminal(
+                f"Model exists in tm/{self.get_hash()}.pt, loading model"
+            )
             self._load_model()
             return self.predict(x), y
-        
+
         print_section_separator(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
 
         # Create datasets
-        train_dataset, test_dataset = self.create_datasets(x, y, train_indices, test_indices, cache_size=cache_size)
+        train_dataset, test_dataset = self.create_datasets(
+            x, y, train_indices, test_indices, cache_size=cache_size
+        )
 
         # Create dataloaders
         train_loader, test_loader = self.create_dataloaders(train_dataset, test_dataset)
@@ -112,15 +126,21 @@ class TorchTrainer(Trainer, _Logger):
 
         self.lowest_val_loss = np.inf
         if len(test_loader) == 0:
-            self.log_to_warning(f"Doing train full, model will be trained for {self.epochs} epochs")
+            self.log_to_warning(
+                f"Doing train full, model will be trained for {self.epochs} epochs"
+            )
 
         self._training_loop(train_loader, test_loader, train_losses, val_losses)
 
-        self.log_to_terminal(f"Done training the model")
+        self.log_to_terminal(
+            f"Done training the model: {self.model.__class__.__name__}"
+        )
 
         # Revert to the best model
-        if self.best_model_state_dict is not None:
-            self.log_to_terminal(f"Reverting to model with best validation loss {self.lowest_val_loss}")
+        if self.best_model_state_dict:
+            self.log_to_terminal(
+                f"Reverting to model with best validation loss {self.lowest_val_loss}"
+            )
             self.model.load_state_dict(self.best_model_state_dict)
 
         if save_model:
@@ -128,13 +148,15 @@ class TorchTrainer(Trainer, _Logger):
 
         # Return the predictions
         pred_dataset = self.concat_datasets(train_dataset, test_dataset)
-        pred_dataloader = DataLoader(pred_dataset, batch_size=self.batch_size, shuffle=False)
+        pred_dataloader = DataLoader(
+            pred_dataset, batch_size=self.batch_size, shuffle=False
+        )
 
         return self.predict_on_loader(pred_dataloader), y
-    
-    def predict(self, x: np.ndarray) -> np.ndarray:
+
+    def predict(self, x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Predict on the test data
-        
+
         :param x: The input to the system.
         :return: The output of the system.
         """
@@ -145,13 +167,14 @@ class TorchTrainer(Trainer, _Logger):
 
         # Create dataset
         pred_dataset = self.create_prediction_dataset(x)
-        pred_dataloader = DataLoader(pred_dataset, batch_size=self.batch_size, shuffle=False)
+        pred_dataloader = DataLoader(
+            pred_dataset, batch_size=self.batch_size, shuffle=False
+        )
 
         # Predict
         return self.predict_on_loader(pred_dataloader)
 
-
-    def predict_on_loader(self, loader: DataLoader) -> np.ndarray:
+    def predict_on_loader(self, loader: DataLoader[Tensor]) -> npt.NDArray[np.float32]:
         """Predict on the loader.
 
         :param loader: The loader to predict on.
@@ -172,7 +195,14 @@ class TorchTrainer(Trainer, _Logger):
         return np.array(predictions)
 
     @abstractmethod
-    def create_datasets(self, x: np.ndarray, y: np.ndarray, train_indeces: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset, Dataset]:
+    def create_datasets(
+        self,
+        x: npt.NDArray[np.float32],
+        y: npt.NDArray[np.float32],
+        train_indeces: list[int],
+        test_indices: list[int],
+        cache_size: int = -1,
+    ) -> tuple[Dataset[tuple[Tensor, Tensor]], Dataset[tuple[Tensor, Tensor]]]:
         """Create the datasets for training and validation.
 
         :param x: The input data.
@@ -181,26 +211,38 @@ class TorchTrainer(Trainer, _Logger):
         :param test_indices: The indices to test on.
         :return: The training and validation datasets.
         """
-        raise NotImplementedError(f"Create datasets method not implemented for {self.__class__.__name__}")
-    
+        raise NotImplementedError(
+            f"Create datasets method not implemented for {self.__class__.__name__}"
+        )
+
     @abstractmethod
-    def create_prediction_dataset(self, x: np.ndarray) -> Dataset:
+    def create_prediction_dataset(self, x: npt.NDArray[np.float32]) -> Dataset[Tensor]:
         """Create the prediction dataset.
 
         :param x: The input data.
         :return: The prediction dataset.
         """
-        raise NotImplementedError(f"Create prediction dataset method not implemented for {self.__class__.__name__}")
+        raise NotImplementedError(
+            f"Create prediction dataset method not implemented for {self.__class__.__name__}"
+        )
 
-    def create_dataloaders(self, train_dataset: Dataset, test_dataset: Dataset) -> tuple[DataLoader, DataLoader]:
+    def create_dataloaders(
+        self,
+        train_dataset: Dataset[tuple[Tensor, Tensor]],
+        test_dataset: Dataset[tuple[Tensor, Tensor]],
+    ) -> tuple[DataLoader[tuple[Tensor, Tensor]], DataLoader[tuple[Tensor, Tensor]]]:
         """Create the dataloaders for training and validation.
 
         :param train_dataset: The training dataset.
         :param test_dataset: The validation dataset.
         :return: The training and validation dataloaders.
         """
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+        train_loader = DataLoader(
+            train_dataset, batch_size=self.batch_size, shuffle=True
+        )
+        test_loader = DataLoader(
+            test_dataset, batch_size=self.batch_size, shuffle=False
+        )
         return train_loader, test_loader
 
     def _training_loop(
@@ -224,7 +266,9 @@ class TorchTrainer(Trainer, _Logger):
             train_losses.append(train_loss)
 
             # Log train loss
-            self.log_to_external(**{"message": {"Training/Train Loss": train_losses[-1]}, "step": epoch + 1})
+            self.log_to_external(
+                message={"Training/Train Loss": train_losses[-1]}, step=epoch + 1
+            )
 
             # Compute validation loss
             if len(test_loader) > 0:
@@ -236,11 +280,10 @@ class TorchTrainer(Trainer, _Logger):
 
                 # Log validation loss and plot train/val loss against each other
                 self.log_to_external(
-                    **{
-                        "message": {"Validation/Validation Loss": val_losses[-1]},
-                        "step": epoch + 1,
-                    }
+                    message={"Validation/Validation Loss": val_losses[-1]},
+                    step=epoch + 1,
                 )
+
                 # TODO(Jasper): How to log this without wandb?
                 # wandb.log(
                 #         {
@@ -256,7 +299,9 @@ class TorchTrainer(Trainer, _Logger):
 
                 # Early stopping
                 if self._early_stopping():
-                    self.log_to_external(message={"Epochs": (epoch + 1) - self.patience})
+                    self.log_to_external(
+                        message={"Epochs": (epoch + 1) - self.patience}
+                    )
                     break
 
             # Log the trained epochs to wandb if we finished training
@@ -342,7 +387,7 @@ class TorchTrainer(Trainer, _Logger):
         # Check if the model exists
         if not Path(f"tm/{self.get_hash()}.pt").exists():
             raise FileNotFoundError(f"Model not found in tm/{self.get_hash()}.pt")
-        
+
         # Load model
         self.log_to_terminal(f"Loading model from tm/{self.get_hash()}.pt")
         checkpoint = torch.load(f"tm/{self.get_hash()}.pt")
@@ -367,7 +412,7 @@ class TorchTrainer(Trainer, _Logger):
 
     def _early_stopping(self) -> bool:
         """Check if early stopping should be performed.
-        
+
         :return: Whether to perform early stopping.
         """
 
@@ -379,6 +424,8 @@ class TorchTrainer(Trainer, _Logger):
         else:
             self.early_stopping_counter += 1
             if self.early_stopping_counter >= self.patience:
-                self.log_to_terminal(f"Early stopping after {self.early_stopping_counter} epochs")
+                self.log_to_terminal(
+                    f"Early stopping after {self.early_stopping_counter} epochs"
+                )
                 return True
         return False
