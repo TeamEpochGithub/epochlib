@@ -64,5 +64,5 @@ class PretrainBlock(Trainer):
         :param train_indices: Train indices
         :return: Split hash
         """
-        self._hash = hash(self._hash + str(train_indices))
+        self._hash = hash(self.get_hash() + str(train_indices))
         return self._hash
