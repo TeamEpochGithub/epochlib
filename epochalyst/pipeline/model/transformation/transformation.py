@@ -17,7 +17,7 @@ class TransformationPipeline(TransformingSystem):
         """Post init method for the Pipeline class."""
         super().__post_init__()
 
-    def transform(self, x: Any, transform_args: dict[str, Any] | None = None) -> Any:
+    def transform(self, x: Any, transform_args: dict[str, Any] = {}) -> Any:
         """Transform the input data.
         
         :param x: The input data.
@@ -27,5 +27,3 @@ class TransformationPipeline(TransformingSystem):
             print_section_separator(f"Running {self.title}")
 
         return super().transform(x, transform_args)
-
-    
