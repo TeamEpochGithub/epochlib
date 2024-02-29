@@ -12,8 +12,6 @@ class ModelPipeline(Pipeline):
     :param label_sys: The system to transform the labels after training. (Very optional)
     """
 
-    verbose: bool = False
-
     def __post_init__(self) -> None:
         """Post init method for the Pipeline class.
         
