@@ -16,7 +16,11 @@ class Dask2TorchDataset(Dataset[Any]):
     :param y: Labels.
     """
 
-    def __init__(self, X: da.Array | npt.NDArray[np.float64], y: da.Array | npt.NDArray[np.float64] | None) -> None:
+    def __init__(
+        self,
+        X: da.Array | npt.NDArray[np.float64],
+        y: da.Array | npt.NDArray[np.float64] | None,
+    ) -> None:
         """Initialize the Dask2TorchDataset.
 
         :param X: Input features.
@@ -35,8 +39,6 @@ class Dask2TorchDataset(Dataset[Any]):
             self.daskY = None
             self.memY = None
 
-        self.transforms = transforms
-
     def __len__(self) -> int:
         """Return the length of the dataset.
 
@@ -44,26 +46,35 @@ class Dask2TorchDataset(Dataset[Any]):
         """
         return self.daskX.shape[0] + len(self.memX)
 
-    def __getitems__(self, idxs: list[int]) -> tuple[torch.Tensor, torch.Tensor] | torch.Tensor:
+    def __getitems__(
+        self, idxs: list[int]
+    ) -> tuple[torch.Tensor, torch.Tensor] | torch.Tensor:
         """Implement the index_to_mem method to update the memory index and compute the memory and dask arrays accordingly.
 
         :param idxs: list of indices to get
         :return: Item at the given index.
         """
         # Get the indices for the in mem and not in mem items
-        not_in_mem_idxs = [idxs[i] - self.memIdx for i in range(len(idxs)) if idxs[i] >= len(self.memX)]
+        not_in_mem_idxs = [
+            idxs[i] - self.memIdx for i in range(len(idxs)) if idxs[i] >= len(self.memX)
+        ]
         in_mem_idxs = [idxs[i] for i in range(len(idxs)) if idxs[i] < len(self.memX)]
 
         # Compute the not in mem items and concat with the ones already in mem
         if len(not_in_mem_idxs) > 0 and isinstance(self.daskX, da.Array):
-            x_arr = np.concatenate((self.memX[in_mem_idxs], self.daskX[not_in_mem_idxs].compute()), axis=0)
+            x_arr = np.concatenate(
+                (self.memX[in_mem_idxs], self.daskX[not_in_mem_idxs].compute()), axis=0
+            )
         else:
             x_arr = self.memX[in_mem_idxs]
 
         if self.daskY is not None and self.memY is not None:
             # If y exists do the same for y
             if len(not_in_mem_idxs) > 0 and isinstance(self.daskY, da.Array):
-                y_arr = np.concatenate((self.memY[in_mem_idxs], self.daskY[not_in_mem_idxs].compute()), axis=0)
+                y_arr = np.concatenate(
+                    (self.memY[in_mem_idxs], self.daskY[not_in_mem_idxs].compute()),
+                    axis=0,
+                )
             else:
                 y_arr = self.memY[in_mem_idxs]
 
@@ -96,7 +107,11 @@ class Dask2TorchDataset(Dataset[Any]):
         :param size: Maximum number of samples to load into memory. If -1, load all samples.
         """
         # If type of self.daskX is numpy array, it means that the cache is already loaded so move to self.memX
-        if isinstance(self.daskX, np.ndarray) or size == -1 or size >= self.daskX.shape[0]:
+        if (
+            isinstance(self.daskX, np.ndarray)
+            or size == -1
+            or size >= self.daskX.shape[0]
+        ):
             self.memX, self.daskX = self.handle_array(self.daskX, self.memX)
             if self.daskY is not None:
                 self.memY, self.daskY = self.handle_array(self.daskY, self.memY)

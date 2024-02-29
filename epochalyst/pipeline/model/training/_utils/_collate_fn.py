@@ -4,7 +4,9 @@
 import torch
 
 
-def collate_fn(batch: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:  # type: ignore[valid-type]
+def collate_fn(
+    batch: tuple[torch.Tensor, torch.Tensor],
+) -> tuple[torch.Tensor, torch.Tensor]:  # type: ignore[valid-type]
     """Make getitems work.
 
     :param batch: The batch of data to collate.

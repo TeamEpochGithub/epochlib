@@ -1,6 +1,7 @@
 from dataclasses import field
 import functools
 from pathlib import Path
+import time
 from typing import Annotated, Callable, Mapping, Any
 import numpy as np
 from torch import nn
@@ -11,17 +12,24 @@ from torch.optim.lr_scheduler import LRScheduler
 from torch.nn import Parameter
 from annotated_types import Gt, Interval
 from epochalyst.logging.logger import logger
-from epochalyst.pipeline.model.training._utils.custom_data_parallel import CustomDataParallel
+from epochalyst.logging.section_separator import print_section_separator
+from epochalyst.pipeline.model.training._utils.custom_data_parallel import (
+    CustomDataParallel,
+)
+from epochalyst.pipeline.model.training._utils.dask_dataset import Dask2TorchDataset
 
-from epochalyst.pipeline.model.training._utils.torch_layerwise_lr import torch_layerwise_lr_groups
+from epochalyst.pipeline.model.training._utils.torch_layerwise_lr import (
+    torch_layerwise_lr_groups,
+)
 
 from tqdm import tqdm
 
 # TODO(Jasper): Update torchblock to use Trainer
 
+
 class TorchBlock(Trainer):
     """Base class to train a torch model.
-    
+
     :param model: The model to train.
     :param optimizer: The optimizer to use for training.
     :param criterion: Loss function.
@@ -42,7 +50,9 @@ class TorchBlock(Trainer):
     patience: Annotated[int, Gt(0)] = 5
     # noinspection PyTypeHints
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
-    best_model_state_dict: Mapping[str, Any] = field(default_factory=dict, init=False, repr=False)
+    best_model_state_dict: Mapping[str, Any] = field(
+        default_factory=dict, init=False, repr=False
+    )
     layerwise_lr_decay: float | None = None
     self_ensemble: bool = field(default=False, repr=False)
     verbose: bool = field(default=False, repr=False)
@@ -60,7 +70,9 @@ class TorchBlock(Trainer):
             base_lr = dummy_optimizer.defaults["lr"]
 
             # Apply the optimizer to each layer with a different learning rate
-            param_groups = torch_layerwise_lr_groups(self.model, base_lr, self.layerwise_lr_decay)
+            param_groups = torch_layerwise_lr_groups(
+                self.model, base_lr, self.layerwise_lr_decay
+            )
             self.initialized_optimizer = self.optimizer(param_groups)
 
         # Set the scheduler
@@ -86,7 +98,16 @@ class TorchBlock(Trainer):
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
 
-    def train(self, x: np.ndarray, y: np.ndarray, train_indices: list[int], test_indices: list[int], cache_size: int = -1, *, save_model: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    def train(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        train_indices: list[int],
+        test_indices: list[int],
+        cache_size: int = -1,
+        *,
+        save_model: bool = True,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Train the model & log the train and validation losses to Weights & Biases.
 
         :param X: Input features.
@@ -112,34 +133,54 @@ class TorchBlock(Trainer):
         train_indices.sort()
         test_indices.sort()
 
-        X_train = X[train_indices]
+        X_train = x[train_indices]
         y_train = y[train_indices]
-        X_test = X[test_indices]
+        X_test = x[test_indices]
         y_test = y[test_indices]
         # Get the ratio of train to all data
         train_ratio = len(X_train) / (len(X_test) + len(X_train))
         # Make datasets from the train and test sets
-        logger.info(f"Making datasets with {'all' if cache_size == -1 else cache_size} samples in memory")
+        logger.info(
+            f"Making datasets with {'all' if cache_size == -1 else cache_size} samples in memory"
+        )
         # Setting cache size to -1 will load all samples into memory
         # If it is not -1 then it will load cache_size * train_ratio samples into memory for training
         # and cache_size * (1 - train_ratio) samples into memory for testing
         # np.round is there to make sure we don't miss a sample due to int to float conversion
         start_time = time.time()
-        train_dataset = Dask2TorchDataset(X_train, y_train, transforms=self.transformations)
+        train_dataset = Dask2TorchDataset(
+            X_train, y_train, transforms=self.transformations
+        )
         logger.info(f"Created train dataset in {time.time() - start_time} seconds")
         start_time = time.time()
-        train_dataset.create_cache(cache_size if cache_size == -1 else int(np.round(cache_size * train_ratio)))
+        train_dataset.create_cache(
+            cache_size if cache_size == -1 else int(np.round(cache_size * train_ratio))
+        )
         logger.info(f"Created train cache in {time.time() - start_time} seconds")
         start_time = time.time()
         test_dataset = Dask2TorchDataset(X_test, y_test)
         logger.info(f"Created test dataset in {time.time() - start_time} seconds")
         start_time = time.time()
-        test_dataset.create_cache(cache_size if cache_size == -1 else int(np.round(cache_size * (1 - train_ratio))))
+        test_dataset.create_cache(
+            cache_size
+            if cache_size == -1
+            else int(np.round(cache_size * (1 - train_ratio)))
+        )
         logger.info(f"Created test cache in {time.time() - start_time} seconds")
 
         # Create dataloaders from the datasets
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn)  # type: ignore[arg-type]
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=collate_fn)  # type: ignore[arg-type]
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            collate_fn=collate_fn,
+        )  # type: ignore[arg-type]
+        test_loader = DataLoader(
+            test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=collate_fn,
+        )  # type: ignore[arg-type]
 
         # Train model
         logger.info("Training the model")
@@ -155,14 +196,18 @@ class TorchBlock(Trainer):
         # https://gitlab.ewi.tudelft.nl/dreamteam-epoch/epoch-iv/q2-detect-kelp/-/issues/38
         self.lowest_val_loss = np.inf
         if len(test_loader) == 0:
-            logger.warning(f"Doing train full, early stopping is not yet implemented for this case so the model will be trained for {self.epochs} epochs")
+            logger.warning(
+                f"Doing train full, early stopping is not yet implemented for this case so the model will be trained for {self.epochs} epochs"
+            )
 
         # Train the model
         self._training_loop(train_loader, test_loader, train_losses, val_losses)
         logger.info("Done training the model")
 
         if self.best_model_state_dict:
-            logger.info(f"Reverting to model with best validation loss {self.lowest_val_loss}")
+            logger.info(
+                f"Reverting to model with best validation loss {self.lowest_val_loss}"
+            )
             self.model.load_state_dict(self.best_model_state_dict)
 
         if save_model:
@@ -202,13 +247,17 @@ class TorchBlock(Trainer):
 
             # Compute validation loss
             if len(test_loader) > 0:
-                self.last_val_loss = self._val_one_epoch(test_loader, desc=f"Epoch {epoch} Valid")
+                self.last_val_loss = self._val_one_epoch(
+                    test_loader, desc=f"Epoch {epoch} Valid"
+                )
                 logger.debug(f"Epoch {epoch} Valid Loss: {self.last_val_loss}")
                 val_losses.append(self.last_val_loss)
 
                 # Log validation loss and plot train/val loss against each other
                 if wandb.run:
-                    wandb.log({"Training/Validation Loss": val_losses[-1]}, step=epoch + 1)
+                    wandb.log(
+                        {"Training/Validation Loss": val_losses[-1]}, step=epoch + 1
+                    )
                     wandb.log(
                         {
                             "Training/Loss": wandb.plot.line_series(
@@ -231,7 +280,9 @@ class TorchBlock(Trainer):
                 # Log the trained epochs to wandb if we finished training
                 wandb.log({"Epochs": epoch + 1})
 
-    def _train_one_epoch(self, dataloader: DataLoader[tuple[Tensor, Tensor]], epoch: int) -> float:
+    def _train_one_epoch(
+        self, dataloader: DataLoader[tuple[Tensor, Tensor]], epoch: int
+    ) -> float:
         """Train the model for one epoch.
 
         :param dataloader: Dataloader for the training data.
@@ -269,7 +320,9 @@ class TorchBlock(Trainer):
 
         return sum(losses) / len(losses)
 
-    def _val_one_epoch(self, dataloader: DataLoader[tuple[Tensor, Tensor]], desc: str) -> float:
+    def _val_one_epoch(
+        self, dataloader: DataLoader[tuple[Tensor, Tensor]], desc: str
+    ) -> float:
         """Compute validation loss of the model for one epoch.
 
         :param dataloader: Dataloader for the testing data.
@@ -306,7 +359,9 @@ class TorchBlock(Trainer):
         """Load the model from the tm folder."""
         # Load the model if it exists
         if not Path(f"tm/{self.prev_hash}.pt").exists():
-            raise FileNotFoundError(f"Model does not exist at tm/{self.prev_hash}.pt, train the model first")
+            raise FileNotFoundError(
+                f"Model does not exist at tm/{self.prev_hash}.pt, train the model first"
+            )
 
         logger.info(f"Loading model from tm/{self.prev_hash}.pt")
         checkpoint = torch.load(f"tm/{self.prev_hash}.pt")
@@ -325,7 +380,13 @@ class TorchBlock(Trainer):
 
         logger.info(f"Model loaded from tm/{self.prev_hash}.pt")
 
-    def predict(self, X: da.Array | npt.NDArray[np.float64], cache_size: int = -1, *, feature_map: bool = False) -> np.ndarray[Any, Any]:  # noqa: C901
+    def predict(
+        self,
+        X: da.Array | npt.NDArray[np.float64],
+        cache_size: int = -1,
+        *,
+        feature_map: bool = False,
+    ) -> np.ndarray[Any, Any]:  # noqa: C901
         """Predict on the test data.
 
         :param X: Input features.
@@ -338,13 +399,20 @@ class TorchBlock(Trainer):
 
         print_section_separator(f"Predicting of model: {self.model.__class__.__name__}")
         logger.debug(f"Training model: {self.model.__class__.__name__}")
-        logger.info(f"Predicting on the test data with {'all' if cache_size == -1 else cache_size} samples in memory")
+        logger.info(
+            f"Predicting on the test data with {'all' if cache_size == -1 else cache_size} samples in memory"
+        )
         X_dataset = Dask2TorchDataset(X, y=None)
         start_time = time.time()
         logger.info("Loading test images into RAM...")
         X_dataset.create_cache(cache_size)
         logger.info(f"Created test cache in {time.time() - start_time} seconds")
-        X_dataloader = DataLoader(X_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=lambda batch: batch)
+        X_dataloader = DataLoader(
+            X_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=lambda batch: batch,
+        )
         self.model.eval()
         preds = []
         with torch.no_grad(), tqdm(X_dataloader, unit="batch", disable=False) as tepoch:
@@ -354,7 +422,9 @@ class TorchBlock(Trainer):
 
                 if feature_map:
                     # forward pass
-                    if hasattr(self.model, "model") and hasattr(self.model.model, "segmentation_head"):
+                    if hasattr(self.model, "model") and hasattr(
+                        self.model.model, "segmentation_head"
+                    ):
                         self.model.model.segmentation_head = nn.Identity()
                     y_pred = self.model(X_batch).cpu().numpy()
                     preds.extend(y_pred)
@@ -366,13 +436,17 @@ class TorchBlock(Trainer):
                     for flip in [False, True]:
                         for rotation in range(4):
                             # Transform the batch
-                            X_batch_transformed = transform_batch(X_batch.clone(), rotation, flip=flip)
+                            X_batch_transformed = transform_batch(
+                                X_batch.clone(), rotation, flip=flip
+                            )
 
                             # Get prediction
                             y_pred_transformed = self.model(X_batch_transformed)
 
                             # Reverse the transformation on prediction
-                            y_pred_reversed = reverse_transform(y_pred_transformed, rotation, flip=flip)
+                            y_pred_reversed = reverse_transform(
+                                y_pred_transformed, rotation, flip=flip
+                            )
 
                             # Collect the predictions
                             predictions.append(y_pred_reversed)
@@ -391,10 +465,14 @@ class TorchBlock(Trainer):
                     regression_preds = y_pred[:, 0] > 0.5
                     classification_preds = y_pred[:, 1:].argmax(axis=1)
 
-                    stacked_preds = np.stack([regression_preds, classification_preds], axis=1)
+                    stacked_preds = np.stack(
+                        [regression_preds, classification_preds], axis=1
+                    )
 
                     # Perform the logical OR operation on the two channels
-                    union_preds = np.logical_or(stacked_preds[:, 0], stacked_preds[:, 1])
+                    union_preds = np.logical_or(
+                        stacked_preds[:, 0], stacked_preds[:, 1]
+                    )
 
                     # Convert the boolean array to an integer array
                     union_preds = union_preds.astype(np.uint8)
@@ -402,7 +480,9 @@ class TorchBlock(Trainer):
                     # preds.extend(union_preds)
                     preds.extend(union_preds)
                 else:
-                    raise ValueError(f"Invalid number of channels in the output of the model: {y_pred.shape[1]}")
+                    raise ValueError(
+                        f"Invalid number of channels in the output of the model: {y_pred.shape[1]}"
+                    )
 
         logger.info("Done predicting")
 
@@ -433,4 +513,3 @@ class TorchBlock(Trainer):
                 logger.info("Ran out of patience, stopping early")
                 return True
         return False
-

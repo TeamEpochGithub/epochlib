@@ -5,10 +5,15 @@ from typing import Any
 
 from torch import nn
 
-from src.logging_utils.logger import logger
+from epochalyst.logging.logger import logger
 
 
-def torch_layerwise_lr_groups(model: nn.Module, base_lr: float, layerwise_lr_decay: float, params_per_layer: int = 8) -> list[dict[str, Any]]:
+def torch_layerwise_lr_groups(
+    model: nn.Module,
+    base_lr: float,
+    layerwise_lr_decay: float,
+    params_per_layer: int = 8,
+) -> list[dict[str, Any]]:
     """Create the parameter groups for the optimizer.
 
     Groups the parameters individually and sets the learning rate for each group.
@@ -26,7 +31,9 @@ def torch_layerwise_lr_groups(model: nn.Module, base_lr: float, layerwise_lr_dec
     num_params = len(list(model.parameters()))
     grouped_params = []
     for i, (_, params) in enumerate(model.named_parameters()):
-        depth = (num_params - i - 1) // params_per_layer  # depth will be 0 for the last layer
+        depth = (
+            num_params - i - 1
+        ) // params_per_layer  # depth will be 0 for the last layer
         lr = base_lr * (layerwise_lr_decay**depth)
         grouped_params.append({"params": params, "lr": lr})
 
