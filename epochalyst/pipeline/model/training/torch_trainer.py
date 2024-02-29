@@ -27,8 +27,8 @@ class TorchTrainer(Trainer, _Logger):
 
     :param model: The model to train.
     :param optimizer: Optimizer to use for training.
-    :param scheduler: Learning rate scheduler
-    :param criterion: Loss function
+    :param criterion: Criterion to use for training.
+    :param scheduler: Scheduler to use for training.
     :param epochs: Number of epochs
     :param batch_size: Batch size
     :param patience: Patience for early stopping
@@ -37,8 +37,8 @@ class TorchTrainer(Trainer, _Logger):
 
     model: nn.Module
     optimizer: functools.partial[Optimizer]
-    scheduler: Callable[[Optimizer], LRScheduler]
     criterion: nn.Module
+    scheduler: Callable[[Optimizer], LRScheduler] | None = None
     epochs: Annotated[int, Gt(0)] = 10
     batch_size: Annotated[int, Gt(0)] = 32
     patience: Annotated[int, Gt(0)] = 5
