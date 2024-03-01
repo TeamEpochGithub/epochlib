@@ -21,10 +21,19 @@ from epochalyst.logging.section_separator import print_section_separator
 from torch.utils.data import DataLoader, Dataset
 import numpy.typing as npt
 
+from epochalyst.pipeline.model.training.training_block import TrainingBlock
+
 
 @dataclass
-class TorchTrainer(Trainer, _Logger):
+class TorchTrainer(TrainingBlock):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
+
+    To use this block, you must inherit from it and implement the following methods:
+    - `log_to_terminal`
+    - `log_to_debug`
+    - `log_to_warning`
+    - `log_to_external`
+    - `external_define_metric`
 
     :param model: The model to train.
     :param optimizer: Optimizer to use for training.
