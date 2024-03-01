@@ -9,7 +9,7 @@ Epochalyst: A fusion of "Epoch" and "Catalyst," this name positions your pipelin
 To generate pytest coverage report run
 
 ```python
-pytest --cov=epochalyst --cov-report=html:coverage_re
+python -m pytest --cov=epochalyst --cov-report=html:coverage_re
 ```
 
 ## Documentation
