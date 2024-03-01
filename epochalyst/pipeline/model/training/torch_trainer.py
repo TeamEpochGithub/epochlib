@@ -152,10 +152,9 @@ class TorchTrainer(Trainer, _Logger):
         concat_dataset = self._concat_datasets(
             train_dataset, test_dataset, train_indices, test_indices
         )
-        pred_dataset = self._train_dataset_to_test_dataset(concat_dataset)
 
         pred_dataloader = DataLoader(
-            pred_dataset, batch_size=self.batch_size, shuffle=False
+            concat_dataset, batch_size=self.batch_size, shuffle=False
         )
 
         return self.predict_on_loader(pred_dataloader), y
@@ -499,21 +498,6 @@ class TorchTrainer(Trainer, _Logger):
                 concatenated_dataset.append(test_dataset[original_index])
 
         return TensorDataset(
-            torch.tensor([x[0] for x in concatenated_dataset]),
-            torch.tensor([x[1] for x in concatenated_dataset]),
+            torch.tensor([[x[0]] for x in concatenated_dataset]),
+            torch.tensor([[x[1]] for x in concatenated_dataset]),
         )
-
-    def _train_dataset_to_test_dataset(
-        self, train_dataset: Dataset[tuple[Tensor, ...]]
-    ) -> Dataset[tuple[Tensor, ...]]:
-        """
-        Convert a training dataset to a test dataset.
-
-        :param train_dataset: The training dataset.
-        :return: The test dataset.
-        """
-
-        # Create a dataset using the input data from the training dataset
-        test_dataset = torch.tensor([[x[0]] for x in train_dataset])
-
-        return TensorDataset(test_dataset)

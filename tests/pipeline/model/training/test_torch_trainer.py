@@ -4,7 +4,6 @@ from unittest.mock import patch
 import torch
 from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
 import pytest
-from torch.utils.data import TensorDataset
 
 from tests.util import remove_cache_files
 
@@ -113,29 +112,6 @@ class TestTorchTrainer:
         for i in range(10):
             assert (dataset[i][0] == x[i]).all()
             assert (dataset[i][1] == y[i]).all()
-
-    # Train dataset to test dataset
-    def test__train_dataset_to_test_dataset(self):
-        tt = self.FullyImplementedTorchTrainer(
-            model=self.simple_model,
-            criterion=torch.nn.MSELoss(),
-            optimizer=self.optimizer,
-        )
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        train_dataset = TensorDataset(torch.tensor(x), torch.tensor(y))
-
-        # Concatenate the datasets
-        new_test_dataset = tt._train_dataset_to_test_dataset(train_dataset)
-
-        # Check the length of the dataset
-        assert len(new_test_dataset) == 10
-
-        # Assert values of dataset are correct
-        step = 0
-        for item in new_test_dataset:
-            assert (item[0] == x[step]).all()
-            step += 1
 
     # Training
     def test_train_no_args(self):
