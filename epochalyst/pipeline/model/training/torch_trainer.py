@@ -4,7 +4,6 @@ import functools
 import gc
 from pathlib import Path
 from typing import Annotated, Any, Callable
-from agogos.trainer import Trainer
 from annotated_types import Gt, Interval
 import numpy as np
 from torch import Tensor, nn
@@ -14,7 +13,6 @@ from torch.optim.lr_scheduler import LRScheduler
 from tqdm import tqdm
 from torch.utils.data import Dataset, TensorDataset, DataLoader
 
-from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 import numpy.typing as npt
