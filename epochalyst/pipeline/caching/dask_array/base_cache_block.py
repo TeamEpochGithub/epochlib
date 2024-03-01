@@ -1,13 +1,12 @@
 """This module contains the BaseCacheBlock class for caching blocks."""
 from abc import abstractmethod
 import glob
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 
 from epochalyst.pipeline.caching.error import CachePipelineError
 
-from epochalyst._core._imports._self import Self
 import dask.array as da
 from dataclasses import dataclass
 
