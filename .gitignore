@@ -211,4 +211,6 @@ plots/images/train
 # ignore Lock file used
 .lock
 
-notebooks/similarity
+# Test coverage
+.coverage
+coverage_re/
