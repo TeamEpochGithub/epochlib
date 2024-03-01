@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class BaseCacheBlock():
+class BaseCacheBlock:
     """BaseCacheBlock is the base class for caching blocks.
 
     :param data_path: The path where the data will be stored.

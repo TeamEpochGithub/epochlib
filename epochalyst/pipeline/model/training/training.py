@@ -2,16 +2,14 @@ from typing import Any
 from agogos.training_system import TrainingSystem
 
 from epochalyst.logging.section_separator import print_section_separator
+from epochalyst._core._logging._logger import _Logger
 
 
 class TrainingPipeline(TrainingSystem):
     """The training pipeline. This is the class used to create the pipeline for the training of the model. (Currently same implementation as agogos pipeline)
 
     :param steps: The steps to train the model.
-    :param verbose: Whether to print verbose output.
     """
-
-    verbose: bool = False
 
     def __post_init__(self) -> None:
         """Post init method for the Pipeline class."""
@@ -26,7 +24,6 @@ class TrainingPipeline(TrainingSystem):
         :param y: The expected output of the system.
         :return: The input and output of the system.
         """
-        if self.verbose:
-            print_section_separator("Training Pipeline")
+        print_section_separator("Training Pipeline")
 
         return super().train(x, y, train_args)

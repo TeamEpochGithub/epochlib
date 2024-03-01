@@ -3,7 +3,6 @@ from epochalyst._core._logging._logger import _Logger
 
 
 class Test_Logger:
-
     def test__logger_init(self):
         _logger = _Logger()
         assert _logger is not None
