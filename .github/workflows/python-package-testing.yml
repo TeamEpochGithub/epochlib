@@ -27,15 +27,15 @@ jobs:
     - name: Create virtual environment
       run: python -m venv venv
 
-    - name: Activate virtual environment and upgrade pip
+    - name: Activate virtual environment
       run: |
         . venv/bin/activate
-        venv/bin/python -m pip install --upgrade pip
 
     - name: Install dependencies
       run: |
+        venv/bin/python -m pip install --upgrade pip
         venv/bin/python -m pip install pytest
-        if [ -f requirements.txt ]; then venv/bin/python -m pip install -r requirements.txt; fi
+        venv/bin/python -m pip install -r requirements.txt
 
     - name: Test with pytest
       run: |
