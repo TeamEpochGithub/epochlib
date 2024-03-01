@@ -4,7 +4,6 @@ import functools
 import gc
 from pathlib import Path
 from typing import Annotated, Any, Callable
-from agogos.trainer import Trainer
 from annotated_types import Gt, Interval
 import numpy as np
 from torch import Tensor, nn
@@ -14,15 +13,23 @@ from torch.optim.lr_scheduler import LRScheduler
 from tqdm import tqdm
 from torch.utils.data import Dataset, TensorDataset, DataLoader
 
-from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 import numpy.typing as npt
 
+from epochalyst.pipeline.model.training.training_block import TrainingBlock
+
 
 @dataclass
-class TorchTrainer(Trainer, _Logger):
+class TorchTrainer(TrainingBlock):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
+
+    To use this block, you must inherit from it and implement the following methods:
+    - `log_to_terminal`
+    - `log_to_debug`
+    - `log_to_warning`
+    - `log_to_external`
+    - `external_define_metric`
 
     :param model: The model to train.
     :param optimizer: Optimizer to use for training.

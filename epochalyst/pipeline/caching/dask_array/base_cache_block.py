@@ -28,7 +28,7 @@ class BaseCacheBlock:
         :param y: UNUSED target variable.
         :return: Itself.
         """
-        #return self
+        # return self
 
     @abstractmethod
     def transform(self, X: da.Array | None) -> da.Array | None:
