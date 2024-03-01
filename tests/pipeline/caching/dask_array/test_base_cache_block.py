@@ -23,7 +23,7 @@ class TestBaseCacheBlock:
 
     def test_fit(self) -> None:
         self.block = BaseCacheBlock("tests/cache")
-        assert self.block.fit(None) == self.block
+        assert self.block.fit(None) == None
 
     def test_data_exists_none(self) -> None:
         self.block = BaseCacheBlock("tests/cache")

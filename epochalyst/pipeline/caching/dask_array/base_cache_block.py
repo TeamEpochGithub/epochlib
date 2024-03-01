@@ -1,7 +1,7 @@
 """This module contains the BaseCacheBlock class for caching blocks."""
 from abc import abstractmethod
 import glob
-from typing import Any, Self
+from typing import Any
 
 import numpy as np
 
@@ -21,14 +21,14 @@ class BaseCacheBlock:
     data_path: str | None = None
     verbose: bool = True
 
-    def fit(self, X: da.Array | None, y: da.Array | None = None) -> Self:  # noqa: ARG002
+    def fit(self, X: da.Array | None, y: da.Array | None = None) -> None:  # noqa: ARG002
         """Do nothing. Exists for Pipeline compatibility.
 
         :param X: UNUSED data to fit.
         :param y: UNUSED target variable.
         :return: Itself.
         """
-        return self
+        #return self
 
     @abstractmethod
     def transform(self, X: da.Array | None) -> da.Array | None:
