@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: python:3.11-slim
+      env:
+        NODE_VERSION: 20
 
     strategy:
       fail-fast: false
@@ -19,6 +21,13 @@ jobs:
         python-version: ["3.10", "3.11"]
 
     steps:
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - uses: actions/checkout@v3
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -27,16 +36,16 @@ jobs:
     - name: Create virtual environment
       run: python -m venv venv
 
-    - name: Activate virtual environment and upgrade pip
+    - name: Activate virtual environment
       run: |
         . venv/bin/activate
-        python -m pip install --upgrade pip
 
     - name: Install dependencies
       run: |
-        pip install pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        venv/bin/python -m pip install --upgrade pip
+        venv/bin/python -m pip install pytest
+        venv/bin/python -m pip install -r requirements.txt
 
     - name: Test with pytest
       run: |
-        pytest
+        venv/bin/python -m pytest tests
