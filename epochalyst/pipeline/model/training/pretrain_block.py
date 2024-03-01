@@ -4,7 +4,10 @@ from agogos.trainer import Trainer
 
 from joblib import hash
 
+from dataclasses import dataclass
 
+
+@dataclass
 class PretrainBlock(Trainer):
     """Pretrain block class
 
@@ -12,7 +15,6 @@ class PretrainBlock(Trainer):
     """
 
     test_size: float = 0.2
-    verbose: bool = False
 
     def __post_init__(self) -> None:
         """Post init method for the PretrainBlock class."""
@@ -50,10 +52,10 @@ class PretrainBlock(Trainer):
         )
 
     @abstractmethod
-    def save_pretrain(self, X: Any) -> Any:
-        """Save pretrain method.
+    def save_pretrain(self, x: Any) -> Any:
+        """Save pretrain output.
 
-        :param path: The path to save the pretrain."""
+        :param x: The input to the system."""
         raise NotImplementedError(
             f"Save pretrain method not implemented for {self.__class__.__name__}"
         )

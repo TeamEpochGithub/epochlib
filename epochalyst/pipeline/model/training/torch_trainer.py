@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import copy
 from dataclasses import dataclass
 import functools
@@ -13,12 +12,11 @@ import torch
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from tqdm import tqdm
-from torch.utils.data import Dataset, TensorDataset
+from torch.utils.data import Dataset, TensorDataset, DataLoader
 
 from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
-from torch.utils.data import DataLoader, Dataset
 import numpy.typing as npt
 
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
@@ -160,11 +158,12 @@ class TorchTrainer(TrainingBlock):
             self._save_model()
 
         # Return the predictions
-        concat_dataset = self._concat_datasets(train_dataset, test_dataset, train_indices, test_indices)
-        pred_dataset = self._train_dataset_to_test_dataset(concat_dataset)
+        concat_dataset = self._concat_datasets(
+            train_dataset, test_dataset, train_indices, test_indices
+        )
 
         pred_dataloader = DataLoader(
-            pred_dataset, batch_size=self.batch_size, shuffle=False
+            concat_dataset, batch_size=self.batch_size, shuffle=False
         )
 
         return self.predict_on_loader(pred_dataloader), y
@@ -189,7 +188,9 @@ class TorchTrainer(TrainingBlock):
         # Predict
         return self.predict_on_loader(pred_dataloader)
 
-    def predict_on_loader(self, loader: DataLoader[Tensor]) -> npt.NDArray[np.float32]:
+    def predict_on_loader(
+        self, loader: DataLoader[tuple[Tensor, ...]]
+    ) -> npt.NDArray[np.float32]:
         """Predict on the loader.
 
         :param loader: The loader to predict on.
@@ -209,27 +210,33 @@ class TorchTrainer(TrainingBlock):
         return np.array(predictions)
 
     def create_datasets(
-            self,
-            x: npt.NDArray[np.float32],
-            y: npt.NDArray[np.float32],
-            train_indices: list[int],
-            test_indices: list[int],
-            cache_size: int = -1,
-        ) -> tuple[Dataset[tuple[Tensor, Tensor]], Dataset[tuple[Tensor, Tensor]]]:
-            """Create the datasets for training and validation.
+        self,
+        x: npt.NDArray[np.float32],
+        y: npt.NDArray[np.float32],
+        train_indices: list[int],
+        test_indices: list[int],
+        cache_size: int = -1,
+    ) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
+        """Create the datasets for training and validation.
 
-            :param x: The input data.
-            :param y: The target variable.
-            :param train_indices: The indices to train on.
-            :param test_indices: The indices to test on.
-            :return: The training and validation datasets.
-            """
-            x_dataset = TensorDataset(torch.tensor(x[train_indices]), torch.tensor(y[train_indices]))
-            y_dataset = TensorDataset(torch.tensor(x[test_indices]), torch.tensor(y[test_indices]))
+        :param x: The input data.
+        :param y: The target variable.
+        :param train_indices: The indices to train on.
+        :param test_indices: The indices to test on.
+        :return: The training and validation datasets.
+        """
+        x_dataset = TensorDataset(
+            torch.tensor(x[train_indices]), torch.tensor(y[train_indices])
+        )
+        y_dataset = TensorDataset(
+            torch.tensor(x[test_indices]), torch.tensor(y[test_indices])
+        )
 
-            return x_dataset, y_dataset
+        return x_dataset, y_dataset
 
-    def create_prediction_dataset(self, x: npt.NDArray[np.float32]) -> Dataset[Tensor]:
+    def create_prediction_dataset(
+        self, x: npt.NDArray[np.float32]
+    ) -> Dataset[tuple[Tensor, ...]]:
         """Create the prediction dataset.
 
         :param x: The input data.
@@ -239,9 +246,9 @@ class TorchTrainer(TrainingBlock):
 
     def create_dataloaders(
         self,
-        train_dataset: Dataset[tuple[Tensor, Tensor]],
-        test_dataset: Dataset[tuple[Tensor, Tensor]],
-    ) -> tuple[DataLoader[tuple[Tensor, Tensor]], DataLoader[tuple[Tensor, Tensor]]]:
+        train_dataset: Dataset[tuple[Tensor, ...]],
+        test_dataset: Dataset[tuple[Tensor, ...]],
+    ) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
         """Create the dataloaders for training and validation.
 
         :param train_dataset: The training dataset.
@@ -265,8 +272,8 @@ class TorchTrainer(TrainingBlock):
 
     def _training_loop(
         self,
-        train_loader: DataLoader[tuple[Tensor, Tensor]],
-        test_loader: DataLoader[tuple[Tensor, Tensor]],
+        train_loader: DataLoader[tuple[Tensor, ...]],
+        test_loader: DataLoader[tuple[Tensor, ...]],
         train_losses: list[float],
         val_losses: list[float],
     ) -> None:
@@ -326,7 +333,7 @@ class TorchTrainer(TrainingBlock):
             self.log_to_external(message={"Epochs": epoch + 1})
 
     def _train_one_epoch(
-        self, dataloader: DataLoader[tuple[Tensor, Tensor]], epoch: int
+        self, dataloader: DataLoader[tuple[Tensor, ...]], epoch: int
     ) -> float:
         """Train the model for one epoch.
 
@@ -366,7 +373,7 @@ class TorchTrainer(TrainingBlock):
         return sum(losses) / len(losses)
 
     def _val_one_epoch(
-        self, dataloader: DataLoader[tuple[Tensor, Tensor]], desc: str
+        self, dataloader: DataLoader[tuple[Tensor, ...]], desc: str
     ) -> float:
         """Compute validation loss of the model for one epoch.
 
@@ -395,19 +402,27 @@ class TorchTrainer(TrainingBlock):
 
     def _save_model(self) -> None:
         """Save the model in the model_directory folder."""
-        self.log_to_terminal(f"Saving model to {self.model_directory}/{self.get_hash()}.pt")
+        self.log_to_terminal(
+            f"Saving model to {self.model_directory}/{self.get_hash()}.pt"
+        )
         torch.save(self.model, f"{self.model_directory}/{self.get_hash()}.pt")
-        self.log_to_terminal(f"Model saved to {self.model_directory}/{self.get_hash()}.pt")
+        self.log_to_terminal(
+            f"Model saved to {self.model_directory}/{self.get_hash()}.pt"
+        )
 
     def _load_model(self) -> None:
         """Load the model from the model_directory folder."""
 
         # Check if the model exists
         if not Path(f"{self.model_directory}/{self.get_hash()}.pt").exists():
-            raise FileNotFoundError(f"Model not found in {self.model_directory}/{self.get_hash()}.pt")
+            raise FileNotFoundError(
+                f"Model not found in {self.model_directory}/{self.get_hash()}.pt"
+            )
 
         # Load model
-        self.log_to_terminal(f"Loading model from {self.model_directory}/{self.get_hash()}.pt")
+        self.log_to_terminal(
+            f"Loading model from {self.model_directory}/{self.get_hash()}.pt"
+        )
         checkpoint = torch.load(f"{self.model_directory}/{self.get_hash()}.pt")
 
         # Load the weights from the checkpoint
@@ -422,11 +437,16 @@ class TorchTrainer(TrainingBlock):
         else:
             self.model.load_state_dict(model.state_dict())
 
-        self.log_to_terminal(f"Model loaded from {self.model_directory}/{self.get_hash()}.pt")
+        self.log_to_terminal(
+            f"Model loaded from {self.model_directory}/{self.get_hash()}.pt"
+        )
 
     def _model_exists(self) -> bool:
         """Check if the model exists in the model_directory folder."""
-        return Path(f"{self.model_directory}/{self.get_hash()}.pt").exists() and self.save_model_to_disk
+        return (
+            Path(f"{self.model_directory}/{self.get_hash()}.pt").exists()
+            and self.save_model_to_disk
+        )
 
     def _early_stopping(self) -> bool:
         """Check if early stopping should be performed.
@@ -448,31 +468,36 @@ class TorchTrainer(TrainingBlock):
                 return True
         return False
 
-    def _concat_datasets(self, train_dataset: Dataset[tuple[Tensor, Tensor]],
-                        test_dataset: Dataset[tuple[Tensor, Tensor]],
-                        train_indices: list[int],
-                        test_indices: list[int]) -> Dataset[tuple[Tensor, Tensor]]:
+    def _concat_datasets(
+        self,
+        train_dataset: Dataset[tuple[Tensor, ...]],
+        test_dataset: Dataset[tuple[Tensor, ...]],
+        train_indices: list[int],
+        test_indices: list[int],
+    ) -> Dataset[tuple[Tensor, ...]]:
         """
         Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
-        
+
         :param train_dataset: The training dataset.
         :param test_dataset: The test dataset.
         :param train_indices: The indices for the training data.
         :param test_indices: The indices for the test data.
         :return: A new dataset containing the concatenated data in the original order.
         """
-        
+
         # Combine the indices and sort them alongside their corresponding dataset identifier ('train' or 'test')
         combined_indices = train_indices + test_indices
-        dataset_labels = ['train'] * len(train_indices) + ['test'] * len(test_indices)
-        sorted_combined = sorted(zip(combined_indices, dataset_labels), key=lambda x: x[0])
+        dataset_labels = ["train"] * len(train_indices) + ["test"] * len(test_indices)
+        sorted_combined = sorted(
+            zip(combined_indices, dataset_labels), key=lambda x: x[0]
+        )
 
         # Create a new list to hold the concatenated dataset
         concatenated_dataset = []
 
         # Iterate over the sorted combination of indices and dataset labels
         for index, dataset_label in sorted_combined:
-            if dataset_label == 'train':
+            if dataset_label == "train":
                 # Calculate the original index in the train dataset
                 original_index = train_indices.index(index)
                 concatenated_dataset.append(train_dataset[original_index])
@@ -481,20 +506,7 @@ class TorchTrainer(TrainingBlock):
                 original_index = test_indices.index(index)
                 concatenated_dataset.append(test_dataset[original_index])
 
-        # Assuming you have a way to create a Dataset from a list of tuples
-        # For simplicity, let's return the list, but you might need to convert it back to a Dataset type depending on your implementation
-        return concatenated_dataset  # Note: Adjust this to fit your Dataset creation method
-        
-    def _train_dataset_to_test_dataset(self, train_dataset: Dataset[tuple[Tensor, Tensor]]) -> Dataset[Tensor]:
-        """
-        Convert a training dataset to a test dataset.
-        
-        :param train_dataset: The training dataset.
-        :return: The test dataset.
-        """
-        
-        # Create a dataset using the input data from the training dataset
-        test_dataset = torch.tensor([[x[0]] for x in train_dataset])
-
-        return TensorDataset(test_dataset)
-
+        return TensorDataset(
+            torch.tensor([[x[0]] for x in concatenated_dataset]),
+            torch.tensor([[x[1]] for x in concatenated_dataset]),
+        )

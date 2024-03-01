@@ -7,13 +7,12 @@ import numpy as np
 
 from epochalyst.pipeline.caching.error import CachePipelineError
 
-from epochalyst._core._imports._self import Self
 import dask.array as da
 from dataclasses import dataclass
 
 
 @dataclass
-class BaseCacheBlock():
+class BaseCacheBlock:
     """BaseCacheBlock is the base class for caching blocks.
 
     :param data_path: The path where the data will be stored.
@@ -22,14 +21,14 @@ class BaseCacheBlock():
     data_path: str | None = None
     verbose: bool = True
 
-    def fit(self, X: da.Array | None, y: da.Array | None = None) -> Self:  # noqa: ARG002
+    def fit(self, X: da.Array | None, y: da.Array | None = None) -> None:  # noqa: ARG002
         """Do nothing. Exists for Pipeline compatibility.
 
         :param X: UNUSED data to fit.
         :param y: UNUSED target variable.
         :return: Itself.
         """
-        return self
+        #return self
 
     @abstractmethod
     def transform(self, X: da.Array | None) -> da.Array | None:
