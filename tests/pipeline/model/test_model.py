@@ -1,4 +1,3 @@
-import pytest
 from epochalyst.pipeline.model.model import ModelPipeline
 
 
@@ -15,4 +14,4 @@ class TestModel:
     def test_model_pipeline_predict(self):
         model = ModelPipeline()
 
-        assert model.predict(None) == None
+        assert model.predict(None) is None

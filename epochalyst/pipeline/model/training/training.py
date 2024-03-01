@@ -2,7 +2,6 @@ from typing import Any
 from agogos.training_system import TrainingSystem
 
 from epochalyst.logging.section_separator import print_section_separator
-from epochalyst._core._logging._logger import _Logger
 
 
 class TrainingPipeline(TrainingSystem):

@@ -2,7 +2,6 @@ from epochalyst.pipeline.model.training.training import TrainingPipeline
 
 
 class TestTrainingPipeline:
-
     def test_training_pipeline_init(self):
         tp = TrainingPipeline()
         assert tp is not None
@@ -15,4 +14,4 @@ class TestTrainingPipeline:
     def test_training_pipeline_predict(self):
         tp = TrainingPipeline()
 
-        assert tp.predict(None) == None
+        assert tp.predict(None) is None

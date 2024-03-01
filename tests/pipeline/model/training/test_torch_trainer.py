@@ -1,13 +1,10 @@
 import functools
 from typing import Any
 from unittest.mock import patch
-import numpy as np
 import torch
 from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
 import pytest
-import numpy.typing as npt
-from torch import Tensor
-from torch.utils.data import Dataset, TensorDataset
+from torch.utils.data import TensorDataset
 
 from tests.util import remove_cache_files
 

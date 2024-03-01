@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import copy
 from dataclasses import dataclass
 import functools
@@ -13,12 +12,11 @@ import torch
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from tqdm import tqdm
-from torch.utils.data import Dataset, TensorDataset
+from torch.utils.data import Dataset, TensorDataset, DataLoader
 
 from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
-from torch.utils.data import DataLoader, Dataset
 import numpy.typing as npt
 
 
@@ -182,7 +180,9 @@ class TorchTrainer(Trainer, _Logger):
         # Predict
         return self.predict_on_loader(pred_dataloader)
 
-    def predict_on_loader(self, loader: DataLoader[Tensor]) -> npt.NDArray[np.float32]:
+    def predict_on_loader(
+        self, loader: DataLoader[tuple[Tensor, ...]]
+    ) -> npt.NDArray[np.float32]:
         """Predict on the loader.
 
         :param loader: The loader to predict on.
@@ -208,7 +208,7 @@ class TorchTrainer(Trainer, _Logger):
         train_indices: list[int],
         test_indices: list[int],
         cache_size: int = -1,
-    ) -> tuple[Dataset[tuple[Tensor, Tensor]], Dataset[tuple[Tensor, Tensor]]]:
+    ) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
         """Create the datasets for training and validation.
 
         :param x: The input data.
@@ -226,7 +226,9 @@ class TorchTrainer(Trainer, _Logger):
 
         return x_dataset, y_dataset
 
-    def create_prediction_dataset(self, x: npt.NDArray[np.float32]) -> Dataset[Tensor]:
+    def create_prediction_dataset(
+        self, x: npt.NDArray[np.float32]
+    ) -> Dataset[tuple[Tensor, ...]]:
         """Create the prediction dataset.
 
         :param x: The input data.
@@ -236,9 +238,9 @@ class TorchTrainer(Trainer, _Logger):
 
     def create_dataloaders(
         self,
-        train_dataset: Dataset[tuple[Tensor, Tensor]],
-        test_dataset: Dataset[tuple[Tensor, Tensor]],
-    ) -> tuple[DataLoader[tuple[Tensor, Tensor]], DataLoader[tuple[Tensor, Tensor]]]:
+        train_dataset: Dataset[tuple[Tensor, ...]],
+        test_dataset: Dataset[tuple[Tensor, ...]],
+    ) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
         """Create the dataloaders for training and validation.
 
         :param train_dataset: The training dataset.
@@ -262,8 +264,8 @@ class TorchTrainer(Trainer, _Logger):
 
     def _training_loop(
         self,
-        train_loader: DataLoader[tuple[Tensor, Tensor]],
-        test_loader: DataLoader[tuple[Tensor, Tensor]],
+        train_loader: DataLoader[tuple[Tensor, ...]],
+        test_loader: DataLoader[tuple[Tensor, ...]],
         train_losses: list[float],
         val_losses: list[float],
     ) -> None:
@@ -323,7 +325,7 @@ class TorchTrainer(Trainer, _Logger):
             self.log_to_external(message={"Epochs": epoch + 1})
 
     def _train_one_epoch(
-        self, dataloader: DataLoader[tuple[Tensor, Tensor]], epoch: int
+        self, dataloader: DataLoader[tuple[Tensor, ...]], epoch: int
     ) -> float:
         """Train the model for one epoch.
 
@@ -363,7 +365,7 @@ class TorchTrainer(Trainer, _Logger):
         return sum(losses) / len(losses)
 
     def _val_one_epoch(
-        self, dataloader: DataLoader[tuple[Tensor, Tensor]], desc: str
+        self, dataloader: DataLoader[tuple[Tensor, ...]], desc: str
     ) -> float:
         """Compute validation loss of the model for one epoch.
 
@@ -460,11 +462,11 @@ class TorchTrainer(Trainer, _Logger):
 
     def _concat_datasets(
         self,
-        train_dataset: Dataset[tuple[Tensor, Tensor]],
-        test_dataset: Dataset[tuple[Tensor, Tensor]],
+        train_dataset: Dataset[tuple[Tensor, ...]],
+        test_dataset: Dataset[tuple[Tensor, ...]],
         train_indices: list[int],
         test_indices: list[int],
-    ) -> Dataset[tuple[Tensor, Tensor]]:
+    ) -> Dataset[tuple[Tensor, ...]]:
         """
         Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
 
@@ -496,13 +498,14 @@ class TorchTrainer(Trainer, _Logger):
                 original_index = test_indices.index(index)
                 concatenated_dataset.append(test_dataset[original_index])
 
-        # Assuming you have a way to create a Dataset from a list of tuples
-        # For simplicity, let's return the list, but you might need to convert it back to a Dataset type depending on your implementation
-        return concatenated_dataset  # Note: Adjust this to fit your Dataset creation method
+        return TensorDataset(
+            torch.tensor([x[0] for x in concatenated_dataset]),
+            torch.tensor([x[1] for x in concatenated_dataset]),
+        )
 
     def _train_dataset_to_test_dataset(
-        self, train_dataset: Dataset[tuple[Tensor, Tensor]]
-    ) -> Dataset[Tensor]:
+        self, train_dataset: Dataset[tuple[Tensor, ...]]
+    ) -> Dataset[tuple[Tensor, ...]]:
         """
         Convert a training dataset to a test dataset.
 
