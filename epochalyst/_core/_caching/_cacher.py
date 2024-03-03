@@ -1,10 +1,11 @@
-from typing import Any
-import dask.dataframe as dd
-import dask.array as da
-import pandas as pd
-import numpy as np
 from epochalyst._core._logging._logger import _Logger
+from typing import Any
+import dask.array as da
+import dask.dataframe as dd
+import numpy as np
 import os
+import pandas as pd
+
 
 class _Cacher(_Logger):
     """The cacher is a flexible class that allows for caching of any data.
@@ -14,11 +15,11 @@ class _Cacher(_Logger):
     supported if more are required create a new issue on the github repository.
 
     args:
-        - output_data_type: The type of the input data.
-            - "dask_array": The input data is a dask array.
-            - "numpy_array": The input data is a numpy array.
-            - "pandas_dataframe": The input data is a pandas dataframe.
-            - "dask_dataframe": The input data is a dask dataframe.
+        - output_data_type: The type of the output data.
+            - "dask_array": The output data is a dask array.
+            - "numpy_array": The output data is a numpy array.
+            - "pandas_dataframe": The output data is a pandas dataframe.
+            - "dask_dataframe": The output data is a dask dataframe.
         - storage_type: The type of the storage.
             - ".npy": The storage type is a numpy file.
             - ".parquet": The storage type is a parquet file.
