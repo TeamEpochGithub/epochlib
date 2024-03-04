@@ -26,4 +26,7 @@ dependencies= [
 
     # Parquet
     "pyarrow>=6.0.0",
+
+    # PyTorch
+    "torch==2.1.2+cu118"
 ]
