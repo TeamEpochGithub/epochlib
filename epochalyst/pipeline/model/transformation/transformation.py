@@ -1,7 +1,6 @@
 from typing import Any
 from agogos.transforming_system import TransformingSystem
 
-from epochalyst.logging.section_separator import print_section_separator
 from epochalyst._core._logging._logger import _Logger
 
 
