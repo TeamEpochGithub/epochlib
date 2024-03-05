@@ -42,26 +42,26 @@ class TorchTrainer(TrainingBlock):
 
     ```python
     ------------------------------
-    
-    def train(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1, save_model: bool = True) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]: 
+
+    def train(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1, save_model: bool = True) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         # Train the model.
-    
-    def predict(x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]: 
+
+    def predict(x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         # Predict on the test data.
-    
-    def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]: 
+
+    def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]:
         # Predict using a dataloader.
-    
-    def create_datasets(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]: 
+
+    def create_datasets(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
         # Create the datasets for training and validation.
 
-    def create_prediction_dataset(x: npt.NDArray[np.float32]) -> Dataset[tuple[Tensor, ...]]: 
+    def create_prediction_dataset(x: npt.NDArray[np.float32]) -> Dataset[tuple[Tensor, ...]]:
         # Create the prediction dataset.
 
-    def create_dataloaders(train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]: 
+    def create_dataloaders(train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
         # Create the dataloaders for training and validation.
 
-    def update_model_directory(model_directory: str) -> None: 
+    def update_model_directory(model_directory: str) -> None:
         # Update the model directory for caching (default: tm).
     ```
     """
@@ -138,7 +138,7 @@ class TorchTrainer(TrainingBlock):
             self._load_model()
             return self.predict(x), y
 
-        print_section_separator(f"Training model: {self.model.__class__.__name__}")
+        self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
 
         # Create datasets
