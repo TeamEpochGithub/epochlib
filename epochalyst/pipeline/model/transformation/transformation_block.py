@@ -15,9 +15,56 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     - `log_to_warning`
     - `log_to_external`
     - `external_define_metric`
+
+    cache_args can be passed to the transform method to cache the output of the transformation block. The cache_args are as follows:
+    - 'output_data_type': The type of the output data. (options: dask_array, numpy_array, pandas_dataframe, dask_dataframe)
+    - 'storage_type': The type of the storage. (options: .npy, .parquet, .csv, .npy_stack)
+    - 'storage_path': The path to the storage.
+    - example: cache_args = {
+        "output_data_type": "numpy_array",
+        "storage_type": ".npy",
+        "storage_path": "data/processed"
+    }
+
+    Example usage:
+    ```python
+        from epochalyst.pipeline.model.transformation.transformation_block import TransformationBlock
+
+        class CustomTransformationBlock(TransformationBlock):
+            def custom_transform(self, data: Any, **kwargs: Any) -> Any:
+                return data
+
+            def log_to_terminal(self, message: str) -> None:
+                print(message)
+
+            def log_to_debug(self, message: str) -> None:
+                print(message)
+
+            def log_to_warning(self, message: str) -> None:
+                print(message)
+
+            def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
+                print(message)
+
+            def external_define_metric(self, metric: str, metric_type: str) -> None:
+                print(metric, metric_type)
+
+        custom_transformation_block = CustomTransformationBlock()
+
+        cache_args = {
+            "output_data_type": "numpy_array",
+            "storage_type": ".npy",
+            "storage_path": "data/processed",
+        }
+
+        data = custom_transformation_block.transform(data, cache=cache_args)
+    ```
+
     """
 
-    def transform(self, data: Any, cache: dict[str, Any] = {}, **kwargs: Any) -> Any:
+    def transform(
+        self, data: Any, cache_args: dict[str, Any] = {}, **kwargs: Any
+    ) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.
@@ -28,14 +75,16 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         :return: The transformed data.
         """
 
-        if cache and self._cache_exists(name=self.get_hash(), cache_args=cache):
-            return self._get_cache(name=self.get_hash(), cache_args=cache)
+        if cache_args and self._cache_exists(
+            name=self.get_hash(), cache_args=cache_args
+        ):
+            return self._get_cache(name=self.get_hash(), cache_args=cache_args)
 
         data = self.custom_transform(data, **kwargs)
 
         self._store_cache(
-            name=self.get_hash(), data=data, cache_args=cache
-        ) if cache else None
+            name=self.get_hash(), data=data, cache_args=cache_args
+        ) if cache_args else None
 
         return data
 
