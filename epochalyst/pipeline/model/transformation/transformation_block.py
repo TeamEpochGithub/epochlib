@@ -16,6 +16,16 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     - `log_to_external`
     - `external_define_metric`
 
+    cache_args can be passed to the transform method to cache the output of the transformation block. The cache_args are as follows:
+    - 'output_data_type': The type of the output data. (options: dask_array, numpy_array, pandas_dataframe, dask_dataframe)
+    - 'storage_type': The type of the storage. (options: .npy, .parquet, .csv, .npy_stack)
+    - 'storage_path': The path to the storage.
+    - example: cache_args = {
+        "output_data_type": "numpy_array",
+        "storage_type": ".npy",
+        "storage_path": "data/processed"
+    }
+
     Example usage:
     ```python
         from epochalyst.pipeline.model.transformation.transformation_block import TransformationBlock
@@ -44,7 +54,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "data.npy",
+            "storage_path": "data/processed",
         }
 
         data = custom_transformation_block.transform(data, cache=cache_args)
