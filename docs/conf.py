@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Final
 
-# TODO(Jeffrey): Replace this with GitHub URL later
 REPO_URL: Final[str] = "https://github.com/TeamEpochGithub/epochalyst"
 
 sys.path.insert(0, Path("../..").resolve().as_posix())
