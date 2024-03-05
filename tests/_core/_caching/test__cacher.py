@@ -106,6 +106,27 @@ class Test_Cacher:
         )
         remove_cache_files()
 
+    def test__cache_exists_storage_type_pkl(self):
+        c = _Cacher()
+        assert (
+            c._cache_exists(
+                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+            )
+            is False
+        )
+
+    def test__cache_exists_storage_type_pkl_exists(self):
+        c = _Cacher()
+        with open("tests/cache/test.pkl", "w") as f:
+            f.write("test")
+        assert (
+            c._cache_exists(
+                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+            )
+            is True
+        )
+        remove_cache_files()
+
     def test__cache_exists_storage_type_unsupported(self):
         c = _Cacher()
         assert (
@@ -394,6 +415,50 @@ class Test_Cacher:
                     "output_data_type": "numpy_array",
                 },
             )
+
+    # storage type .pkl
+    def test__store_cache_storage_type_pkl_output_data_type_pandas_dataframe(self):
+        c = _Cacher()
+        # Pandas dataframe
+        data = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".pkl",
+                "storage_path": "tests/cache",
+                "output_data_type": "pandas_dataframe",
+            },
+        )
+        assert (
+            c._cache_exists(
+                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+            )
+            is True
+        )
+        remove_cache_files()
+
+    def test__store_cache_storage_type_pkl_output_data_type_dask_dataframe(self):
+        c = _Cacher()
+        # Dask dataframe
+        data = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        data = dd.from_pandas(data, npartitions=2)
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".pkl",
+                "storage_path": "tests/cache",
+                "output_data_type": "dask_dataframe",
+            },
+        )
+        assert (
+            c._cache_exists(
+                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+            )
+            is True
+        )
+        remove_cache_files()
 
     # _get_cache
     def test__get_cache_no_cache_args(self):
@@ -706,3 +771,53 @@ class Test_Cacher:
                     "output_data_type": "numpy_array",
                 },
             )
+
+    # storage type .pkl
+    def test__get_cache_storage_type_pkl_output_data_type_pandas_dataframe(self):
+        c = _Cacher()
+        # Pandas dataframe
+        data = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".pkl",
+                "storage_path": "tests/cache",
+                "output_data_type": "pandas_dataframe",
+            },
+        )
+        get_cache = c._get_cache(
+            "test",
+            {
+                "storage_type": ".pkl",
+                "storage_path": "tests/cache",
+                "output_data_type": "pandas_dataframe",
+            },
+        )
+        assert get_cache.equals(data)
+        remove_cache_files()
+
+    def test__get_cache_storage_type_pkl_output_data_type_dask_dataframe(self):
+        c = _Cacher()
+        # Dask dataframe
+        data = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        data = dd.from_pandas(data, npartitions=2)
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".pkl",
+                "storage_path": "tests/cache",
+                "output_data_type": "dask_dataframe",
+            },
+        )
+        get_cache = c._get_cache(
+            "test",
+            {
+                "storage_type": ".pkl",
+                "storage_path": "tests/cache",
+                "output_data_type": "dask_dataframe",
+            },
+        )
+        assert get_cache.compute().reset_index(drop=True).equals(data.compute())
+        remove_cache_files()
