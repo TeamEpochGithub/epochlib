@@ -4,7 +4,7 @@ from typing import Any
 
 class _Logger:
     """Logger abstract class for logging methods.
-
+    
     This class is used to define the logging methods, the following of which should be overridden in the child class:
     - log_to_terminal(message: str): Log terminal method, if no logging override with empty.
     - log_to_debug(message: str): Log debug method, if no logging override with empty.

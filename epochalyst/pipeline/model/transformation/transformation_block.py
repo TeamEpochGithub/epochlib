@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 
 class TransformationBlock(Transformer, _Cacher, _Logger):
-    """The transformation block is a flexible block that allows for transformation of any data.
+    """The transformation block is a flexible block that allows for transformation of any data.    
 
     To use this block, you must inherit from it and implement the following methods:
     - `custom_transform`
@@ -42,7 +42,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
 
             def log_to_warning(self, message: str) -> None:
                 print(message)
-
+            
             def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
                 print(message)
 
@@ -62,22 +62,18 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
 
     """
 
-    def transform(
-        self, data: Any, cache_args: dict[str, Any] = {}, **kwargs: Any
-    ) -> Any:
+    def transform(self, data: Any, cache_args: dict[str, Any] = {}, **kwargs: Any) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.
-        :param cache: The cache arguments.
+        :param cache_args: The cache arguments.
         - 'output_data_type': The type of the output data. (options: dask_array, numpy_array, pandas_dataframe, dask_dataframe)
         - 'storage_type': The type of the storage. (options: .npy, .parquet, .csv, .npy_stack)
         - 'storage_path': The path to the storage.
         :return: The transformed data.
         """
 
-        if cache_args and self._cache_exists(
-            name=self.get_hash(), cache_args=cache_args
-        ):
+        if cache_args and self._cache_exists(name=self.get_hash(), cache_args=cache_args):
             return self._get_cache(name=self.get_hash(), cache_args=cache_args)
 
         data = self.custom_transform(data, **kwargs)
@@ -89,7 +85,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         return data
 
     @abstractmethod
-    def custom_transform(self, data: Any, **kwargs: Any) -> Any:
+    def custom_transform(self, data: Any) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.
