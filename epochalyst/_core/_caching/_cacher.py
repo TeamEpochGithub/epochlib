@@ -1,4 +1,5 @@
 import glob
+import pickle
 from epochalyst._core._logging._logger import _Logger
 from typing import Any
 import dask.array as da
@@ -67,6 +68,8 @@ class _Cacher(_Logger):
             )
         elif storage_type == ".npy_stack":
             return os.path.exists(storage_path + name)
+        elif storage_type == ".pkl":
+            return os.path.exists(storage_path + name + ".pkl")
 
         return False
 
@@ -143,6 +146,9 @@ class _Cacher(_Logger):
                 raise ValueError(
                     "output_data_type must be dask_array, other types not supported yet"
                 )
+        elif storage_type == ".pkl":
+            # Load the pickle file
+            return pickle.load(open(storage_path + name + ".pkl", "rb"))
         else:
             raise ValueError(
                 "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet"
@@ -227,6 +233,9 @@ class _Cacher(_Logger):
                 raise ValueError(
                     "output_data_type must be numpy_array other types not supported yet"
                 )
+        elif storage_type == ".pkl":
+            # Store the pickle file
+            pickle.dump(data, open(storage_path + name + ".pkl", "wb"))
         else:
             raise ValueError(
                 "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet"
