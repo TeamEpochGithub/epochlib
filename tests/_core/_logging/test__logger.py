@@ -31,3 +31,8 @@ class Test_Logger:
         _logger = _Logger()
         with pytest.raises(NotImplementedError):
             assert _logger.external_define_metric("", "")
+
+    def test__logger_log_section_separator(self):
+        _logger = _Logger()
+        # Test that method prints a section separator
+        assert _logger.log_section_separator("Test") is None

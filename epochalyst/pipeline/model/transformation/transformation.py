@@ -2,9 +2,10 @@ from typing import Any
 from agogos.transforming_system import TransformingSystem
 
 from epochalyst.logging.section_separator import print_section_separator
+from epochalyst._core._logging._logger import _Logger
 
 
-class TransformationPipeline(TransformingSystem):
+class TransformationPipeline(TransformingSystem, _Logger):
     """TransformationPipeline is the class used to create the pipeline for the transformation of the data.
 
     :param steps: The steps to transform the data. Can be a list of Transformers, TransformationPipelines, or a combination of both.
@@ -21,6 +22,6 @@ class TransformationPipeline(TransformingSystem):
         """
 
         if self.steps:
-            print_section_separator(self.title)
+            self.log_section_separator(self.title)
 
         return super().transform(x, transform_args)

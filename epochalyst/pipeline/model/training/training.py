@@ -2,9 +2,10 @@ from typing import Any
 from agogos.training_system import TrainingSystem
 
 from epochalyst.logging.section_separator import print_section_separator
+from epochalyst._core._logging._logger import _Logger
 
 
-class TrainingPipeline(TrainingSystem):
+class TrainingPipeline(TrainingSystem, _Logger):
     """The training pipeline. This is the class used to create the pipeline for the training of the model.
 
     :param steps: The steps to train the model.
@@ -25,6 +26,6 @@ class TrainingPipeline(TrainingSystem):
         """
 
         if self.steps:
-            print_section_separator("Training Pipeline")
+            self.log_section_separator("Training Pipeline")
 
         return super().train(x, y, train_args)

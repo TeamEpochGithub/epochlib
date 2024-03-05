@@ -259,6 +259,10 @@ class TestTorchTrainer:
         remove_cache_files()
 
     def test_train_two_gpu_saved(self):
+        # If test is run on a machine with 2 or more GPUs, this test will run else it will be skipped
+        if torch.cuda.device_count() < 2:
+            pytest.skip("Test requires 2 GPUs")
+
         with patch("torch.cuda.device_count", return_value=2):
             tt = self.FullyImplementedTorchTrainer(
                 model=self.simple_model,
