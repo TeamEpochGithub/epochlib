@@ -15,7 +15,12 @@ class _Cacher(_Logger):
     cache_args is a dictionary that contains the arguments to determine if the data is already cached. Currently listed cache_args are
     supported if more are required create a new issue on the github repository.
 
-    args:
+    Methods:
+        - _cache_exists(name: str, cache_args: dict[str, Any] = {}) -> bool: Check if the cache exists.
+        - _get_cache(name: str, cache_args: dict[str, Any] = {}) -> Any: Load the cache.
+        - _store_cache(name: str, data: Any, cache_args: dict[str, Any] = {}) -> None: Store one set of data.
+
+    cache_args supports the following keys:
         - output_data_type: The type of the output data.
             - "dask_array": The output data is a dask array.
             - "numpy_array": The output data is a numpy array.
