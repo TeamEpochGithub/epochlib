@@ -5,12 +5,22 @@ from typing import Any
 class _Logger:
     """Logger abstract class for logging methods.
 
-    This class is used to define the logging methods, the following of which should be overridden in the child class:
-    - log_to_terminal(message: str): Log terminal method, if no logging override with empty.
-    - log_to_debug(message: str): Log debug method, if no logging override with empty.
-    - log_to_warning(message: str): Log warning method, if no logging override with empty.
-    - log_to_external(message: dict[str, Any], **kwargs: Any): Log external method, if no logging override with empty.
-    - external_define_metric(metric: str, metric_type: str): Define metric for external. Example: (wandb.define_metric("Training/Train Loss", summary="min"))
+    ### Methods:
+    ```python
+    @abstractmethod
+    def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
+
+    @abstractmethod
+    def log_to_debug(self, message: str) -> None: # Logs to debugger if implemented
+
+    @abstractmethod
+    def log_to_warning(self, message: str) -> None: # Logs to warning if implemented
+
+    @abstractmethod
+    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: # Logs to external site
+
+    @abstractmethod
+    def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
     """
 
     @abstractmethod
