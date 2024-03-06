@@ -123,6 +123,28 @@ class TestTorchTrainer:
         with pytest.raises(TypeError):
             tt.train()
 
+    def test_train_no_train_indices(self):
+        tt = self.ImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        with pytest.raises(ValueError):
+            tt.train(torch.rand(10, 1), torch.rand(10))
+
+    def test_train_no_test_indices(self):
+        tt = self.ImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        with pytest.raises(ValueError):
+            tt.train(
+                torch.rand(10, 1),
+                torch.rand(10),
+                train_indices=[0, 1, 2, 3, 4, 5, 6, 7],
+            )
+
     def test_train(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
@@ -259,6 +281,10 @@ class TestTorchTrainer:
         remove_cache_files()
 
     def test_train_two_gpu_saved(self):
+        # If test is run on a machine with 2 or more GPUs, this test will run else it will be skipped
+        if torch.cuda.device_count() < 2:
+            pytest.skip("Test requires 2 GPUs")
+
         with patch("torch.cuda.device_count", return_value=2):
             tt = self.FullyImplementedTorchTrainer(
                 model=self.simple_model,

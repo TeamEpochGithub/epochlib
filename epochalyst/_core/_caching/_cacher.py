@@ -1,4 +1,5 @@
 import glob
+import pickle
 from epochalyst._core._logging._logger import _Logger
 from typing import Any
 import dask.array as da
@@ -15,11 +16,6 @@ class _Cacher(_Logger):
     cache_args is a dictionary that contains the arguments to determine if the data is already cached. Currently listed cache_args are
     supported if more are required create a new issue on the github repository.
 
-    Methods:
-        - _cache_exists(name: str, cache_args: dict[str, Any] = {}) -> bool: Check if the cache exists.
-        - _get_cache(name: str, cache_args: dict[str, Any] = {}) -> Any: Load the cache.
-        - _store_cache(name: str, data: Any, cache_args: dict[str, Any] = {}) -> None: Store one set of data.
-
     cache_args supports the following keys:
         - output_data_type: The type of the output data.
             - "dask_array": The output data is a dask array.
@@ -31,7 +27,17 @@ class _Cacher(_Logger):
             - ".parquet": The storage type is a parquet file.
             - ".csv": The storage type is a csv file.
             - ".npy_stack": The storage type is a numpy stack.
+            - ".pkl": The storage type is a pickle file
         - storage_path: The path to the storage.
+
+    ### Methods:
+    ```python
+    def _cache_exists(name: str, cache_args: dict[str, Any] = {}) -> bool: # Check if the cache exists
+
+    def _get_cache(name: str, cache_args: dict[str, Any] = {}) -> Any: # Load the cache
+
+    def _store_cache(name: str, data: Any, cache_args: dict[str, Any] = {}) -> None: # Store data
+    ```
     """
 
     def _cache_exists(self, name: str, cache_args: dict[str, Any] = {}) -> bool:
@@ -67,6 +73,8 @@ class _Cacher(_Logger):
             )
         elif storage_type == ".npy_stack":
             return os.path.exists(storage_path + name)
+        elif storage_type == ".pkl":
+            return os.path.exists(storage_path + name + ".pkl")
 
         return False
 
@@ -143,6 +151,9 @@ class _Cacher(_Logger):
                 raise ValueError(
                     "output_data_type must be dask_array, other types not supported yet"
                 )
+        elif storage_type == ".pkl":
+            # Load the pickle file
+            return pickle.load(open(storage_path + name + ".pkl", "rb"))
         else:
             raise ValueError(
                 "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet"
@@ -227,6 +238,9 @@ class _Cacher(_Logger):
                 raise ValueError(
                     "output_data_type must be numpy_array other types not supported yet"
                 )
+        elif storage_type == ".pkl":
+            # Store the pickle file
+            pickle.dump(data, open(storage_path + name + ".pkl", "wb"))
         else:
             raise ValueError(
                 "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet"

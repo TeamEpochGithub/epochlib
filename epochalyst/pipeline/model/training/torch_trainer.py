@@ -42,26 +42,26 @@ class TorchTrainer(TrainingBlock):
 
     ```python
     ------------------------------
-    
-    def train(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1, save_model: bool = True) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]: 
+
+    def train(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1, save_model: bool = True) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         # Train the model.
-    
-    def predict(x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]: 
+
+    def predict(x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         # Predict on the test data.
-    
-    def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]: 
+
+    def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]:
         # Predict using a dataloader.
-    
-    def create_datasets(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]: 
+
+    def create_datasets(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
         # Create the datasets for training and validation.
 
-    def create_prediction_dataset(x: npt.NDArray[np.float32]) -> Dataset[tuple[Tensor, ...]]: 
+    def create_prediction_dataset(x: npt.NDArray[np.float32]) -> Dataset[tuple[Tensor, ...]]:
         # Create the prediction dataset.
 
-    def create_dataloaders(train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]: 
+    def create_dataloaders(train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
         # Create the dataloaders for training and validation.
 
-    def update_model_directory(model_directory: str) -> None: 
+    def update_model_directory(model_directory: str) -> None:
         # Update the model directory for caching (default: tm).
     ```
     """
@@ -110,35 +110,42 @@ class TorchTrainer(TrainingBlock):
 
         super().__post_init__()
 
-    def train(
+    def custom_train(
         self,
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
-        train_indices: list[int],
-        test_indices: list[int],
-        cache_size: int = -1,
-        *,
-        save_model: bool = True,
+        **kwargs: Any,
     ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         """Train the model.
 
         :param x: The input to the system.
         :param y: The expected output of the system.
+
+        Keyword Arguments:
         :param train_indices: The indices to train on.
         :param test_indices: The indices to test on.
         :param cache_size: The cache size.
         :param save_model: Whether to save the model.
         :return: The input and output of the system.
         """
+        train_indices = kwargs.get("train_indices")
+        if train_indices is None:
+            raise ValueError("train_indices not provided")
+        test_indices = kwargs.get("test_indices")
+        if test_indices is None:
+            raise ValueError("test_indices not provided")
+        cache_size = kwargs.get("cache_size", -1)
+        save_model = kwargs.get("save_model", True)
+
         self.save_model_to_disk = save_model
         if self._model_exists():
             self.log_to_terminal(
                 f"Model exists in {self.model_directory}/{self.get_hash()}.pt, loading model"
             )
             self._load_model()
-            return self.predict(x), y
+            return self.custom_predict(x), y
 
-        print_section_separator(f"Training model: {self.model.__class__.__name__}")
+        self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
 
         # Create datasets
@@ -191,7 +198,9 @@ class TorchTrainer(TrainingBlock):
 
         return self.predict_on_loader(pred_dataloader), y
 
-    def predict(self, x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
+    def custom_predict(
+        self, x: npt.NDArray[np.float32], **kwargs: Any
+    ) -> npt.NDArray[np.float32]:
         """Predict on the test data
 
         :param x: The input to the system.
