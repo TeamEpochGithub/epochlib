@@ -33,13 +33,12 @@ class _Cacher(_Logger):
     ### Methods:
     ```python
     def _cache_exists(name: str, cache_args: dict[str, Any] = {}) -> bool: # Check if the cache exists
-        
+
     def _get_cache(name: str, cache_args: dict[str, Any] = {}) -> Any: # Load the cache
-    
+
     def _store_cache(name: str, data: Any, cache_args: dict[str, Any] = {}) -> None: # Store data
     ```
     """
-
 
     def _cache_exists(self, name: str, cache_args: dict[str, Any] = {}) -> bool:
         """Check if the cache exists.
