@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Any
+from epochalyst.logging.section_separator import print_section_separator
 
 
 class _Logger:
@@ -21,6 +22,9 @@ class _Logger:
 
     @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
+
+    @abstractmethod
+    def log_section_separator(self, message: str) -> None: # Logs a section separator
     """
 
     @abstractmethod
@@ -68,3 +72,10 @@ class _Logger:
         raise NotImplementedError(
             f"External define metric method not implemented for {self.__class__}"
         )
+
+    @abstractmethod
+    def log_section_separator(self, message: str) -> None:
+        """Log section separator method, if no logging override with empty.
+
+        :param message: The message to log."""
+        print_section_separator(message)

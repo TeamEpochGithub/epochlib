@@ -145,7 +145,7 @@ class TorchTrainer(TrainingBlock):
             self._load_model()
             return self.custom_predict(x), y
 
-        print_section_separator(f"Training model: {self.model.__class__.__name__}")
+        self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
 
         # Create datasets

@@ -51,7 +51,6 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
 
             ....
 
-
         custom_transformation_block = CustomTransformationBlock()
 
         cache_args = {
