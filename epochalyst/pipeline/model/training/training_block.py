@@ -73,6 +73,11 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             x = self._get_cache(name=self.get_hash() + "x", cache_args=cache_args)
             y = self._get_cache(name=self.get_hash() + "y", cache_args=cache_args)
 
+        # Check if custom train method exists
+        if not hasattr(self, "custom_train"):
+            raise NotImplementedError(
+                f"Custom train method not implemented for {self.__class__}"
+            )
         x, y = self.custom_train(x, y, **kwargs)
 
         self._store_cache(name=self.get_hash() + "x", data=x)
@@ -81,7 +86,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         return x, y
 
     @abstractmethod
-    def custom_train(self, x: Any, y: Any) -> tuple[Any, Any]:
+    def custom_train(self, x: Any, y: Any, **kwargs: Any) -> tuple[Any, Any]:
         """Train the model.
 
         :param x: The input data.
@@ -111,7 +116,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         return x
 
     @abstractmethod
-    def custom_predict(self, x: Any) -> Any:
+    def custom_predict(self, x: Any, **kwargs: Any) -> Any:
         """Predict using the model.
 
         :param x: The input data.

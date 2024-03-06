@@ -91,7 +91,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         return data
 
     @abstractmethod
-    def custom_transform(self, data: Any) -> Any:
+    def custom_transform(self, data: Any, **kwargs: Any) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.
