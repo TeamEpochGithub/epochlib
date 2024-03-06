@@ -73,11 +73,6 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             x = self._get_cache(name=self.get_hash() + "x", cache_args=cache_args)
             y = self._get_cache(name=self.get_hash() + "y", cache_args=cache_args)
 
-        # Check if custom train method exists
-        if not hasattr(self, "custom_train"):
-            raise NotImplementedError(
-                f"Custom train method not implemented for {self.__class__}"
-            )
         x, y = self.custom_train(x, y, **kwargs)
 
         self._store_cache(
