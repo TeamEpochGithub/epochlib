@@ -80,8 +80,12 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             )
         x, y = self.custom_train(x, y, **kwargs)
 
-        self._store_cache(name=self.get_hash() + "x", data=x)
-        self._store_cache(name=self.get_hash() + "y", data=y)
+        self._store_cache(
+            name=self.get_hash() + "x", data=x, cache_args=cache_args
+        ) if cache_args else None
+        self._store_cache(
+            name=self.get_hash() + "y", data=y, cache_args=cache_args
+        ) if cache_args else None
 
         return x, y
 
@@ -111,7 +115,9 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
 
         x = self.custom_predict(x, **kwargs)
 
-        self._store_cache(name=self.get_hash() + "x", data=x)
+        self._store_cache(
+            name=self.get_hash() + "x", data=x, cache_args=cache_args
+        ) if cache_args else None
 
         return x
 

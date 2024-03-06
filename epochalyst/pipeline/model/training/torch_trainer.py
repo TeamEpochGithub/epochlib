@@ -143,7 +143,7 @@ class TorchTrainer(TrainingBlock):
                 f"Model exists in {self.model_directory}/{self.get_hash()}.pt, loading model"
             )
             self._load_model()
-            return self.predict(x), y
+            return self.custom_predict(x), y
 
         print_section_separator(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
