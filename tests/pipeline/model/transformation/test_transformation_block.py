@@ -67,7 +67,7 @@ class TestTransformationBlock:
             "storage_path": "tests/cache",
         }
 
-        assert tb.transform(np.array([1]), cache=cache_args) == np.array([2])
-        assert tb.transform(np.array([1]), cache=cache_args) == np.array([2])
+        assert tb.transform(np.array([1]), cache_args=cache_args) == np.array([2])
+        assert tb.transform(np.array([1]), cache_args=cache_args) == np.array([2])
 
         remove_cache_files()
