@@ -28,7 +28,7 @@ dependencies= [
     "pyarrow>=6.0.0",
 
     # PyTorch
-    "torch==2.1.2+cu118"
+    "torch==2.1.2+cu118",
 
     # Agogos
     "agogos>=0.1.0"
