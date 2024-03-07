@@ -28,6 +28,24 @@ class PretrainBlock(TrainingBlock):
     def predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
 
     def train_split_hash(self, train_indices: list[int]) -> str: # Split the hash on train split
+    ```
+
+    ### Usage:
+    ```python
+    from epochalyst.pipeline.model.training.pretrain_block import PretrainBlock
+
+    class CustomPretrainBlock(PretrainBlock):
+        def pretrain_train(self, x: Any, y: Any, train_indices: list[int], *, save_pretrain: bool = True, save_pretrain_with_split: bool = False) -> tuple[Any, Any]:
+            return x, y
+
+        def custom_predict(self, x: Any, **pred_args: Any) -> Any:
+            return x
+
+    custom_pretrain_block = CustomPretrainBlock()
+
+    x, y = custom_pretrain_block.train(x, y)
+    x = custom_pretrain_block.predict(x)
+    ```
     """
 
     test_size: float = 0.2
