@@ -1,4 +1,4 @@
-from agogos.trainer import Trainer
+from agogos.training import Trainer
 from typing import Any
 from epochalyst._core._logging._logger import _Logger
 from abc import abstractmethod
@@ -11,10 +11,10 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
     ### Methods:
     ```python
     @abstractmethod
-    def custom_train(self, x: Any, y: Any, **kwargs) -> tuple[Any, Any]: # Custom training implementation
+    def custom_train(self, x: Any, y: Any, **train_args) -> tuple[Any, Any]: # Custom training implementation
 
     @abstractmethod
-    def custom_predict(self, x: Any, y: Any, **kwargs) -> tuple[Any, Any]: # Custom prediction implementation
+    def custom_predict(self, x: Any, y: Any, **pred_args) -> tuple[Any, Any]: # Custom prediction implementation
 
     @abstractmethod
     def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
@@ -31,9 +31,9 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
     @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
 
-    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **kwargs: Any) -> tuple[Any, Any]: # Applies caching and calls custom_train
+    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]: # Applies caching and calls custom_train
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **kwargs: Any) -> Any: # Applies caching and calls custom_predict
+    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any: # Applies caching and calls custom_predict
 
     ### Usage:
     ```python
@@ -56,7 +56,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
     """
 
     def train(
-        self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **kwargs: Any
+        self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any
     ) -> tuple[Any, Any]:
         """Train the model.
 
@@ -74,7 +74,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             y = self._get_cache(name=self.get_hash() + "y", cache_args=cache_args)
             return x, y
 
-        x, y = self.custom_train(x, y, **kwargs)
+        x, y = self.custom_train(x, y, **train_args)
 
         self._store_cache(
             name=self.get_hash() + "x", data=x, cache_args=cache_args
@@ -86,7 +86,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         return x, y
 
     @abstractmethod
-    def custom_train(self, x: Any, y: Any, **kwargs: Any) -> tuple[Any, Any]:
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
         """Train the model.
 
         :param x: The input data.
@@ -97,7 +97,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             f"Custom transform method not implemented for {self.__class__}"
         )
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **kwargs: Any) -> Any:
+    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
         """Predict using the model.
 
         :param x: The input data.
@@ -109,7 +109,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         ):
             return self._get_cache(name=self.get_hash() + "p", cache_args=cache_args)
 
-        x = self.custom_predict(x, **kwargs)
+        x = self.custom_predict(x, **pred_args)
 
         self._store_cache(
             name=self.get_hash() + "p", data=x, cache_args=cache_args
@@ -118,7 +118,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         return x
 
     @abstractmethod
-    def custom_predict(self, x: Any, **kwargs: Any) -> Any:
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
         """Predict using the model.
 
         :param x: The input data.
