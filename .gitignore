@@ -214,3 +214,6 @@ plots/images/train
 # Test coverage
 .coverage
 coverage_re/
+
+# Ignore vscode settings
+.vscode/
