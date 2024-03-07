@@ -4,6 +4,20 @@ This package contains many modules and classes necessary to construct the src co
 
 Epochalyst: A fusion of "Epoch" and "Catalyst," this name positions your pipeline as a catalyst in the field of machine learning, sparking significant advancements and transformations.
 
+## Installation
+
+Install `epochalyst` via pip:
+
+```shell
+pip install epochalyst
+```
+
+Or using [Poetry](https://python-poetry.org/):
+
+```shell
+poetry add epochalyst
+```
+
 ## Pytest coverage report
 
 To generate pytest coverage report run
