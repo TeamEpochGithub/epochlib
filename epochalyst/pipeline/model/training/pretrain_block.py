@@ -13,13 +13,27 @@ class PretrainBlock(TrainingBlock):
     """Pretrain block class
 
     ### Parameters
-    test_size : float
+    - test_size : float
+
+    ### Methods
+    ```python
+    @abstractmethod
+    def custom_train(self, x: Any, y: Any, train_indices: list[int], *, save_pretrain: bool = True, save_pretrain_with_split: bool = False) -> tuple[Any, Any]:
+    
+    @abstractmethod
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
+    
+    def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]: # Train pretrain block method.
+    
+    def predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
+
+    def train_split_hash(self, train_indices: list[int]) -> str: # Split the hash on train split
     """
 
     test_size: float = 0.2
 
     @abstractmethod
-    def train(
+    def custom_train(
         self,
         x: Any,
         y: Any,
@@ -37,25 +51,6 @@ class PretrainBlock(TrainingBlock):
         :param save_pretrain_with_split: Whether to save the pretrain with a cross validation split."""
         raise NotImplementedError(
             f"Train method not implemented for {self.__class__.__name__}"
-        )
-
-    @abstractmethod
-    def predict(self, x: Any) -> Any:
-        """Predict pretrain block method.
-
-        :param x: The input to the system.
-        :return: The output of the system."""
-        raise NotImplementedError(
-            f"Predict method not implemented for {self.__class__.__name__}"
-        )
-
-    @abstractmethod
-    def save_pretrain(self, x: Any) -> Any:
-        """Save pretrain output.
-
-        :param x: The input to the system."""
-        raise NotImplementedError(
-            f"Save pretrain method not implemented for {self.__class__.__name__}"
         )
 
     def train_split_hash(self, train_indices: list[int]) -> str:
