@@ -1,4 +1,4 @@
-agogos==0.1.1
+agogos>=0.2.0
 annotated-types==0.6.0
 certifi==2024.2.2
 charset-normalizer==3.3.2
@@ -31,9 +31,9 @@ requests==2.31.0
 sympy==1.12
 toolz==0.12.1
 --find-links https://download.pytorch.org/whl/torch_stable.html
-torch==2.1.2+cu118
-torchaudio==2.1.2+cu118
-torchvision==0.16.2+cu118
+torch==2.2.1+cu118
+torchaudio==2.2.1+cu118
+torchvision==0.17.1+cu118
 tqdm==4.66.2
 typing_extensions==4.10.0
 urllib3==2.2.1

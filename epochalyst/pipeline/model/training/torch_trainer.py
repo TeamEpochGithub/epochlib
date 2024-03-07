@@ -114,7 +114,7 @@ class TorchTrainer(TrainingBlock):
         self,
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
-        **kwargs: Any,
+        **train_args: Any,
     ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         """Train the model.
 
@@ -128,14 +128,14 @@ class TorchTrainer(TrainingBlock):
         :param save_model: Whether to save the model.
         :return: The input and output of the system.
         """
-        train_indices = kwargs.get("train_indices")
+        train_indices = train_args.get("train_indices")
         if train_indices is None:
             raise ValueError("train_indices not provided")
-        test_indices = kwargs.get("test_indices")
+        test_indices = train_args.get("test_indices")
         if test_indices is None:
             raise ValueError("test_indices not provided")
-        cache_size = kwargs.get("cache_size", -1)
-        save_model = kwargs.get("save_model", True)
+        cache_size = train_args.get("cache_size", -1)
+        save_model = train_args.get("save_model", True)
 
         self.save_model_to_disk = save_model
         if self._model_exists():
@@ -199,7 +199,7 @@ class TorchTrainer(TrainingBlock):
         return self.predict_on_loader(pred_dataloader), y
 
     def custom_predict(
-        self, x: npt.NDArray[np.float32], **kwargs: Any
+        self, x: npt.NDArray[np.float32], **pred_args: Any
     ) -> npt.NDArray[np.float32]:
         """Predict on the test data
 
