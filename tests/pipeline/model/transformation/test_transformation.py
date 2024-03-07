@@ -1,6 +1,7 @@
 from epochalyst.pipeline.model.transformation.transformation import (
     TransformationPipeline,
 )
+import numpy as np
 
 
 class TestTransformationPipeline:
@@ -25,3 +26,22 @@ class TestTransformationPipeline:
         tp = TransformationPipeline(steps=[t1, t2])
 
         assert tp.transform(None) is None
+
+    def test_transformation_pipeline_with_cache(self):
+        class TestTransformationBlock(TransformationPipeline):
+            def transform(self, x, **transform_args):
+                return x
+
+        t1 = TestTransformationBlock()
+        t2 = TestTransformationBlock()
+
+        tp = TransformationPipeline(steps=[t1, t2])
+
+        cache_args = {
+            "output_data_type": "numpy_array",
+            "storage_type": ".npy",
+            "storage_path": "tests/cache",
+        }
+
+        assert tp.transform(np.array([1]), cache_args=cache_args) == np.array([1])
+        assert tp.transform(np.array([1]), cache_args=cache_args) == np.array([1])
