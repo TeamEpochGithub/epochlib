@@ -40,6 +40,9 @@ class TestTrainingBlock:
             def custom_predict(self, x: int) -> int:
                 return x
 
+            def log_to_debug(self, message: str) -> None:
+                return None
+
         tb = TestTrainingBlockImpl()
         cache_args = {
             "output_data_type": "numpy_array",

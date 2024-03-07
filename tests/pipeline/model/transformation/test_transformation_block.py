@@ -60,6 +60,9 @@ class TestTransformationBlock:
             def custom_transform(self, data: np.ndarray[int], **transform_args) -> int:
                 return data * 2
 
+            def log_to_debug(self, message: str) -> None:
+                return None
+
         tb = TestTransformationBlockImpl()
         cache_args = {
             "output_data_type": "numpy_array",
