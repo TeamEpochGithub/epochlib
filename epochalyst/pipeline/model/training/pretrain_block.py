@@ -1,17 +1,19 @@
 from abc import abstractmethod
 from typing import Any
-from agogos.trainer import Trainer
 
 from joblib import hash
 
 from dataclasses import dataclass
 
+from epochalyst.pipeline.model.training.training_block import TrainingBlock
+
 
 @dataclass
-class PretrainBlock(Trainer):
+class PretrainBlock(TrainingBlock):
     """Pretrain block class
 
-    :param test_size: Test size
+    ### Parameters
+    test_size : float
     """
 
     test_size: float = 0.2

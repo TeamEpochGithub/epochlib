@@ -1,5 +1,5 @@
 from typing import Any
-from agogos.training_system import TrainingSystem
+from agogos.training import TrainingSystem
 
 from epochalyst._core._logging._logger import _Logger
 

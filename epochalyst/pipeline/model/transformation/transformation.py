@@ -1,5 +1,5 @@
 from typing import Any
-from agogos.transforming_system import TransformingSystem
+from agogos.transforming import TransformingSystem
 
 from epochalyst._core._logging._logger import _Logger
 
