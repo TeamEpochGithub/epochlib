@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing import Any
-from agogos.trainer import Trainer
+from agogos.training import Trainer
 
 from joblib import hash
 

@@ -1,4 +1,4 @@
-from agogos.trainer import Trainer
+from agogos.training import Trainer
 from typing import Any
 from epochalyst._core._logging._logger import _Logger
 from abc import abstractmethod

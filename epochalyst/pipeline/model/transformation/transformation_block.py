@@ -1,5 +1,5 @@
 from typing import Any
-from agogos.transformer import Transformer
+from agogos.transforming import Transformer
 from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._caching._cacher import _Cacher
 from abc import abstractmethod

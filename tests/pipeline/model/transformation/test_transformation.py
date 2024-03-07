@@ -17,7 +17,7 @@ class TestTransformationPipeline:
 
     def test_transformation_pipeline_with_steps(self):
         class TestTransformationBlock(TransformationPipeline):
-            def transform(self, x, transform_args):
+            def transform(self, x, **transform_args):
                 return x
 
         t1 = TestTransformationBlock()

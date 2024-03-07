@@ -1,5 +1,5 @@
 from typing import Any
-from agogos.transforming_system import TransformingSystem
+from agogos.transforming import TransformingSystem
 
 from epochalyst._core._logging._logger import _Logger
 
@@ -13,7 +13,7 @@ class TransformationPipeline(TransformingSystem, _Logger):
 
     title: str = "Transformation Pipeline"  # The title of the pipeline since transformation pipeline can be used for multiple purposes. (Feature, Label, etc.)
 
-    def transform(self, x: Any, transform_args: dict[str, Any] = {}) -> Any:
+    def transform(self, x: Any, **transform_args: Any) -> Any:
         """Transform the input data.
 
         :param x: The input data.
@@ -23,4 +23,4 @@ class TransformationPipeline(TransformingSystem, _Logger):
         if self.steps:
             self.log_section_separator(self.title)
 
-        return super().transform(x, transform_args)
+        return super().transform(x, **transform_args)
