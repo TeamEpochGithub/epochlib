@@ -21,7 +21,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     ### Methods:
     ```python
     @abstractmethod
-    def custom_transform(self, data: Any, **kwargs) -> Any: # Custom transformation implementation
+    def custom_transform(self, data: Any, **transform_args) -> Any: # Custom transformation implementation
 
     @abstractmethod
     def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
@@ -38,7 +38,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
 
-    def transform(self, data: Any, cache_args: dict[str, Any] = {}, **kwargs: Any) -> Any: # Applies caching and calls custom_transform
+    def transform(self, data: Any, cache_args: dict[str, Any] = {}, **transform_args: Any) -> Any: # Applies caching and calls custom_transform
     ```
 
     ### Usage:
@@ -64,7 +64,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     """
 
     def transform(
-        self, data: Any, cache_args: dict[str, Any] = {}, **kwargs: Any
+        self, data: Any, cache_args: dict[str, Any] = {}, **transform_args: Any
     ) -> Any:
         """Transform the input data using a custom method.
 
@@ -81,7 +81,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         ):
             return self._get_cache(name=self.get_hash(), cache_args=cache_args)
 
-        data = self.custom_transform(data, **kwargs)
+        data = self.custom_transform(data, **transform_args)
 
         self._store_cache(
             name=self.get_hash(), data=data, cache_args=cache_args
@@ -90,7 +90,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         return data
 
     @abstractmethod
-    def custom_transform(self, data: Any, **kwargs: Any) -> Any:
+    def custom_transform(self, data: Any, **transform_args: Any) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.

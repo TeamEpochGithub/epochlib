@@ -27,7 +27,7 @@ class ModelPipeline(Pipeline):
         """
         return super().train(x, y, **train_args)
 
-    def predict(self, x: Any, **pred_args) -> Any:
+    def predict(self, x: Any, **pred_args: Any) -> Any:
         """Predict the output of the system.
 
         :param x: The input to the system.

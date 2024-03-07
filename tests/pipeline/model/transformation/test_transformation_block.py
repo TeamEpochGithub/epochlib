@@ -48,7 +48,7 @@ class TestTransformationBlock:
 
     def test_tb_custom_transform_implementation(self):
         class TestTransformationBlockImpl(TransformationBlock):
-            def custom_transform(self, data: int, **kwargs) -> int:
+            def custom_transform(self, data: int, **transform_args) -> int:
                 return data + 1
 
         tb = TestTransformationBlockImpl()
@@ -57,7 +57,7 @@ class TestTransformationBlock:
 
     def test_tb_custom_transform_implementation_with_cache(self):
         class TestTransformationBlockImpl(TransformationBlock):
-            def custom_transform(self, data: np.ndarray[int], **kwargs) -> int:
+            def custom_transform(self, data: np.ndarray[int], **transform_args) -> int:
                 return data * 2
 
         tb = TestTransformationBlockImpl()

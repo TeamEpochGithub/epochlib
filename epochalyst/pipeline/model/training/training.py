@@ -14,9 +14,7 @@ class TrainingPipeline(TrainingSystem, _Logger):
         """Post init method for the Pipeline class."""
         super().__post_init__()
 
-    def train(
-        self, x: Any, y: Any, **train_args: Any 
-    ) -> tuple[Any, Any]:
+    def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
         """Train the system.
 
         :param x: The input to the system.
