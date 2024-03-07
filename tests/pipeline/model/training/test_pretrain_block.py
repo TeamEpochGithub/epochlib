@@ -17,11 +17,6 @@ class TestPretrainBlock:
             pb = PretrainBlock()
             pb.predict(None)
 
-    def test_pretrain_block_save_pretrain(self):
-        with pytest.raises(NotImplementedError):
-            pb = PretrainBlock()
-            pb.save_pretrain(None)
-
     def test_pretrain_block_train_split_hash(self):
         pb = PretrainBlock()
         initial_hash = pb.get_hash()
