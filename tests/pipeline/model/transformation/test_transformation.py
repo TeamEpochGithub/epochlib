@@ -32,10 +32,14 @@ class TestTransformationPipeline:
             def transform(self, x, **transform_args):
                 return x
 
+        class CustomTransformationPipeline(TransformationPipeline):
+            def log_to_debug(self, message: str) -> None:
+                return None
+
         t1 = TestTransformationBlock()
         t2 = TestTransformationBlock()
 
-        tp = TransformationPipeline(steps=[t1, t2])
+        tp = CustomTransformationPipeline(steps=[t1, t2])
 
         cache_args = {
             "output_data_type": "numpy_array",

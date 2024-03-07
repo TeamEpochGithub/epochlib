@@ -39,10 +39,14 @@ class TestTrainingPipeline:
             def predict(self, x):
                 return x
 
+        class CustomTrainingPipeline(TrainingPipeline):
+            def log_to_debug(self, message: str) -> None:
+                return None
+
         t1 = TestTrainingBlock()
         t2 = TestTrainingBlock()
 
-        tp = TrainingPipeline(steps=[t1, t2])
+        tp = CustomTrainingPipeline(steps=[t1, t2])
 
         cache_args = {
             "output_data_type": "numpy_array",
