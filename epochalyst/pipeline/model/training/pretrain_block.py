@@ -18,10 +18,6 @@ class PretrainBlock(TrainingBlock):
 
     test_size: float = 0.2
 
-    def __post_init__(self) -> None:
-        """Post init method for the PretrainBlock class."""
-        super().__post_init__()
-
     @abstractmethod
     def train(
         self,
