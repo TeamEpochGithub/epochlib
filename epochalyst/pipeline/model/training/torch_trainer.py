@@ -37,35 +37,35 @@ class TorchTrainer(TrainingBlock):
     ### Methods:
     ```python
     @abstractmethod
-    def log_to_terminal(self, message: str) -> None: 
+    def log_to_terminal(self, message: str) -> None:
         # Logs to terminal if implemented
 
     @abstractmethod
-    def log_to_debug(self, message: str) -> None: 
+    def log_to_debug(self, message: str) -> None:
         # Logs to debugger if implemented
 
     @abstractmethod
-    def log_to_warning(self, message: str) -> None: 
+    def log_to_warning(self, message: str) -> None:
         # Logs to warning if implemented
 
     @abstractmethod
-    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: 
+    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
         # Logs to external site
 
     @abstractmethod
-    def external_define_metric(self, metric: str, metric_type: str) -> None: 
+    def external_define_metric(self, metric: str, metric_type: str) -> None:
         # Defines an external metric
 
-    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]: 
+    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]:
         # Applies caching and calls custom_train, overridding removes caching
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any: 
+    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
         # Applies caching and calls custom_predict, overridding removes caching
 
-    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]: 
-        # Implements torch training. If you are going to override this method and not use any other functionality, inherit from TrainingBlock. 
-    
-    def custom_predict(self, x: Any, **pred_args: Any) -> Any: 
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+        # Implements torch training. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
+
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
         # Implements torch prediction. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
 
     def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]:
@@ -93,9 +93,9 @@ class TorchTrainer(TrainingBlock):
     from torch.nn import MSELoss
 
     class MyTorchTrainer(TorchTrainer):
-    
+
         def log_to_terminal(self, message: str) -> None:
-        
+
         ....
 
     model = nn.Sequential(nn.Linear(1, 1))

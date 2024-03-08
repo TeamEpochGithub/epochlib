@@ -18,35 +18,35 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
     ```python
     @abstractmethod
     def log_to_terminal(self, message: str) -> None: # Log the message to the terminal.
-    
+
     @abstractmethod
     def log_to_debug(self, message: str) -> None: # Log the message to the debug file.
-    
+
     @abstractmethod
     def log_to_warning(self, message: str) -> None: # Log the message to the warning file.
-    
+
     @abstractmethod
     def log_to_external(self, message: str) -> None: # Log the message to an external file.
-    
+
     @abstractmethod
     def log_section_separator(self, title: str) -> None: # Log a section separator to the terminal.
-    
+
     @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None: # Define a metric to be logged to an external file.
-    
+
     def transform(self, data: Any, cache_args: dict[str, Any] = {}, **transform_args: Any) -> Any: # Transform the input data.
-    
+
     def get_hash(self) -> str: # Get the hash of the pipeline.
     ```
 
-    ### Usage:  
+    ### Usage:
     ```python
     from epochalyst.pipeline.model.transformation import TransformationPipeline
 
     class MyTransformationPipeline(TransformationPipeline):
         def log_to_terminal(self, message: str) -> None:
             print(message)
-        
+
         ....
 
     step1 = MyTransformer1()
