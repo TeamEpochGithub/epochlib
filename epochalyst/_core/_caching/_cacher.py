@@ -287,7 +287,11 @@ class _Cacher(_Logger):
         elif storage_type == ".pkl":
             # Store the pickle file
             self.log_to_debug(f"Storing pickle file to {storage_path + name + '.pkl'}")
-            pickle.dump(data, open(storage_path + name + ".pkl", "wb"))
+            pickle.dump(
+                data,
+                open(storage_path + name + ".pkl", "wb"),
+                protocol=pickle.HIGHEST_PROTOCOL,
+            )
         else:
             self.log_to_debug(f"Invalid storage type: {storage_type}")
             raise ValueError(
