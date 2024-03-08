@@ -1,6 +1,6 @@
 [project]
 name = "epochalyst"
-version = "0.1.2"
+version = "0.1.3"
 authors = [
     { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
     { name = "Ariel Ebersberger", email = "arielebersberger@gmail.com" },
