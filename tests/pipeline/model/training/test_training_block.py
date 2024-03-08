@@ -43,6 +43,9 @@ class TestTrainingBlock:
             def log_to_debug(self, message: str) -> None:
                 return None
 
+            def log_to_terminal(self, message: str) -> None:
+                return None
+
         tb = TestTrainingBlockImpl()
         cache_args = {
             "output_data_type": "numpy_array",

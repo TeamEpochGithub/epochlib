@@ -25,6 +25,9 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
             and self._cache_exists(name=self.get_hash() + "x", cache_args=cache_args)
             and self._cache_exists(name=self.get_hash() + "y", cache_args=cache_args)
         ):
+            self.log_to_terminal(
+                f"Cache exists for training pipeline with hash: {self.get_hash()}. Using the cache."
+            )
             x = self._get_cache(name=self.get_hash() + "x", cache_args=cache_args)
             y = self._get_cache(name=self.get_hash() + "y", cache_args=cache_args)
             return x, y
