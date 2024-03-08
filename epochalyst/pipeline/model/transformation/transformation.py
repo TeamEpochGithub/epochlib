@@ -69,6 +69,9 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
         """
 
         if cache_args and self._cache_exists(self.get_hash(), cache_args):
+            self.log_to_terminal(
+                f"Cache exists for {self.title} with hash: {self.get_hash()}. Using the cache."
+            )
             return self._get_cache(self.get_hash(), cache_args)
 
         if self.steps:
