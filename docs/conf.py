@@ -95,6 +95,9 @@ html_theme_options: Final[dict[str, str]] = {
     "logo_light": "./_static/images/logo/Epoch_Icon_Dark.png",
     "logo_dark": "./_static/images/logo/Epoch_Icon_Light.png",
 }
+html_css_files: Final[list[str]] = [
+    "./logo.css",
+]
 html_favicon: Final[str] = "./_static/images/logo/Epoch_Icon_Light.png"
 html_static_path: Final[list[str]] = ["_static"]
 html_use_smartypants: Final[bool] = True

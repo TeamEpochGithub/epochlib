@@ -8,6 +8,7 @@ authors = [
     { name = "Jeffrey Lim", email = "jeffrey-lim@outlook.com" },
 ]
 description = "This package contains the code for team Epoch's pipeline"
+repository = "https://github.com/TeamEpochGithub/epochalyst"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [

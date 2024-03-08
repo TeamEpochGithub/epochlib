@@ -6,6 +6,10 @@
 Epochalyst
 =======================================
 
+.. raw:: html
+
+   <div class="epochalyst-logo"></div>
+
 Contents:
 
 .. autosummary::

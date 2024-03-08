@@ -1,4 +1,10 @@
-# The Epochalyst package is the base package for Team Epoch competitions
+![image](./docs/_static/images/logo/Epochalyst_Logo_Dark.png#gh-dark-mode-only)
+![image](./docs/_static/images/logo/Epochalyst_Logo_Light.png#gh-light-mode-only)
+
+[![PyPI Latest Release](https://img.shields.io/pypi/v/epochalyst.svg)](https://pypi.org/project/epochalyst/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/epochalyst.svg?label=PyPI%20downloads)](https://pypi.org/project/epochalyst/)
+
+Epochalyst is the base for [Team Epoch](https://teamepoch.ai/) competitions.
 
 This package contains many modules and classes necessary to construct the src code for machine learning competitions.
 
