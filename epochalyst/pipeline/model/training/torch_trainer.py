@@ -305,14 +305,14 @@ class TorchTrainer(TrainingBlock):
         :param test_indices: The indices to test on.
         :return: The training and validation datasets.
         """
-        x_dataset = TensorDataset(
+        train_dataset = TensorDataset(
             torch.tensor(x[train_indices]), torch.tensor(y[train_indices])
         )
-        y_dataset = TensorDataset(
+        test_dataset = TensorDataset(
             torch.tensor(x[test_indices]), torch.tensor(y[test_indices])
         )
 
-        return x_dataset, y_dataset
+        return train_dataset, test_dataset
 
     def create_prediction_dataset(
         self, x: npt.NDArray[np.float32]
