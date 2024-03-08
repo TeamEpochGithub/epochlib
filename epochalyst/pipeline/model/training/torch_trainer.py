@@ -24,30 +24,49 @@ from epochalyst.pipeline.model.training.training_block import TrainingBlock
 class TorchTrainer(TrainingBlock):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
 
-    To use this block, you must inherit from it and implement the following methods:
-    - `log_to_terminal`
-    - `log_to_debug`
-    - `log_to_warning`
-    - `log_to_external`
-    - `external_define_metric`
+    ### Parameters:
+    - `model` (nn.Module): The model to train.
+    - `optimizer` (functools.partial[Optimizer]): Optimizer to use for training.
+    - `criterion` (nn.Module): Criterion to use for training.
+    - `scheduler` (Callable[[Optimizer], LRScheduler] | None): Scheduler to use for training.
+    - `epochs` (int): Number of epochs
+    - `batch_size` (int): Batch size
+    - `patience` (int): Patience for early stopping
+    - `test_size` (float): Relative size of the test set
 
-    :param model: The model to train.
-    :param optimizer: Optimizer to use for training.
-    :param criterion: Criterion to use for training.
-    :param scheduler: Scheduler to use for training.
-    :param epochs: Number of epochs
-    :param batch_size: Batch size
-    :param patience: Patience for early stopping
-    :param test_size: Relative size of the test set
-
+    ### Methods:
     ```python
-    ------------------------------
+    @abstractmethod
+    def log_to_terminal(self, message: str) -> None:
+        # Logs to terminal if implemented
 
-    def train(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1, save_model: bool = True) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
-        # Train the model.
+    @abstractmethod
+    def log_to_debug(self, message: str) -> None:
+        # Logs to debugger if implemented
 
-    def predict(x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
-        # Predict on the test data.
+    @abstractmethod
+    def log_to_warning(self, message: str) -> None:
+        # Logs to warning if implemented
+
+    @abstractmethod
+    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
+        # Logs to external site
+
+    @abstractmethod
+    def external_define_metric(self, metric: str, metric_type: str) -> None:
+        # Defines an external metric
+
+    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]:
+        # Applies caching and calls custom_train, overridding removes caching
+
+    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
+        # Applies caching and calls custom_predict, overridding removes caching
+
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+        # Implements torch training. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
+
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
+        # Implements torch prediction. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
 
     def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]:
         # Predict using a dataloader.
@@ -63,6 +82,35 @@ class TorchTrainer(TrainingBlock):
 
     def update_model_directory(model_directory: str) -> None:
         # Update the model directory for caching (default: tm).
+    ```
+
+    ### Usage:
+    ```python
+    from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
+    from torch import nn
+    from torch.optim import Adam
+    from torch.optim.lr_scheduler import StepLR
+    from torch.nn import MSELoss
+
+    class MyTorchTrainer(TorchTrainer):
+
+        def log_to_terminal(self, message: str) -> None:
+
+        ....
+
+    model = nn.Sequential(nn.Linear(1, 1))
+    optimizer = functools.partial(Adam, lr=0.01)
+    criterion = MSELoss()
+    scheduler = functools.partial(StepLR, step_size=1, gamma=0.1)
+    epochs = 10
+    batch_size = 32
+    patience = 5
+    test_size = 0.2
+
+    trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler, epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
+
+    x, y = trainer.train(x, y)
+    x = trainer.predict(x)
     ```
     """
 
