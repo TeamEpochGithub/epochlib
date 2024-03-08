@@ -43,6 +43,9 @@ class TestTrainingPipeline:
             def log_to_debug(self, message: str) -> None:
                 return None
 
+            def log_to_terminal(self, message: str) -> None:
+                return None
+
         t1 = TestTrainingBlock()
         t2 = TestTrainingBlock()
 
