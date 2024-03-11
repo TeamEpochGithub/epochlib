@@ -146,7 +146,6 @@ class TorchTrainer(TrainingBlock):
 
         # If multiple GPUs are available, distribute batch size over the GPUs
         if torch.cuda.device_count() > 1:
-            self.batch_size = self.batch_size * torch.cuda.device_count()
             self.log_to_terminal(f"Using {torch.cuda.device_count()} GPUs")
             self.model = _CustomDataParallel(self.model)
 
@@ -305,14 +304,14 @@ class TorchTrainer(TrainingBlock):
         :param test_indices: The indices to test on.
         :return: The training and validation datasets.
         """
-        x_dataset = TensorDataset(
+        train_dataset = TensorDataset(
             torch.tensor(x[train_indices]), torch.tensor(y[train_indices])
         )
-        y_dataset = TensorDataset(
+        test_dataset = TensorDataset(
             torch.tensor(x[test_indices]), torch.tensor(y[test_indices])
         )
 
-        return x_dataset, y_dataset
+        return train_dataset, test_dataset
 
     def create_prediction_dataset(
         self, x: npt.NDArray[np.float32]
@@ -485,6 +484,10 @@ class TorchTrainer(TrainingBlock):
         self.log_to_terminal(
             f"Saving model to {self.model_directory}/{self.get_hash()}.pt"
         )
+        path = Path(self.model_directory)
+        if not Path.exists(path):
+            Path.mkdir(path)
+
         torch.save(self.model, f"{self.model_directory}/{self.get_hash()}.pt")
         self.log_to_terminal(
             f"Model saved to {self.model_directory}/{self.get_hash()}.pt"

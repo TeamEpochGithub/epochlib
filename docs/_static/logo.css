@@ -1,0 +1,11 @@
+.epochalyst-logo {
+    content: url('./images/logo/Epochalyst_Logo_Dark.png');
+    max-width: 100%;
+    height: auto;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+html.dark .epochalyst-logo {
+    content: url('./images/logo/Epochalyst_Logo_Light.png');
+}

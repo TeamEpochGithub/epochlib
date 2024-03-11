@@ -1,4 +1,5 @@
 """Section separator module."""
+
 import os
 
 
