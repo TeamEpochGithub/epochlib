@@ -146,7 +146,6 @@ class TorchTrainer(TrainingBlock):
 
         # If multiple GPUs are available, distribute batch size over the GPUs
         if torch.cuda.device_count() > 1:
-            self.batch_size = self.batch_size * torch.cuda.device_count()
             self.log_to_terminal(f"Using {torch.cuda.device_count()} GPUs")
             self.model = _CustomDataParallel(self.model)
 
