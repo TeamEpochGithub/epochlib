@@ -1,4 +1,5 @@
 """Custom DataParallel class."""
+
 from torch import nn
 
 

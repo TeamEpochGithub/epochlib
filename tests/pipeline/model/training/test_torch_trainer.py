@@ -257,7 +257,7 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            tt.update_model_directory("tests/cache")
+            tt.update_model_directory("tests/cache/tm")
             x = torch.rand(10, 1)
             y = torch.rand(10)
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])

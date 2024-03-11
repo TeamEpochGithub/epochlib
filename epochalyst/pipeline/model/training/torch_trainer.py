@@ -484,6 +484,10 @@ class TorchTrainer(TrainingBlock):
         self.log_to_terminal(
             f"Saving model to {self.model_directory}/{self.get_hash()}.pt"
         )
+        path = Path(self.model_directory)
+        if not Path.exists(path):
+            Path.mkdir(path)
+
         torch.save(self.model, f"{self.model_directory}/{self.get_hash()}.pt")
         self.log_to_terminal(
             f"Model saved to {self.model_directory}/{self.get_hash()}.pt"
