@@ -1,22 +1,22 @@
 import copy
-from dataclasses import dataclass
 import functools
 import gc
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any, Callable
-from annotated_types import Gt, Interval
+
 import numpy as np
-from torch import Tensor, nn
+import numpy.typing as npt
 import torch
+from annotated_types import Gt, Interval
+from torch import Tensor, nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
-from tqdm import tqdm
 from torch.utils.data import Dataset, TensorDataset, DataLoader
+from tqdm import tqdm
 
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
-import numpy.typing as npt
-
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
 
 
@@ -388,18 +388,21 @@ class TorchTrainer(TrainingBlock):
                     step=epoch + 1,
                 )
 
-                # TODO(Jasper): How to log this without wandb?
-                # wandb.log(
-                #         {
-                #             "Training/Loss": wandb.plot.line_series(
-                #                 xs=range(epoch + 1),
-                #                 ys=[train_losses, val_losses],
-                #                 keys=["Train", "Validation"],
-                #                 title="Training/Loss",
-                #                 xname="Epoch",
-                #             ),
-                #         },
-                #     )
+                self.log_to_external(
+                    message={
+                        "type": "wandb_plot",
+                        "plot_type": "line_series",
+                        "data": {
+                            "xs": list(
+                                range(epoch + 1)
+                            ),  # Ensure it's a list, not a range object
+                            "ys": [train_losses, val_losses],
+                            "keys": ["Train", "Validation"],
+                            "title": "Training/Loss",
+                            "xname": "Epoch",
+                        },
+                    }
+                )
 
                 # Early stopping
                 if self._early_stopping():
