@@ -1,11 +1,10 @@
-import bisect
 import copy
 import functools
 import gc
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any, Callable, Iterable, List, TypeVar
-import warnings
+from typing import Annotated, Any, Callable, List, TypeVar
+
 
 import numpy as np
 import numpy.typing as npt
@@ -20,9 +19,10 @@ from tqdm import tqdm
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
-from torch.utils.data import ConcatDataset, IterableDataset
 
-T = TypeVar('T', bound=Dataset)
+T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
+T_co = TypeVar("T_co", covariant=True)
+
 
 @dataclass
 class TorchTrainer(TrainingBlock):
@@ -239,7 +239,7 @@ class TorchTrainer(TrainingBlock):
             self._save_model()
 
         # Return the predictions
-        concat_dataset = self._concat_datasets(
+        concat_dataset: Dataset[Any] = self._concat_datasets(
             train_dataset, test_dataset, train_indices, test_indices
         )
 
@@ -564,7 +564,7 @@ class TorchTrainer(TrainingBlock):
         test_dataset: T,
         train_indices: list[int],
         test_indices: list[int],
-    ) -> T:
+    ) -> Dataset[T_co]:
         """
         Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
 
@@ -575,10 +575,10 @@ class TorchTrainer(TrainingBlock):
         :return: A new dataset containing the concatenated data in the original order.
         """
 
-        return TrainTestDataset(train_dataset, test_dataset, train_indices, test_indices)
+        return TrainTestDataset(
+            train_dataset, test_dataset, train_indices, test_indices
+        )
 
-
-T_co = TypeVar('T_co', covariant=True)
 
 class TrainTestDataset(Dataset[T_co]):
     r"""Dataset as a concatenation of multiple datasets.
@@ -588,27 +588,40 @@ class TrainTestDataset(Dataset[T_co]):
     Args:
         datasets (sequence): List of datasets to be concatenated
     """
+
     train_dataset: Dataset[T_co]
     test_dataset: Dataset[T_co]
     train_indices: List[int]
     test_indices: List[int]
 
-    def __init__(self, train_dataset: Dataset[T_co], test_dataset: Dataset[T_co], train_indices: List[int], test_indices: List[int]) -> None:
+    def __init__(
+        self,
+        train_dataset: Dataset[T_co],
+        test_dataset: Dataset[T_co],
+        train_indices: List[int],
+        test_indices: List[int],
+    ) -> None:
         super().__init__()
-        assert len(train_dataset) == len(train_indices), "Train_dataset should be the same length as train_indices"
-        assert len(test_dataset) == len(test_indices), "Test_dataset should be the same length as test_indices"
+        assert len(train_dataset) == len(  # type: ignore[arg-type]
+            train_indices
+        ), "Train_dataset should be the same length as train_indices"
+        assert len(test_dataset) == len(  # type: ignore[arg-type]
+            test_indices
+        ), "Test_dataset should be the same length as test_indices"
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
         self.train_indices = train_indices
         self.test_indices = test_indices
 
-    def __len__(self):
-        return len(self.train_dataset) + len(self.test_dataset)
+    def __len__(self) -> int:
+        return len(self.train_dataset) + len(self.test_dataset)  # type: ignore[arg-type]
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> T_co:
         if idx < 0:
             if -idx > len(self):
-                raise ValueError("absolute value of index should not exceed dataset length")
+                raise ValueError(
+                    "absolute value of index should not exceed dataset length"
+                )
             idx = len(self) + idx
 
         item = self.train_dataset[0]
