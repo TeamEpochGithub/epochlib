@@ -1,23 +1,27 @@
 import copy
-from dataclasses import dataclass
 import functools
 import gc
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any, Callable
-from annotated_types import Gt, Interval
+from typing import Annotated, Any, Callable, List, TypeVar
+
+
 import numpy as np
-from torch import Tensor, nn
+import numpy.typing as npt
 import torch
+from annotated_types import Gt, Interval
+from torch import Tensor, nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
-from tqdm import tqdm
 from torch.utils.data import Dataset, TensorDataset, DataLoader
+from tqdm import tqdm
 
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
-import numpy.typing as npt
-
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
+
+T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
+T_co = TypeVar("T_co", covariant=True)
 
 
 @dataclass
@@ -235,7 +239,7 @@ class TorchTrainer(TrainingBlock):
             self._save_model()
 
         # Return the predictions
-        concat_dataset = self._concat_datasets(
+        concat_dataset: Dataset[Any] = self._concat_datasets(
             train_dataset, test_dataset, train_indices, test_indices
         )
 
@@ -388,18 +392,21 @@ class TorchTrainer(TrainingBlock):
                     step=epoch + 1,
                 )
 
-                # TODO(Jasper): How to log this without wandb?
-                # wandb.log(
-                #         {
-                #             "Training/Loss": wandb.plot.line_series(
-                #                 xs=range(epoch + 1),
-                #                 ys=[train_losses, val_losses],
-                #                 keys=["Train", "Validation"],
-                #                 title="Training/Loss",
-                #                 xname="Epoch",
-                #             ),
-                #         },
-                #     )
+                self.log_to_external(
+                    message={
+                        "type": "wandb_plot",
+                        "plot_type": "line_series",
+                        "data": {
+                            "xs": list(
+                                range(epoch + 1)
+                            ),  # Ensure it's a list, not a range object
+                            "ys": [train_losses, val_losses],
+                            "keys": ["Train", "Validation"],
+                            "title": "Training/Loss",
+                            "xname": "Epoch",
+                        },
+                    }
+                )
 
                 # Early stopping
                 if self._early_stopping():
@@ -553,11 +560,11 @@ class TorchTrainer(TrainingBlock):
 
     def _concat_datasets(
         self,
-        train_dataset: Dataset[tuple[Tensor, ...]],
-        test_dataset: Dataset[tuple[Tensor, ...]],
+        train_dataset: T,
+        test_dataset: T,
         train_indices: list[int],
         test_indices: list[int],
-    ) -> Dataset[tuple[Tensor, ...]]:
+    ) -> Dataset[T_co]:
         """
         Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
 
@@ -568,28 +575,62 @@ class TorchTrainer(TrainingBlock):
         :return: A new dataset containing the concatenated data in the original order.
         """
 
-        # Combine the indices and sort them alongside their corresponding dataset identifier ('train' or 'test')
-        combined_indices = train_indices + test_indices
-        dataset_labels = ["train"] * len(train_indices) + ["test"] * len(test_indices)
-        sorted_combined = sorted(
-            zip(combined_indices, dataset_labels), key=lambda x: x[0]
+        return TrainTestDataset(
+            train_dataset, test_dataset, train_indices, test_indices
         )
 
-        # Create a new list to hold the concatenated dataset
-        concatenated_dataset = []
 
-        # Iterate over the sorted combination of indices and dataset labels
-        for index, dataset_label in sorted_combined:
-            if dataset_label == "train":
-                # Calculate the original index in the train dataset
-                original_index = train_indices.index(index)
-                concatenated_dataset.append(train_dataset[original_index])
-            else:
-                # Calculate the original index in the test dataset
-                original_index = test_indices.index(index)
-                concatenated_dataset.append(test_dataset[original_index])
+class TrainTestDataset(Dataset[T_co]):
+    r"""Dataset as a concatenation of multiple datasets.
 
-        return TensorDataset(
-            torch.tensor([[x[0]] for x in concatenated_dataset]),
-            torch.tensor([[x[1]] for x in concatenated_dataset]),
-        )
+    This class is useful to assemble different existing datasets.
+
+    Args:
+        datasets (sequence): List of datasets to be concatenated
+    """
+
+    train_dataset: Dataset[T_co]
+    test_dataset: Dataset[T_co]
+    train_indices: List[int]
+    test_indices: List[int]
+
+    def __init__(
+        self,
+        train_dataset: Dataset[T_co],
+        test_dataset: Dataset[T_co],
+        train_indices: List[int],
+        test_indices: List[int],
+    ) -> None:
+        super().__init__()
+        assert len(train_dataset) == len(  # type: ignore[arg-type]
+            train_indices
+        ), "Train_dataset should be the same length as train_indices"
+        assert len(test_dataset) == len(  # type: ignore[arg-type]
+            test_indices
+        ), "Test_dataset should be the same length as test_indices"
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+        self.train_indices = train_indices
+        self.test_indices = test_indices
+
+    def __len__(self) -> int:
+        return len(self.train_dataset) + len(self.test_dataset)  # type: ignore[arg-type]
+
+    def __getitem__(self, idx: int) -> T_co:
+        if idx < 0:
+            if -idx > len(self):
+                raise ValueError(
+                    "absolute value of index should not exceed dataset length"
+                )
+            idx = len(self) + idx
+
+        item = self.train_dataset[0]
+
+        if idx in self.train_indices:
+            train_index = self.train_indices.index(idx)
+            item = self.train_dataset[train_index]
+        else:
+            test_index = self.test_indices.index(idx)
+            item = self.test_dataset[test_index]
+
+        return item
