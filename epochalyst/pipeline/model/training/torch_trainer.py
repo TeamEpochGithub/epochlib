@@ -372,8 +372,8 @@ class TorchTrainer(TrainingBlock):
         if fold > -1:
             fold_no = f"_{fold}"
 
-        self.external_define_metric(f"Training/Train Loss{fold_no}", "min")
-        self.external_define_metric(f"Validation/Validation Loss{fold_no}", "min")
+        self.external_define_metric(f"Training/Train Loss{fold_no}", "epoch")
+        self.external_define_metric(f"Validation/Validation Loss{fold_no}", "epoch")
 
         for epoch in range(self.epochs):
             # Train using train_loader
@@ -383,8 +383,10 @@ class TorchTrainer(TrainingBlock):
 
             # Log train loss
             self.log_to_external(
-                message={f"Training/Train Loss{fold_no}": train_losses[-1]},
-                step=epoch + 1,
+                message={
+                    f"Training/Train Loss{fold_no}": train_losses[-1],
+                    "epoch": epoch,
+                }
             )
 
             # Compute validation loss
@@ -397,8 +399,10 @@ class TorchTrainer(TrainingBlock):
 
                 # Log validation loss and plot train/val loss against each other
                 self.log_to_external(
-                    message={f"Validation/Validation Loss{fold_no}": val_losses[-1]},
-                    step=epoch + 1,
+                    message={
+                        f"Validation/Validation Loss{fold_no}": val_losses[-1],
+                        "epoch": epoch,
+                    }
                 )
 
                 self.log_to_external(
