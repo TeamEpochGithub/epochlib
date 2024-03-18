@@ -177,6 +177,7 @@ class TorchTrainer(TrainingBlock):
         :param test_indices: The indices to test on.
         :param cache_size: The cache size.
         :param save_model: Whether to save the model.
+        :param fold: Fold number if running cv
         :return: The input and output of the system.
         """
         train_indices = train_args.get("train_indices")
@@ -187,6 +188,7 @@ class TorchTrainer(TrainingBlock):
             raise ValueError("test_indices not provided")
         cache_size = train_args.get("cache_size", -1)
         save_model = train_args.get("save_model", True)
+        fold = train_args.get("fold", -1)
 
         self.save_model_to_disk = save_model
         if self._model_exists():
@@ -213,16 +215,13 @@ class TorchTrainer(TrainingBlock):
         train_losses: list[float] = []
         val_losses: list[float] = []
 
-        self.external_define_metric("Training/Train Loss", "min")
-        self.external_define_metric("Validation/Validation Loss", "min")
-
         self.lowest_val_loss = np.inf
         if len(test_loader) == 0:
             self.log_to_warning(
                 f"Doing train full, model will be trained for {self.epochs} epochs"
             )
 
-        self._training_loop(train_loader, test_loader, train_losses, val_losses)
+        self._training_loop(train_loader, test_loader, train_losses, val_losses, fold)
 
         self.log_to_terminal(
             f"Done training the model: {self.model.__class__.__name__}"
@@ -359,6 +358,7 @@ class TorchTrainer(TrainingBlock):
         test_loader: DataLoader[tuple[Tensor, ...]],
         train_losses: list[float],
         val_losses: list[float],
+        fold: int = -1,
     ) -> None:
         """Training loop for the model.
 
@@ -367,6 +367,14 @@ class TorchTrainer(TrainingBlock):
         :param train_losses: List of train losses.
         :param val_losses: List of validation losses.
         """
+        fold_no = ""
+
+        if fold > -1:
+            fold_no = f"_{fold}"
+
+        self.external_define_metric(f"Training/Train Loss{fold_no}", "min")
+        self.external_define_metric(f"Validation/Validation Loss{fold_no}", "min")
+
         for epoch in range(self.epochs):
             # Train using train_loader
             train_loss = self._train_one_epoch(train_loader, epoch)
@@ -375,7 +383,8 @@ class TorchTrainer(TrainingBlock):
 
             # Log train loss
             self.log_to_external(
-                message={"Training/Train Loss": train_losses[-1]}, step=epoch + 1
+                message={f"Training/Train Loss{fold_no}": train_losses[-1]},
+                step=epoch + 1,
             )
 
             # Compute validation loss
@@ -388,7 +397,7 @@ class TorchTrainer(TrainingBlock):
 
                 # Log validation loss and plot train/val loss against each other
                 self.log_to_external(
-                    message={"Validation/Validation Loss": val_losses[-1]},
+                    message={f"Validation/Validation Loss{fold_no}": val_losses[-1]},
                     step=epoch + 1,
                 )
 
@@ -401,8 +410,8 @@ class TorchTrainer(TrainingBlock):
                                 range(epoch + 1)
                             ),  # Ensure it's a list, not a range object
                             "ys": [train_losses, val_losses],
-                            "keys": ["Train", "Validation"],
-                            "title": "Training/Loss",
+                            "keys": [f"Train{fold_no}", f"Validation{fold_no}"],
+                            "title": f"Training/Loss{fold_no}",
                             "xname": "Epoch",
                         },
                     }
@@ -411,12 +420,12 @@ class TorchTrainer(TrainingBlock):
                 # Early stopping
                 if self._early_stopping():
                     self.log_to_external(
-                        message={"Epochs": (epoch + 1) - self.patience}
+                        message={f"Epochs{fold_no}": (epoch + 1) - self.patience}
                     )
                     break
 
             # Log the trained epochs to wandb if we finished training
-            self.log_to_external(message={"Epochs": epoch + 1})
+            self.log_to_external(message={f"Epochs{fold_no}": epoch + 1})
 
     def _train_one_epoch(
         self, dataloader: DataLoader[tuple[Tensor, ...]], epoch: int
