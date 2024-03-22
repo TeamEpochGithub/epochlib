@@ -57,7 +57,8 @@ jobs:
         venv/bin/python -m pip install --upgrade pip
         venv/bin/python -m pip install pytest
         venv/bin/python -m pip install -r requirements.txt
+        venv/bin/python -m pip install pytest-cov coverage
 
     - name: Test with pytest
       run: |
-        venv/bin/python -m pytest tests
+        venv/bin/python -m pytest --cov=epochalyst --cov-fail-under=95 tests
