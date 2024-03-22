@@ -261,10 +261,15 @@ class TorchTrainer(TrainingBlock):
         print_section_separator(f"Predicting model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Predicting model: {self.model.__class__.__name__}")
 
+        # Parse pred_args
+        curr_batch_size = pred_args.get("batch_size", self.batch_size)
+
         # Create dataset
         pred_dataset = self.create_prediction_dataset(x)
         pred_dataloader = DataLoader(
-            pred_dataset, batch_size=self.batch_size, shuffle=False
+            pred_dataset,
+            batch_size=curr_batch_size,
+            shuffle=False
         )
 
         # Predict
