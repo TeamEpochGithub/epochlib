@@ -24,6 +24,7 @@ dependencies= [
 
     # Data Processing Libraries
     "pandas>=1.3.0",
+    "polars",
 
     # Parquet
     "pyarrow>=6.0.0",

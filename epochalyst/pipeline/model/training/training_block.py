@@ -2,7 +2,7 @@ from agogos.training import Trainer
 from typing import Any
 from epochalyst._core._logging._logger import _Logger
 from abc import abstractmethod
-from epochalyst._core._caching._cacher import _Cacher
+from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
 
 
 class TrainingBlock(Trainer, _Cacher, _Logger):
@@ -56,7 +56,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
     """
 
     def train(
-        self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any
+        self, x: Any, y: Any, cache_args: _CacheArgs | None = None, **train_args: Any
     ) -> tuple[Any, Any]:
         """Train the model.
 
@@ -100,7 +100,9 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             f"Custom transform method not implemented for {self.__class__}"
         )
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
+    def predict(
+        self, x: Any, cache_args: _CacheArgs | None = None, **pred_args: Any
+    ) -> Any:
         """Predict using the model.
 
         :param x: The input data.
