@@ -29,7 +29,7 @@ poetry add epochalyst
 To generate pytest coverage report run
 
 ```python
-python -m pytest --cov=epochalyst --cov-report=html:coverage_re
+python -m pytest --cov=epochalyst --cov-branch --cov-report=html:coverage_re
 ```
 
 ## Documentation
