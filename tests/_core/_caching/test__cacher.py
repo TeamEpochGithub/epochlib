@@ -2,6 +2,7 @@ from epochalyst._core._caching._cacher import _Cacher
 import numpy as np
 import dask.dataframe as dd
 import pandas as pd
+import polars as pl
 import dask.array as da
 from tests.util import remove_cache_files
 import pytest
@@ -304,6 +305,27 @@ class Test_Cacher:
         )
         remove_cache_files()
 
+    def test__store_cache_storage_type_parquet_output_data_type_polars_dataframe(self):
+        c = Implemented_Cacher()
+        # Polars dataframe
+        data = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".parquet",
+                "storage_path": "tests/cache",
+                "output_data_type": "polars_dataframe",
+            },
+        )
+        assert (
+            c._cache_exists(
+                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+            )
+            is True
+        )
+        remove_cache_files()
+
     def test__store_cache_storage_type_parquet_output_data_type_unsupported(self):
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
@@ -351,6 +373,27 @@ class Test_Cacher:
                 "storage_type": ".csv",
                 "storage_path": "tests/cache",
                 "output_data_type": "dask_dataframe",
+            },
+        )
+        assert (
+            c._cache_exists(
+                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+            )
+            is True
+        )
+        remove_cache_files()
+
+    def test__store_cache_storage_type_csv_output_data_type_polars_dataframe(self):
+        c = Implemented_Cacher()
+        # Polars dataframe
+        data = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".csv",
+                "storage_path": "tests/cache",
+                "output_data_type": "polars_dataframe",
             },
         )
         assert (
@@ -654,6 +697,30 @@ class Test_Cacher:
         assert get_cache.compute().all() == data.compute().all()
         remove_cache_files()
 
+    def test__get_cache_storage_type_parquet_output_data_type_polars_dataframe(self):
+        c = Implemented_Cacher()
+        # Polars dataframe
+        data = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".parquet",
+                "storage_path": "tests/cache",
+                "output_data_type": "polars_dataframe",
+            },
+        )
+        get_cache = c._get_cache(
+            "test",
+            {
+                "storage_type": ".parquet",
+                "storage_path": "tests/cache",
+                "output_data_type": "polars_dataframe",
+            },
+        )
+        assert data.equals(get_cache)
+        remove_cache_files()
+
     def test__get_cache_storage_type_parquet_output_data_type_unsupported(self):
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
@@ -714,6 +781,30 @@ class Test_Cacher:
             },
         )
         assert get_cache.compute().reset_index(drop=True).equals(data.compute())
+        remove_cache_files()
+
+    def test__get_cache_storage_type_csv_output_data_type_polars_dataframe(self):
+        c = Implemented_Cacher()
+        # Polars dataframe
+        data = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        c._store_cache(
+            "test",
+            data,
+            {
+                "storage_type": ".csv",
+                "storage_path": "tests/cache",
+                "output_data_type": "polars_dataframe",
+            },
+        )
+        get_cache = c._get_cache(
+            "test",
+            {
+                "storage_type": ".csv",
+                "storage_path": "tests/cache",
+                "output_data_type": "polars_dataframe",
+            },
+        )
+        assert data.equals(get_cache)
         remove_cache_files()
 
     def test__get_cache_storage_type_csv_output_data_type_unsupported(self):

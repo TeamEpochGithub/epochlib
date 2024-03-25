@@ -2,7 +2,7 @@ from typing import Any
 from agogos.training import TrainingSystem
 
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher
+from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
 
 
 class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
@@ -12,7 +12,7 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
     """
 
     def train(
-        self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any
+        self, x: Any, y: Any, cache_args: _CacheArgs | None = None, **train_args: Any
     ) -> tuple[Any, Any]:
         """Train the system.
 
@@ -46,10 +46,13 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
 
         return x, y
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
+    def predict(
+        self, x: Any, cache_args: _CacheArgs | None = None, **pred_args: Any
+    ) -> Any:
         """Predict the output of the system.
 
         :param x: The input to the system.
+        :param cache_args: The cache arguments.
         :return: The output of the system.
         """
         if cache_args and self._cache_exists(self.get_hash() + "p", cache_args):

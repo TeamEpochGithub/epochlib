@@ -1,7 +1,7 @@
 from typing import Any
 from agogos.transforming import Transformer
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher
+from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
 from abc import abstractmethod
 
 
@@ -64,15 +64,12 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     """
 
     def transform(
-        self, data: Any, cache_args: dict[str, Any] = {}, **transform_args: Any
+        self, data: Any, cache_args: _CacheArgs | None = None, **transform_args: Any
     ) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.
         :param cache_args: The cache arguments.
-        - 'output_data_type': The type of the output data. (options: dask_array, numpy_array, pandas_dataframe, dask_dataframe)
-        - 'storage_type': The type of the storage. (options: .npy, .parquet, .csv, .npy_stack)
-        - 'storage_path': The path to the storage.
         :return: The transformed data.
         """
 
