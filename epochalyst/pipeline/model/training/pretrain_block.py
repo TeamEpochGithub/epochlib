@@ -12,40 +12,38 @@ from epochalyst.pipeline.model.training.training_block import TrainingBlock
 class PretrainBlock(TrainingBlock):
     """Pretrain block class
 
-    ### Parameters
+    Parameters:
     - test_size : float
 
-    ### Methods
-    ```python
-    @abstractmethod
-    def pretrain_train(self, x: Any, y: Any, train_indices: list[int], *, save_pretrain: bool = True, save_pretrain_with_split: bool = False) -> tuple[Any, Any]:
-
-    @abstractmethod
-    def custom_predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
-
-    def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]: # Train pretrain block method.
-
-    def predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
-
-    def train_split_hash(self, train_indices: list[int]) -> str: # Split the hash on train split
-    ```
-
-    ### Usage:
-    ```python
-    from epochalyst.pipeline.model.training.pretrain_block import PretrainBlock
-
-    class CustomPretrainBlock(PretrainBlock):
+    Methods:
+    .. code-block:: python
+        @abstractmethod
         def pretrain_train(self, x: Any, y: Any, train_indices: list[int], *, save_pretrain: bool = True, save_pretrain_with_split: bool = False) -> tuple[Any, Any]:
-            return x, y
 
-        def custom_predict(self, x: Any, **pred_args: Any) -> Any:
-            return x
+        @abstractmethod
+        def custom_predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
 
-    custom_pretrain_block = CustomPretrainBlock()
+        def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]: # Train pretrain block method.
 
-    x, y = custom_pretrain_block.train(x, y)
-    x = custom_pretrain_block.predict(x)
-    ```
+        def predict(self, x: Any, **pred_args: Any) -> Any: # Predict pretrain block method.
+
+        def train_split_hash(self, train_indices: list[int]) -> str: # Split the hash on train split
+
+    Usage:
+    .. code-block:: python
+        from epochalyst.pipeline.model.training.pretrain_block import PretrainBlock
+
+        class CustomPretrainBlock(PretrainBlock):
+            def pretrain_train(self, x: Any, y: Any, train_indices: list[int], *, save_pretrain: bool = True, save_pretrain_with_split: bool = False) -> tuple[Any, Any]:
+                return x, y
+
+            def custom_predict(self, x: Any, **pred_args: Any) -> Any:
+                return x
+
+        custom_pretrain_block = CustomPretrainBlock()
+
+        x, y = custom_pretrain_block.train(x, y)
+        x = custom_pretrain_block.predict(x)
     """
 
     test_size: float = 0.2
