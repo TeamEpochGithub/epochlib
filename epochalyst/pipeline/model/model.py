@@ -1,5 +1,5 @@
 from typing import Any
-from agogos.pipeline import Pipeline
+from agogos.training import Pipeline
 
 
 class ModelPipeline(Pipeline):
