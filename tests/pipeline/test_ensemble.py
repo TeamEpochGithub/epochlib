@@ -116,11 +116,11 @@ class TestEnsemble:
                 },
                 "y_sys": {
                     "cache_args": cache_args,
-                }
+                },
             }
         }
 
-        data = np.array([1,2,3])
+        data = np.array([1, 2, 3])
 
         ensemble.train(data, data, **train_args)
 
