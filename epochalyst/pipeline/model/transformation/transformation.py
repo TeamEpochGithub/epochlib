@@ -76,8 +76,36 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
         if self.steps:
             self.log_section_separator(self.title)
 
+        self.all_steps = self.steps
+
+        # Furthest step
+        for i, step in enumerate(self.steps):
+            # Check if step is instance of _Cacher and if cache_args exists
+            if not isinstance(step, _Cacher):
+                print("Not instance of _Cacher")
+                continue
+
+            step_args = transform_args.get(step.__class__.__name__, None)
+            if step_args is None:
+                print("No step arguments")
+                continue
+
+            step_cache_args = step_args.get("cache_args", None)
+            if step_cache_args is None:
+                print("No cache arguments for step")
+                continue
+            print(f"Hash: {step.get_hash()}")
+            step_cache_exists = step._cache_exists(step.get_hash(), step_cache_args)
+            print(f"Cache exists: {step_cache_exists}")
+            if step_cache_exists:
+                self.steps = self.all_steps[i:]
+        print(f"Steps:{self.steps}")
         data = super().transform(data, **transform_args)
 
-        self._store_cache(self.get_hash(), data, cache_args) if cache_args else None
+        if cache_args:
+            self._store_cache(self.get_hash(), data, cache_args)
+
+        # Set steps to original in case class is called again
+        self.steps = self.all_steps
 
         return data
