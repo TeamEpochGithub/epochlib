@@ -6,25 +6,25 @@ from epochalyst.logging.section_separator import print_section_separator
 class _Logger:
     """Logger abstract class for logging methods.
 
-    ### Methods:
-    ```python
-    @abstractmethod
-    def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
+    Methods:
+    .. code-block:: python
+        @abstractmethod
+        def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
 
-    @abstractmethod
-    def log_to_debug(self, message: str) -> None: # Logs to debugger if implemented
+        @abstractmethod
+        def log_to_debug(self, message: str) -> None: # Logs to debugger if implemented
 
-    @abstractmethod
-    def log_to_warning(self, message: str) -> None: # Logs to warning if implemented
+        @abstractmethod
+        def log_to_warning(self, message: str) -> None: # Logs to warning if implemented
 
-    @abstractmethod
-    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: # Logs to external site
+        @abstractmethod
+        def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: # Logs to external site
 
-    @abstractmethod
-    def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
+        @abstractmethod
+        def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
 
-    @abstractmethod
-    def log_section_separator(self, message: str) -> None: # Logs a section separator
+        @abstractmethod
+        def log_section_separator(self, message: str) -> None: # Logs a section separator
     """
 
     @abstractmethod

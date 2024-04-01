@@ -54,14 +54,13 @@ class _Cacher(_Logger):
     The cacher uses cache_args to determine if the data is already cached and if so, return the cached data.
     cache_args is a dictionary that contains the arguments to determine if the data is already cached.
 
-    ### Methods:
-    ```python
-    def _cache_exists(name: str, cache_args: _CacheArgs | None = None) -> bool: # Check if the cache exists
+    Methods:
+    .. code-block:: python
+        def _cache_exists(name: str, cache_args: _CacheArgs | None = None) -> bool: # Check if the cache exists
 
-    def _get_cache(name: str, cache_args: _CacheArgs | None = None) -> Any: # Load the cache
+        def _get_cache(name: str, cache_args: _CacheArgs | None = None) -> Any: # Load the cache
 
-    def _store_cache(name: str, data: Any, cache_args: _CacheArgs | None = None) -> None: # Store data
-    ```
+        def _store_cache(name: str, data: Any, cache_args: _CacheArgs | None = None) -> None: # Store data
     """
 
     def _cache_exists(self, name: str, cache_args: _CacheArgs | None = None) -> bool:

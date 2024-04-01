@@ -27,7 +27,7 @@ T_co = TypeVar("T_co", covariant=True)
 class TorchTrainer(TrainingBlock):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
 
-    ### Parameters:
+    Parameters:
     - `model` (nn.Module): The model to train.
     - `optimizer` (functools.partial[Optimizer]): Optimizer to use for training.
     - `criterion` (nn.Module): Criterion to use for training.
@@ -37,84 +37,82 @@ class TorchTrainer(TrainingBlock):
     - `patience` (int): Patience for early stopping
     - `test_size` (float): Relative size of the test set
 
-    ### Methods:
-    ```python
-    @abstractmethod
-    def log_to_terminal(self, message: str) -> None:
-        # Logs to terminal if implemented
-
-    @abstractmethod
-    def log_to_debug(self, message: str) -> None:
-        # Logs to debugger if implemented
-
-    @abstractmethod
-    def log_to_warning(self, message: str) -> None:
-        # Logs to warning if implemented
-
-    @abstractmethod
-    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
-        # Logs to external site
-
-    @abstractmethod
-    def external_define_metric(self, metric: str, metric_type: str) -> None:
-        # Defines an external metric
-
-    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]:
-        # Applies caching and calls custom_train, overridding removes caching
-
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
-        # Applies caching and calls custom_predict, overridding removes caching
-
-    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
-        # Implements torch training. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
-
-    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
-        # Implements torch prediction. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
-
-    def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]:
-        # Predict using a dataloader.
-
-    def create_datasets(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
-        # Create the datasets for training and validation.
-
-    def create_prediction_dataset(x: npt.NDArray[np.float32]) -> Dataset[tuple[Tensor, ...]]:
-        # Create the prediction dataset.
-
-    def create_dataloaders(train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
-        # Create the dataloaders for training and validation.
-
-    def update_model_directory(model_directory: str) -> None:
-        # Update the model directory for caching (default: tm).
-    ```
-
-    ### Usage:
-    ```python
-    from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
-    from torch import nn
-    from torch.optim import Adam
-    from torch.optim.lr_scheduler import StepLR
-    from torch.nn import MSELoss
-
-    class MyTorchTrainer(TorchTrainer):
-
+    Methods:
+    .. code-block:: python
+        @abstractmethod
         def log_to_terminal(self, message: str) -> None:
+            # Logs to terminal if implemented
 
-        ....
+        @abstractmethod
+        def log_to_debug(self, message: str) -> None:
+            # Logs to debugger if implemented
 
-    model = nn.Sequential(nn.Linear(1, 1))
-    optimizer = functools.partial(Adam, lr=0.01)
-    criterion = MSELoss()
-    scheduler = functools.partial(StepLR, step_size=1, gamma=0.1)
-    epochs = 10
-    batch_size = 32
-    patience = 5
-    test_size = 0.2
+        @abstractmethod
+        def log_to_warning(self, message: str) -> None:
+            # Logs to warning if implemented
 
-    trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler, epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
+        @abstractmethod
+        def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
+            # Logs to external site
 
-    x, y = trainer.train(x, y)
-    x = trainer.predict(x)
-    ```
+        @abstractmethod
+        def external_define_metric(self, metric: str, metric_type: str) -> None:
+            # Defines an external metric
+
+        def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]:
+            # Applies caching and calls custom_train, overridding removes caching
+
+        def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
+            # Applies caching and calls custom_predict, overridding removes caching
+
+        def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+            # Implements torch training. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
+
+        def custom_predict(self, x: Any, **pred_args: Any) -> Any:
+            # Implements torch prediction. If you are going to override this method and not use any other functionality, inherit from TrainingBlock.
+
+        def predict_on_loader(loader: DataLoader[tuple[Tensor, ...]]) -> npt.NDArray[np.float32]:
+            # Predict using a dataloader.
+
+        def create_datasets(x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
+            # Create the datasets for training and validation.
+
+        def create_prediction_dataset(x: npt.NDArray[np.float32]) -> Dataset[tuple[Tensor, ...]]:
+            # Create the prediction dataset.
+
+        def create_dataloaders(train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
+            # Create the dataloaders for training and validation.
+
+        def update_model_directory(model_directory: str) -> None:
+            # Update the model directory for caching (default: tm).
+
+    Usage:
+    .. code-block:: python
+        from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
+        from torch import nn
+        from torch.optim import Adam
+        from torch.optim.lr_scheduler import StepLR
+        from torch.nn import MSELoss
+
+        class MyTorchTrainer(TorchTrainer):
+
+            def log_to_terminal(self, message: str) -> None:
+
+            ....
+
+        model = nn.Sequential(nn.Linear(1, 1))
+        optimizer = functools.partial(Adam, lr=0.01)
+        criterion = MSELoss()
+        scheduler = functools.partial(StepLR, step_size=1, gamma=0.1)
+        epochs = 10
+        batch_size = 32
+        patience = 5
+        test_size = 0.2
+
+        trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler, epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
+
+        x, y = trainer.train(x, y)
+        x = trainer.predict(x)
     """
 
     model: nn.Module
@@ -260,10 +258,15 @@ class TorchTrainer(TrainingBlock):
         print_section_separator(f"Predicting model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Predicting model: {self.model.__class__.__name__}")
 
+        # Parse pred_args
+        curr_batch_size = pred_args.get("batch_size", self.batch_size)
+
         # Create dataset
         pred_dataset = self.create_prediction_dataset(x)
         pred_dataloader = DataLoader(
-            pred_dataset, batch_size=self.batch_size, shuffle=False
+            pred_dataset,
+            batch_size=curr_batch_size,
+            shuffle=False
         )
 
         # Predict
@@ -593,12 +596,14 @@ class TorchTrainer(TrainingBlock):
 
 
 class TrainTestDataset(Dataset[T_co]):
-    r"""Dataset as a concatenation of multiple datasets.
+    """Dataset as a concatenation of multiple datasets.
 
     This class is useful to assemble different existing datasets.
 
-    Args:
-        datasets (sequence): List of datasets to be concatenated
+    :param train_dataset: The train dataset
+    :param test_dataset: The test dataset
+    :param train_indices: The train indices
+    :param test_indices: The test indices
     """
 
     train_dataset: Dataset[T_co]
