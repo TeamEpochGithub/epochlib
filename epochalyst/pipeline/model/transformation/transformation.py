@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
-from agogos.transforming import TransformingSystem
+from agogos.transforming import TransformingSystem, TransformType
 
 from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
@@ -73,16 +73,16 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
             )
             return self._get_cache(self.get_hash(), cache_args)
 
-        if self.steps:
+        if self.get_steps():
             self.log_section_separator(self.title)
 
-        self.all_steps = self.steps
+        self.all_steps = self.get_steps()
 
         # Furthest step
-        for i, step in enumerate(self.steps):
+        for i, step in enumerate(self.get_steps()):
             # Check if step is instance of _Cacher and if cache_args exists
-            if not isinstance(step, _Cacher):
-                self.log_to_debug(f"{step} is not instance of _Cacher")
+            if not isinstance(step, _Cacher) or not isinstance(step, TransformType):
+                self.log_to_debug(f"{step} is not instance of _Cacher or TransformType")
                 continue
 
             step_args = transform_args.get(step.__class__.__name__, None)

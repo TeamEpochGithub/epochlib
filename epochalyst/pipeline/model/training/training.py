@@ -1,5 +1,5 @@
 from typing import Any
-from agogos.training import TrainingSystem
+from agogos.training import TrainingSystem, TrainType
 
 from epochalyst._core._logging._logger import _Logger
 from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
@@ -32,16 +32,16 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
             y = self._get_cache(name=self.get_hash() + "y", cache_args=cache_args)
             return x, y
 
-        if self.steps:
+        if self.get_steps():
             self.log_section_separator("Training Pipeline")
 
-        self.all_steps = self.steps
+        self.all_steps = self.get_steps()
 
         # Furthest step
-        for i, step in enumerate(self.steps):
+        for i, step in enumerate(self.get_steps()):
             # Check if step is instance of _Cacher and if cache_args exists
-            if not isinstance(step, _Cacher):
-                self.log_to_debug(f"{step} is not instance of _Cacher")
+            if not isinstance(step, _Cacher) or not isinstance(step, TrainType):
+                self.log_to_debug(f"{step} is not instance of _Cacher or TrainType")
                 continue
 
             step_args = train_args.get(step.__class__.__name__, None)
@@ -86,16 +86,16 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
         if cache_args and self._cache_exists(self.get_hash() + "p", cache_args):
             return self._get_cache(self.get_hash() + "p", cache_args)
 
-        if self.steps:
+        if self.get_steps():
             self.log_section_separator("Prediction Pipeline")
 
-        self.all_steps = self.steps
+        self.all_steps = self.get_steps()
 
         # Retrieve furthest step calculated
-        for i, step in enumerate(self.steps):
+        for i, step in enumerate(self.get_steps()):
             # Check if step is instance of _Cacher and if cache_args exists
-            if not isinstance(step, _Cacher):
-                self.log_to_debug(f"{step} is not instance of _Cacher")
+            if not isinstance(step, _Cacher) or not isinstance(step, TrainType):
+                self.log_to_debug(f"{step} is not instance of _Cacher or TrainType")
                 continue
 
             step_args = pred_args.get(step.__class__.__name__, None)
