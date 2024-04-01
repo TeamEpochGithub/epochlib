@@ -1,7 +1,9 @@
 from epochalyst.pipeline.model.transformation.transformation import (
     TransformationPipeline,
 )
-from epochalyst.pipeline.model.transformation.transformation_block import TransformationBlock
+from epochalyst.pipeline.model.transformation.transformation_block import (
+    TransformationBlock,
+)
 from agogos.transforming import Transformer
 import numpy as np
 from tests.util import remove_cache_files
@@ -30,11 +32,11 @@ class CustomTransformationPipeline(TransformationPipeline):
 
 class TestTransformationPipeline:
     def test_transformation_pipeline_init(self):
-        tp = TransformationPipeline()
+        tp = CustomTransformationPipeline()
         assert tp.steps is not None
 
     def test_transformation_pipeline_transform(self):
-        tp = TransformationPipeline()
+        tp = CustomTransformationPipeline()
         x = 1
         assert tp.transform(x) == x
         assert tp.transform(x, transform_args={"a": 1}) == x
@@ -43,7 +45,7 @@ class TestTransformationPipeline:
     def test_transformation_pipeline_with_steps(self):
         t1 = TestTransformationBlock()
         t2 = TestTransformationBlock()
-        tp = TransformationPipeline(steps=[t1, t2])
+        tp = CustomTransformationPipeline(steps=[t1, t2])
 
         assert tp.transform(None) is None
 
@@ -85,24 +87,6 @@ class TestTransformationPipeline:
         remove_cache_files()
 
     def test_transformation_pipeline_with_halfway_cache_no_step_cache_args(self):
-        class TestTransformationBlock(TransformationBlock):
-            def log_to_debug(self, message):
-                pass
-
-            def log_to_terminal(self, message):
-                pass
-
-            def custom_transform(self, x, **transform_args):
-                print(f"Input: {x}")
-                return x * 2
-
-        class CustomTransformationPipeline(TransformationPipeline):
-            def log_to_debug(self, message: str) -> None:
-                return None
-
-            def log_to_terminal(self, message: str) -> None:
-                return None
-
         t1 = TestTransformationBlock()
         t2 = TestTransformationBlock()
 

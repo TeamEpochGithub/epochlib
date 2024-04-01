@@ -35,14 +35,42 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
         if self.steps:
             self.log_section_separator("Training Pipeline")
 
+        self.all_steps = self.steps
+
+        # Furthest step
+        for i, step in enumerate(self.steps):
+            # Check if step is instance of _Cacher and if cache_args exists
+            if not isinstance(step, _Cacher):
+                self.log_to_debug(f"{step} is not instance of _Cacher")
+                continue
+
+            step_args = train_args.get(step.__class__.__name__, None)
+            if step_args is None:
+                self.log_to_debug(f"{step} is not given train_args")
+                continue
+
+            step_cache_args = step_args.get("cache_args", None)
+            if step_cache_args is None:
+                self.log_to_debug(f"{step} is not given cache_args")
+                continue
+
+            step_cache_exists = step._cache_exists(
+                step.get_hash() + "x", step_cache_args
+            ) and step._cache_exists(step.get_hash() + "y", step_cache_args)
+            if step_cache_exists:
+                self.log_to_debug(
+                    f"Cache exists for {step}, moving index of steps to {i}"
+                )
+                self.steps = self.all_steps[i:]
+
         x, y = super().train(x, y, **train_args)
 
-        self._store_cache(
-            name=self.get_hash() + "x", data=x, cache_args=cache_args
-        ) if cache_args else None
-        self._store_cache(
-            name=self.get_hash() + "y", data=y, cache_args=cache_args
-        ) if cache_args else None
+        if cache_args:
+            self._store_cache(name=self.get_hash() + "x", data=x, cache_args=cache_args)
+            self._store_cache(name=self.get_hash() + "y", data=y, cache_args=cache_args)
+
+        # Set steps to original in case class is called again (case: train -> predict)
+        self.steps = self.all_steps
 
         return x, y
 
@@ -61,8 +89,39 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
         if self.steps:
             self.log_section_separator("Prediction Pipeline")
 
+        self.all_steps = self.steps
+
+        # Retrieve furthest step calculated
+        for i, step in enumerate(self.steps):
+            # Check if step is instance of _Cacher and if cache_args exists
+            if not isinstance(step, _Cacher):
+                self.log_to_debug(f"{step} is not instance of _Cacher")
+                continue
+
+            step_args = pred_args.get(step.__class__.__name__, None)
+            if step_args is None:
+                self.log_to_debug(f"{step} is not given train_args")
+                continue
+
+            step_cache_args = step_args.get("cache_args", None)
+            if step_cache_args is None:
+                self.log_to_debug(f"{step} is not given cache_args")
+                continue
+
+            step_cache_exists = step._cache_exists(
+                step.get_hash() + "p", step_cache_args
+            )
+            if step_cache_exists:
+                self.log_to_debug(
+                    f"Cache exists for {step}, moving index of steps to {i}"
+                )
+                self.steps = self.all_steps[i:]
+
         x = super().predict(x, **pred_args)
 
         self._store_cache(self.get_hash() + "p", x, cache_args) if cache_args else None
+
+        # Set steps to original in case class is called again
+        self.steps = self.all_steps
 
         return x
