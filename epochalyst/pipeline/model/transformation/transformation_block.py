@@ -70,11 +70,8 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
             return self._get_cache(name=self.get_hash(), cache_args=cache_args)
 
         data = self.custom_transform(data, **transform_args)
-        print(f"cache_args: {cache_args}")
         if cache_args:
-            print(f"Storing cache at {self.get_hash()}")
             self._store_cache(name=self.get_hash(), data=data, cache_args=cache_args)
-        print(f"returning_data: {data}")
         return data
 
     @abstractmethod
