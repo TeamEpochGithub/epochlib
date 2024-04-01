@@ -264,9 +264,7 @@ class TorchTrainer(TrainingBlock):
         # Create dataset
         pred_dataset = self.create_prediction_dataset(x)
         pred_dataloader = DataLoader(
-            pred_dataset,
-            batch_size=curr_batch_size,
-            shuffle=False
+            pred_dataset, batch_size=curr_batch_size, shuffle=False
         )
 
         # Predict

@@ -1,5 +1,6 @@
 from typing import Any
-from agogos.pipeline import Pipeline
+from agogos.training import Pipeline
+from epochalyst._core._caching._cacher import _CacheArgs
 
 
 class ModelPipeline(Pipeline):
@@ -34,3 +35,24 @@ class ModelPipeline(Pipeline):
         :return: The output of the system.
         """
         return super().predict(x, **pred_args)
+
+    def get_x_cache_exists(self, cache_args: _CacheArgs) -> bool:
+        """Get status of x
+
+        :param cache_args: Cache arguments
+        :return: Whether cache exists
+        """
+        if self.x_sys is None:
+            return False
+        return self.x_sys._cache_exists(self.x_sys.get_hash(), cache_args)
+
+    def get_y_cache_exists(self, cache_args: _CacheArgs) -> bool:
+        """Get status of y cache
+
+        :param cache_args: Cache arguments
+        :return: Whether cache exists
+        """
+        if self.y_sys is None:
+            return False
+
+        return self.y_sys._cache_exists(self.y_sys.get_hash(), cache_args)
