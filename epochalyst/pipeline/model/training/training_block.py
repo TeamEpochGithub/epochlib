@@ -2,61 +2,60 @@ from agogos.training import Trainer
 from typing import Any
 from epochalyst._core._logging._logger import _Logger
 from abc import abstractmethod
-from epochalyst._core._caching._cacher import _Cacher
+from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
 
 
 class TrainingBlock(Trainer, _Cacher, _Logger):
     """The training block is a flexible block that allows for training of any model.
 
-    ### Methods:
-    ```python
-    @abstractmethod
-    def custom_train(self, x: Any, y: Any, **train_args) -> tuple[Any, Any]: # Custom training implementation
+    Methods:
+    .. code-block:: python
+        @abstractmethod
+        def custom_train(self, x: Any, y: Any, **train_args) -> tuple[Any, Any]: # Custom training implementation
 
-    @abstractmethod
-    def custom_predict(self, x: Any, y: Any, **pred_args) -> tuple[Any, Any]: # Custom prediction implementation
+        @abstractmethod
+        def custom_predict(self, x: Any, y: Any, **pred_args) -> tuple[Any, Any]: # Custom prediction implementation
 
-    @abstractmethod
-    def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
+        @abstractmethod
+        def log_to_terminal(self, message: str) -> None: # Logs to terminal if implemented
 
-    @abstractmethod
-    def log_to_debug(self, message: str) -> None: # Logs to debugger if implemented
+        @abstractmethod
+        def log_to_debug(self, message: str) -> None: # Logs to debugger if implemented
 
-    @abstractmethod
-    def log_to_warning(self, message: str) -> None: # Logs to warning if implemented
+        @abstractmethod
+        def log_to_warning(self, message: str) -> None: # Logs to warning if implemented
 
-    @abstractmethod
-    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: # Logs to external site
+        @abstractmethod
+        def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: # Logs to external site
 
-    @abstractmethod
-    def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
+        @abstractmethod
+        def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
 
-    def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]: # Applies caching and calls custom_train
+        def train(self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any) -> tuple[Any, Any]: # Applies caching and calls custom_train
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any: # Applies caching and calls custom_predict
+        def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any: # Applies caching and calls custom_predict
 
-    ### Usage:
-    ```python
-    from epochalyst.pipeline.model.training.training_block import TrainingBlock
+    Usage:
+    .. code-block:: python
+        from epochalyst.pipeline.model.training.training_block import TrainingBlock
 
-    class CustomTrainingBlock(TrainingBlock):
-        def custom_train(self, x: Any, y: Any) -> tuple[Any, Any]:
-            return x, y
+        class CustomTrainingBlock(TrainingBlock):
+            def custom_train(self, x: Any, y: Any) -> tuple[Any, Any]:
+                return x, y
 
-        def custom_predict(self, x: Any) -> Any:
-            return x
+            def custom_predict(self, x: Any) -> Any:
+                return x
 
-        ....
+            ....
 
-    custom_training_block = CustomTrainingBlock()
+        custom_training_block = CustomTrainingBlock()
 
-    x, y = custom_training_block.train(x, y)
-    x = custom_training_block.predict(x)
-    ```
+        x, y = custom_training_block.train(x, y)
+        x = custom_training_block.predict(x)
     """
 
     def train(
-        self, x: Any, y: Any, cache_args: dict[str, Any] = {}, **train_args: Any
+        self, x: Any, y: Any, cache_args: _CacheArgs | None = None, **train_args: Any
     ) -> tuple[Any, Any]:
         """Train the model.
 
@@ -100,7 +99,9 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             f"Custom transform method not implemented for {self.__class__}"
         )
 
-    def predict(self, x: Any, cache_args: dict[str, Any] = {}, **pred_args: Any) -> Any:
+    def predict(
+        self, x: Any, cache_args: _CacheArgs | None = None, **pred_args: Any
+    ) -> Any:
         """Predict using the model.
 
         :param x: The input data.

@@ -29,8 +29,19 @@ poetry add epochalyst
 To generate pytest coverage report run
 
 ```python
-python -m pytest --cov=epochalyst --cov-report=html:coverage_re
+python -m pytest --cov=epochalyst --cov-branch --cov-report=html:coverage_re
 ```
+
+## Imports
+
+### Caching
+
+For caching some imports are only required, these have to be manually installed when needed
+- dask >= 2023.12.0 & dask-expr
+- pandas >= 1.3.0
+- polars
+- pyarrow >= 6.0.0 (Read parquet files)
+- annotated-types >= 0.6.0
 
 ## Documentation
 
