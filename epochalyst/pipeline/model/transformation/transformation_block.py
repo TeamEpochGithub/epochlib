@@ -1,7 +1,7 @@
 from typing import Any
 from agogos.transforming import Transformer
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
+from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 from abc import abstractmethod
 
 
@@ -52,7 +52,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
     """
 
     def transform(
-        self, data: Any, cache_args: _CacheArgs | None = None, **transform_args: Any
+        self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any
     ) -> Any:
         """Transform the input data using a custom method.
 
