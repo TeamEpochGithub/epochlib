@@ -1,6 +1,8 @@
 import functools
 from typing import Any
 from unittest.mock import patch
+
+import numpy as np
 import torch
 from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
 import pytest
@@ -220,6 +222,25 @@ class TestTorchTrainer:
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict2(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),
+        )
         tt.predict(x)
 
         remove_cache_files()

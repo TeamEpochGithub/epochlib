@@ -123,6 +123,7 @@ class TorchTrainer(TrainingBlock):
     batch_size: Annotated[int, Gt(0)] = 32
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
+    predict_all: bool = False
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -200,9 +201,13 @@ class TorchTrainer(TrainingBlock):
         concat_dataset: Dataset[Any] = self._concat_datasets(
             train_dataset, test_dataset, train_indices, test_indices
         )
-        pred_dataloader = DataLoader(
-            concat_dataset, batch_size=self.batch_size, shuffle=False
-        )
+
+        if self.predict_all:
+            pred_dataloader = DataLoader(
+                concat_dataset, batch_size=self.batch_size, shuffle=False
+            )
+        else:
+            pred_dataloader = test_loader
 
         if self._model_exists():
             self.log_to_terminal(
@@ -575,8 +580,8 @@ class TorchTrainer(TrainingBlock):
         self,
         train_dataset: T,
         test_dataset: T,
-        train_indices: list[int],
-        test_indices: list[int],
+        train_indices: list[int] | npt.NDArray[np.int32],
+        test_indices: list[int] | npt.NDArray[np.int32],
     ) -> Dataset[T_co]:
         """
         Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
@@ -589,7 +594,7 @@ class TorchTrainer(TrainingBlock):
         """
 
         return TrainTestDataset(
-            train_dataset, test_dataset, train_indices, test_indices
+            train_dataset, test_dataset, list(train_indices), list(test_indices)
         )
 
 
