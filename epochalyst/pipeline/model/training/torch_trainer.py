@@ -565,17 +565,18 @@ class TorchTrainer(TrainingBlock):
         """
 
         # Store the best model so far based on validation loss
-        if self.last_val_loss < self.lowest_val_loss:
-            self.lowest_val_loss = self.last_val_loss
-            self.best_model_state_dict = copy.deepcopy(self.model.state_dict())
-            self.early_stopping_counter = 0
-        else:
-            self.early_stopping_counter += 1
-            if self.early_stopping_counter >= self.patience:
-                self.log_to_terminal(
-                    f"Early stopping after {self.early_stopping_counter} epochs"
-                )
-                return True
+        if self.patience != -1:
+            if self.last_val_loss < self.lowest_val_loss:
+                self.lowest_val_loss = self.last_val_loss
+                self.best_model_state_dict = copy.deepcopy(self.model.state_dict())
+                self.early_stopping_counter = 0
+            else:
+                self.early_stopping_counter += 1
+                if self.early_stopping_counter >= self.patience:
+                    self.log_to_terminal(
+                        f"Early stopping after {self.early_stopping_counter} epochs"
+                    )
+                    return True
         return False
 
     def _concat_datasets(
