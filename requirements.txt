@@ -6,6 +6,7 @@ click==8.1.7
 cloudpickle==3.0.0
 coverage==7.4.3
 dask==2024.2.1
+dask-expr==0.5.3
 filelock==3.13.1
 fsspec==2024.2.0
 idna==3.6
