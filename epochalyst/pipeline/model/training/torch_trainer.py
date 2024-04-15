@@ -512,6 +512,13 @@ class TorchTrainer(TrainingBlock):
         self.log_to_terminal(
             f"Model saved to {self.model_directory}/{self.get_hash()}.pt"
         )
+        self.save_model_to_external()
+
+    def save_model_to_external(self) -> None:
+        self.log_to_warning(
+            "Saving model to external is not implemented for TorchTrainer, if you want uploaded models. Please overwrite"
+        )
+        pass
 
     def _load_model(self) -> None:
         """Load the model from the model_directory folder."""
