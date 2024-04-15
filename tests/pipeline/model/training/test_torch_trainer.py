@@ -299,3 +299,29 @@ class TestTorchTrainer:
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
 
         remove_cache_files()
+
+    def test_early_stopping_no_patience(self):
+        tt = self.FullyImplementedTorchTrainer(
+        model=self.simple_model,
+        criterion=torch.nn.MSELoss(),
+        optimizer=self.optimizer,
+        patience=-1,
+        )
+        tt.last_val_loss = 0.5
+        tt.lowest_val_loss = 0.3
+        tt.model = torch.nn.Linear(1, 1)
+        tt.best_model_state_dict = tt.model.state_dict()
+        tt.early_stopping_counter = 0
+
+        # Call the _early_stopping method
+        # This increments the counter
+        result = tt._early_stopping()
+
+        # Assert that the best model is not updated
+        assert tt.best_model_state_dict == tt.model.state_dict()
+
+        # Assert that the early stopping counter is incremented
+        assert tt.early_stopping_counter == 1
+
+        # Assert that the method returns False
+        assert result is False
