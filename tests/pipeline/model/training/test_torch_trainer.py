@@ -245,6 +245,71 @@ class TestTorchTrainer:
 
         remove_cache_files()
 
+    def test_predict_all(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            predict_all=True,
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert len(preds) == 10
+        remove_cache_files()
+
+    def test_predict_2d(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=torch.nn.Linear(2, 2),
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            predict_all=True,
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 2)
+        y = torch.rand(10, 2)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert preds.shape == (10, 2)
+        assert len(preds) == 10
+        remove_cache_files()
+
+    def test_predict_partial(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            predict_all=False,
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 2
+        assert len(preds) == 10
+
+        remove_cache_files()
+
     def test_predict_no_model_trained(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
