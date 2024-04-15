@@ -1,6 +1,8 @@
+import copy
 import functools
 from typing import Any
 from unittest.mock import patch
+import numpy as np
 import torch
 from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
 import pytest
@@ -302,26 +304,28 @@ class TestTorchTrainer:
 
     def test_early_stopping_no_patience(self):
         tt = self.FullyImplementedTorchTrainer(
-        model=self.simple_model,
-        criterion=torch.nn.MSELoss(),
-        optimizer=self.optimizer,
-        patience=-1,
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
         )
-        tt.last_val_loss = 0.5
-        tt.lowest_val_loss = 0.3
-        tt.model = torch.nn.Linear(1, 1)
-        tt.best_model_state_dict = tt.model.state_dict()
-        tt.early_stopping_counter = 0
 
-        # Call the _early_stopping method
-        # This increments the counter
-        result = tt._early_stopping()
+        orig_state_dict = copy.deepcopy(tt.model.state_dict)
 
-        # Assert that the best model is not updated
-        assert tt.best_model_state_dict == tt.model.state_dict()
+        tt._early_stopping()
 
-        # Assert that the early stopping counter is incremented
-        assert tt.early_stopping_counter == 1
+        # Lowest val loss should still be -inf
+        assert np.isinf(tt.lowest_val_loss)
 
-        # Assert that the method returns False
-        assert result is False
+        # Early stopping counter should not exist
+        assert not hasattr(tt, "early_stopping_counter")
+
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        # Assert that no best model exists
+        assert tt.best_model_state_dict == {}
+        # Assert self.model still exists
+        assert tt.model.state_dict != {}
+        # Assert model chnages after training
+        assert tt.model.state_dict != orig_state_dict
