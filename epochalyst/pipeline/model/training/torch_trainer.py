@@ -1,7 +1,7 @@
 import copy
 import functools
 import gc
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Any, Callable, List, TypeVar
 
@@ -124,8 +124,16 @@ class TorchTrainer(TrainingBlock):
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
 
+    _fold: int = field(default=-1, init=False, repr=False, compare=False)
+    test_split_type: float = field(default=-1, init=True, repr=False, compare=False)
+
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
+
+        if self.test_split_type == -1:
+            raise ValueError(
+                "Train_split_type needs to be set to either test_size or n_folds"
+            )
 
         self.save_model_to_disk = True
         self.model_directory = "tm"
@@ -163,7 +171,7 @@ class TorchTrainer(TrainingBlock):
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
         **train_args: Any,
-    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Train the model.
 
         :param x: The input to the system.
@@ -185,7 +193,7 @@ class TorchTrainer(TrainingBlock):
             raise ValueError("test_indices not provided")
         cache_size = train_args.get("cache_size", -1)
         save_model = train_args.get("save_model", True)
-        fold = train_args.get("fold", -1)
+        self._fold = train_args.get("fold", -1)
 
         self.save_model_to_disk = save_model
 
@@ -210,7 +218,7 @@ class TorchTrainer(TrainingBlock):
             )
             self._load_model()
             # Return the predictions
-            return self.predict_on_loader(pred_dataloader), y
+            return self.predict_on_loader(pred_dataloader), torch.tensor(y)
 
         self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
@@ -227,7 +235,9 @@ class TorchTrainer(TrainingBlock):
                 f"Doing train full, model will be trained for {self.epochs} epochs"
             )
 
-        self._training_loop(train_loader, test_loader, train_losses, val_losses, fold)
+        self._training_loop(
+            train_loader, test_loader, train_losses, val_losses, self._fold
+        )
 
         self.log_to_terminal(
             f"Done training the model: {self.model.__class__.__name__}"
@@ -243,11 +253,11 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self.predict_on_loader(pred_dataloader), y
+        return self.predict_on_loader(pred_dataloader), torch.tensor(y)
 
     def custom_predict(
         self, x: npt.NDArray[np.float32], **pred_args: Any
-    ) -> npt.NDArray[np.float32]:
+    ) -> torch.Tensor:
         """Predict on the test data
 
         :param x: The input to the system.
@@ -267,12 +277,26 @@ class TorchTrainer(TrainingBlock):
             pred_dataset, batch_size=curr_batch_size, shuffle=False
         )
 
-        # Predict
-        return self.predict_on_loader(pred_dataloader)
+        # Predict with a single model, test_split_type lower than 1 means a single test size, no CV
+        if self.test_split_type < 1 or pred_args.get("use_single_model", False):
+            self._load_model()
+            return self.predict_on_loader(pred_dataloader)
 
-    def predict_on_loader(
-        self, loader: DataLoader[tuple[Tensor, ...]]
-    ) -> npt.NDArray[np.float32]:
+        # Ensemble the fold models:
+        predictions = []
+        for i in range(int(self.test_split_type)):
+            self.log_to_terminal(
+                f"Predicting with model fold {i + 1}/{self.test_split_type}"
+            )
+            self._fold = i  # set the fold, which updates the hash
+            self._load_model()  # load the model for this fold
+            predictions.append(self.predict_on_loader(pred_dataloader))
+
+        test_predictions = torch.stack(predictions)
+
+        return torch.mean(test_predictions, dim=0)
+
+    def predict_on_loader(self, loader: DataLoader[tuple[Tensor, ...]]) -> torch.Tensor:
         """Predict on the loader.
 
         :param loader: The loader to predict on.
@@ -285,11 +309,23 @@ class TorchTrainer(TrainingBlock):
             for data in tepoch:
                 X_batch = data[0].to(self.device).float()
 
-                y_pred = self.model(X_batch).cpu().numpy()
+                y_pred = self.model(X_batch).cpu()
                 predictions.extend(y_pred)
 
         self.log_to_terminal("Done predicting")
-        return np.array(predictions)
+        return torch.stack(predictions)
+
+    def get_hash(self) -> str:
+        """Get the hash of the block.
+
+        Override the get_hash method to include the fold number in the hash.
+
+        :return: The hash of the block.
+        """
+        result = f"{self._hash}_{self.test_split_type}"
+        if self._fold != -1:
+            result += f"_f{self._fold}"
+        return result
 
     def create_datasets(
         self,
@@ -347,6 +383,7 @@ class TorchTrainer(TrainingBlock):
 
     def update_model_directory(self, model_directory: str) -> None:
         """Update the model directory.
+
 
         :param model_directory: The model directory.
         """

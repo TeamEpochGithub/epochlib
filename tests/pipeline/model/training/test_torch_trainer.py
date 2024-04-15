@@ -1,4 +1,5 @@
 import functools
+from dataclasses import dataclass
 from typing import Any
 from unittest.mock import patch
 import torch
@@ -14,13 +15,22 @@ class TestTorchTrainer:
     scheduler = functools.partial(torch.optim.lr_scheduler.StepLR, step_size=1)
 
     class ImplementedTorchTrainer(TorchTrainer):
+        def __post_init__(self):
+            self.test_split_type = 1
+            super().__post_init__()
+
         def log_to_terminal(self, message: str) -> None:
             print(message)
 
         def log_to_debug(self, message: str) -> None:
             pass
 
+    @dataclass
     class FullyImplementedTorchTrainer(TorchTrainer):
+        def __post_init__(self):
+            self.test_split_type = 1
+            super().__post_init__()
+
         def log_to_terminal(self, message: str) -> None:
             print(message)
 
@@ -38,11 +48,17 @@ class TestTorchTrainer:
 
     def test_init_no_args(self):
         with pytest.raises(TypeError):
-            TorchTrainer()
+            TorchTrainer(test_split_type=1)
 
     def test_init_none_args(self):
         with pytest.raises(TypeError):
-            TorchTrainer(model=None, criterion=None, optimizer=None, device=None)
+            TorchTrainer(
+                model=None,
+                criterion=None,
+                optimizer=None,
+                device=None,
+                test_split_type=1,
+            )
 
     def test_init_proper_args(self):
         with pytest.raises(NotImplementedError):
@@ -50,6 +66,7 @@ class TestTorchTrainer:
                 model=self.simple_model,
                 criterion=torch.nn.MSELoss(),
                 optimizer=self.optimizer,
+                test_split_type=0,
             )
 
     def test_init_proper_args_with_implemented(self):
@@ -178,11 +195,13 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
+        tt.test_split_type = 0
         tt.update_model_directory("tests/cache")
         x = torch.rand(10, 1)
         y = torch.rand(10)
 
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
+        tt.predict(x)
 
         remove_cache_files()
 
@@ -219,7 +238,9 @@ class TestTorchTrainer:
         tt.update_model_directory("tests/cache")
         x = torch.rand(10, 1)
         y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
+        )
         tt.predict(x)
 
         remove_cache_files()
