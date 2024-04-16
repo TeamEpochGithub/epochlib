@@ -21,17 +21,17 @@ class Test_Cacher:
     # _cache_exists
     def test__cache_exists_no_cache_args(self):
         c = Implemented_Cacher()
-        assert c._cache_exists("test") is False
+        assert c.cache_exists("test") is False
 
     def test__cache_exists_no_storage_type(self):
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
-            c._cache_exists("test", {"storage_path": "test"})
+            c.cache_exists("test", {"storage_path": "test"})
 
     def test__cache_exists_storage_type_npy(self):
         c = Implemented_Cacher()
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
             )
             is False
@@ -42,7 +42,7 @@ class Test_Cacher:
         with open("tests/cache/test.npy", "w") as f:
             f.write("test")
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
             )
             is True
@@ -52,7 +52,7 @@ class Test_Cacher:
     def test__cache_exists_storage_type_parquet(self):
         c = Implemented_Cacher()
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is False
@@ -63,7 +63,7 @@ class Test_Cacher:
         with open("tests/cache/test.parquet", "w") as f:
             f.write("test")
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is True
@@ -73,7 +73,7 @@ class Test_Cacher:
     def test__cache_exists_storage_type_csv(self):
         c = Implemented_Cacher()
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
             )
             is False
@@ -84,7 +84,7 @@ class Test_Cacher:
         with open("tests/cache/test.csv", "w") as f:
             f.write("test")
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
             )
             is True
@@ -94,7 +94,7 @@ class Test_Cacher:
     def test__cache_exists_storage_type_npy_stack(self):
         c = Implemented_Cacher()
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
             )
             is False
@@ -105,7 +105,7 @@ class Test_Cacher:
         with open("tests/cache/test", "w") as f:
             f.write("test")
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
             )
             is True
@@ -115,7 +115,7 @@ class Test_Cacher:
     def test__cache_exists_storage_type_pkl(self):
         c = Implemented_Cacher()
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
             )
             is False
@@ -126,7 +126,7 @@ class Test_Cacher:
         with open("tests/cache/test.pkl", "w") as f:
             f.write("test")
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
             )
             is True
@@ -136,7 +136,7 @@ class Test_Cacher:
     def test__cache_exists_storage_type_unsupported(self):
         c = Implemented_Cacher()
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".new_type", "storage_path": "tests/cache"}
             )
             is False
@@ -178,7 +178,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
             )
             is True
@@ -199,7 +199,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
             )
             is True
@@ -234,7 +234,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is True
@@ -256,7 +256,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is True
@@ -277,7 +277,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is True
@@ -298,7 +298,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is True
@@ -319,7 +319,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
             )
             is True
@@ -354,7 +354,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
             )
             is True
@@ -376,7 +376,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
             )
             is True
@@ -397,7 +397,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
             )
             is True
@@ -432,7 +432,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
             )
             is True
@@ -479,7 +479,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
             )
             is True
@@ -501,7 +501,7 @@ class Test_Cacher:
             },
         )
         assert (
-            c._cache_exists(
+            c.cache_exists(
                 "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
             )
             is True

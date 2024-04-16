@@ -1,3 +1,4 @@
+exclude: ^(venv/|.venv/|tests/)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -31,58 +32,22 @@ repos:
       - id: sphinx-lint
         args: [ --enable=default-role ]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.2
+    rev: v0.1.9
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.9.0
+    rev: v1.8.0
     hooks:
       - id: mypy
-        exclude: ^tests/
         additional_dependencies:
-          - numpy
-          - scikit-learn
-          - scikit-image
-          - scipy
-          - tqdm
-          - polars
-          - imagecodecs
-          - Pillow
-          - opencv-python
-          - tifffile
-          - seaborn
-          - matplotlib
-          - plotly
-          - torch
-          - torchaudio
-          - torchvision
-          - torch-summary
-          - open-clip-torch
-          - dash
-          - dash-bootstrap-components
-          - dash-bootstrap-templates
-          - rasterio
-          - dask
-          - dask-glm
-          - dask_image
-          - dask-ml
-          - distributed
-          - fsspec
-          - segmentation-models-pytorch
-          - catboost
-          - albumentations
-          - typing_extensions
-          - annotated-types
-          - pandas-stubs
-          - traitlets
-          - hydra-core
-          - wandb
-          - randomname
-          - coloredlogs
-          - kornia
-          - einops
-          - pytest
           - agogos
+          - annotated-types
+          - dask
+          - matplotlib
+          - numpy
           - polars
+          - torch
+          - traitlets
+          - timm
         args: [ --disallow-any-generics, --disallow-untyped-defs, --disable-error-code=import-untyped]
