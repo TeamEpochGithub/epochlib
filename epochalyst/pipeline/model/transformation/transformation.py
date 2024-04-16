@@ -3,7 +3,7 @@ from typing import Any
 from agogos.transforming import TransformingSystem, TransformType
 
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
+from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 
 
 @dataclass
@@ -58,7 +58,7 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
     title: str = "Transformation Pipeline"  # The title of the pipeline since transformation pipeline can be used for multiple purposes. (Feature, Label, etc.)
 
     def transform(
-        self, data: Any, cache_args: _CacheArgs | None = None, **transform_args: Any
+        self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any
     ) -> Any:
         """Transform the input data.
 
