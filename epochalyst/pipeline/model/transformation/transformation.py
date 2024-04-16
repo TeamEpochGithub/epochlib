@@ -60,12 +60,7 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
 
     title: str = "Transformation Pipeline"  # The title of the pipeline since transformation pipeline can be used for multiple purposes. (Feature, Label, etc.)
 
-    def transform(
-        self,
-        data: Any,
-        cache_args: _CacheArgs | None = None,
-        **transform_args: Any,
-    ) -> Any:
+    def transform(self, data: Any, cache_args: _CacheArgs | None = None, **transform_args: Any) -> Any:  # noqa: ANN401
         """Transform the input data.
 
         :param data: The input data.
@@ -100,7 +95,7 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
                 self.log_to_debug(f"{step} is not given cache_args")
                 continue
 
-            step_cache_exists = step._cache_exists(step.get_hash(), step_cache_args)
+            step_cache_exists = step.cache_exists(step.get_hash(), step_cache_args)
             if step_cache_exists:
                 self.log_to_debug(
                     f"Cache exists for {step}, moving index of steps to {i}",
