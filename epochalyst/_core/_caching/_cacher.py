@@ -4,11 +4,26 @@ import pickle
 import sys
 from typing import Any, TypedDict, Literal
 
-import dask.array as da
-import dask.dataframe as dd
-import numpy as np
-import pandas as pd
-import polars as pl
+try:
+    import dask.array as da
+    import dask.dataframe as dd
+except ImportError:
+    """User doesn't require these packages"""
+
+try:
+    import numpy as np
+except ImportError:
+    """User doesn't require these packages"""
+
+try:
+    import pandas as pd
+except ImportError:
+    """User doesn't require these packages"""
+
+try:
+    import polars as pl
+except ImportError:
+    """User doen't require these packages"""
 
 from epochalyst._core._logging._logger import _Logger
 
