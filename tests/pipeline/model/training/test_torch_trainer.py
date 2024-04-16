@@ -16,7 +16,7 @@ class TestTorchTrainer:
 
     class ImplementedTorchTrainer(TorchTrainer):
         def __post_init__(self):
-            self.test_split_type = 1
+            self.n_folds = 1
             super().__post_init__()
 
         def log_to_terminal(self, message: str) -> None:
@@ -28,7 +28,7 @@ class TestTorchTrainer:
     @dataclass
     class FullyImplementedTorchTrainer(TorchTrainer):
         def __post_init__(self):
-            self.test_split_type = 1
+            self.n_folds = 1
             super().__post_init__()
 
         def log_to_terminal(self, message: str) -> None:
@@ -48,7 +48,7 @@ class TestTorchTrainer:
 
     def test_init_no_args(self):
         with pytest.raises(TypeError):
-            TorchTrainer(test_split_type=1)
+            TorchTrainer(n_folds=1)
 
     def test_init_none_args(self):
         with pytest.raises(TypeError):
@@ -57,7 +57,7 @@ class TestTorchTrainer:
                 criterion=None,
                 optimizer=None,
                 device=None,
-                test_split_type=1,
+                n_folds=1,
             )
 
     def test_init_proper_args(self):
@@ -66,7 +66,7 @@ class TestTorchTrainer:
                 model=self.simple_model,
                 criterion=torch.nn.MSELoss(),
                 optimizer=self.optimizer,
-                test_split_type=0,
+                n_folds=0,
             )
 
     def test_init_proper_args_with_implemented(self):
@@ -195,7 +195,7 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        tt.test_split_type = 0
+        tt.n_folds = 0
         tt.update_model_directory("tests/cache")
         x = torch.rand(10, 1)
         y = torch.rand(10)
@@ -241,6 +241,46 @@ class TestTorchTrainer:
         tt.train(
             x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
         )
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict_3fold(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        remove_cache_files()
+        tt.n_folds = 3
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
+        )
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=1
+        )
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=2
+        )
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict_train_full(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        remove_cache_files()
+        tt.n_folds = 0
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[])
         tt.predict(x)
 
         remove_cache_files()
