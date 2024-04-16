@@ -2,9 +2,8 @@
 import copy
 import functools
 import gc
-
-from dataclasses import dataclass, field
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Any, TypeVar
 
@@ -142,10 +141,9 @@ class TorchTrainer(TrainingBlock):
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
-
         if self.n_folds == -1:
             raise ValueError(
-                "Please specify the number of folds for cross validation or set n_folds to 0 for train full."
+                "Please specify the number of folds for cross validation or set n_folds to 0 for train full.",
             )
         self.save_model_to_disk = True
         self.model_directory = "tm"
@@ -255,7 +253,11 @@ class TorchTrainer(TrainingBlock):
             )
 
         self._training_loop(
-            train_loader, test_loader, train_losses, val_losses, self._fold
+            train_loader,
+            test_loader,
+            train_losses,
+            val_losses,
+            self._fold,
         )
 
         self.log_to_terminal(
@@ -316,7 +318,8 @@ class TorchTrainer(TrainingBlock):
         return np.mean(test_predictions, axis=0)
 
     def predict_on_loader(
-        self, loader: DataLoader[tuple[Tensor, ...]]
+        self,
+        loader: DataLoader[tuple[Tensor, ...]],
     ) -> npt.NDArray[np.float32]:
         """Predict on the loader.
 
@@ -421,7 +424,6 @@ class TorchTrainer(TrainingBlock):
 
     def update_model_directory(self, model_directory: str) -> None:
         """Update the model directory.
-
 
         :param model_directory: The model directory.
         """
