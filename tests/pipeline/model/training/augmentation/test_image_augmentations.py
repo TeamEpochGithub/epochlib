@@ -21,9 +21,7 @@ class TestImageAugmentations:
         assert augmented_y.shape == y.shape
 
         # Because the images are all ones and zeros the mean of the pixels should be equal to the labels after being transformed
-        assert torch.all(
-            torch.isclose(augmented_x.mean(dim=-1).mean(dim=-1), augmented_y)
-        )
+        assert torch.allclose(augmented_x.mean(dim=-1).mean(dim=-1), augmented_y)
 
     def test_mixup(self):
         mixup = image_augmentations.MixUp(p=1.0)
@@ -40,6 +38,4 @@ class TestImageAugmentations:
         assert augmented_y.shape == y.shape
 
         # Because the images are all ones and zeros the mean of the pixels should be equal to the labels after being transformed
-        assert torch.all(
-            torch.isclose(augmented_x.mean(dim=-1).mean(dim=-1), augmented_y)
-        )
+        assert torch.allclose(augmented_x.mean(dim=-1).mean(dim=-1), augmented_y)

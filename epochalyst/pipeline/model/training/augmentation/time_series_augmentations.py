@@ -23,7 +23,7 @@ class CutMix1D(torch.nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Appply CutMix to the batch of 1D signal.
 
-        :param x: Input features. (N,C,L)|(N,L)
+        :param x: Input features. (N,C,L)
         :param y: Input labels. (N,C)
         :return: The augmented features and labels"""
 
@@ -138,8 +138,8 @@ class RandomPhaseShift(torch.nn.Module):
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         """Apply Random phase shift to each frequency of the fft of the input signal.
 
-        :param x: Input features. (N,C,L)|(N,L)
-        :return: augmented features. (N,C,L)|(N,L)
+        :param x: Input features. (N,C,L)|(N,L)|(L)
+        :return: augmented features. (N,C,L)|(N,L)|(L)
         """
         if torch.rand(1) < self.p:
             # Take the rfft of the input tensor
@@ -189,6 +189,10 @@ class SubstractChannels(torch.nn.Module):
         :param x: Input features. (N,C,L)
         :return: Augmented features. (N,C,L)
         """
+        if x.shape[1] == 1:
+            raise ValueError(
+                "Sequence only has 1 channel. No channels to subtract from each other"
+            )
         if torch.rand(1) < self.p:
             length = x.shape[1] - 1
             total = x.sum(dim=1) / length
