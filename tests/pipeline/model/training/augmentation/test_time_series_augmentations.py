@@ -70,7 +70,27 @@ class TestTimeSeriesAugmentations:
         )
 
     def test_random_amplitude_shift(self):
-        pass
+        set_torch_seed(42)
+        low = 0.5
+        high = 1.5
+        random_amplitude_shift = time_series_augmentations.RandomAmplitudeShift(
+            p=1.0, low=low, high=high
+        )
+        # Sum of 2 signals with the 2nd one being half the frequency of the first one
+        x = torch.sin(torch.linspace(0, 2 * np.pi, 1000)) + torch.sin(
+            torch.linspace(0, np.pi, 1000)
+        )
+        augmented_x = random_amplitude_shift(x)
+
+        # Assert the output shape is correct
+        assert augmented_x.shape == x.shape
+        # Assert that the resulting signals amplitudes do not go over the bounds that have been set
+        assert torch.all(
+            torch.abs(torch.fft.rfft(x)) * low <= torch.abs(torch.fft.rfft(augmented_x))
+        ) & torch.all(
+            torch.abs(torch.fft.rfft(augmented_x))
+            <= torch.abs(torch.fft.rfft(x)) * high
+        )
 
     def test_random_phase_shift(self):
         set_torch_seed(42)
@@ -103,7 +123,7 @@ class TestTimeSeriesAugmentations:
         # Assert the output shape is correct
         assert augmented_x.shape == x.shape
         # Assert the reversed sine wave is equal to 180 degrees phase shifted version
-        assert torch.allclose(test_x, augmented_x, atol=0.05)
+        assert torch.allclose(test_x, augmented_x, atol=0.0000005)
 
     def test_subtract_channels(self):
         set_torch_seed(42)
