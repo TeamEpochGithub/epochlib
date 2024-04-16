@@ -123,6 +123,7 @@ class TorchTrainer(TrainingBlock):
     batch_size: Annotated[int, Gt(0)] = 32
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
+    model_name: str = "MODEL_NAME_NOT_SPECIFIED"  # No spaces allowed
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -155,6 +156,10 @@ class TorchTrainer(TrainingBlock):
         # Early stopping
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
+
+        # Check validity of model_name
+        if " " in self.model_name:
+            raise ValueError("Spaces in model_name not allowed")
 
         super().__post_init__()
 
@@ -352,6 +357,12 @@ class TorchTrainer(TrainingBlock):
         """
         self.model_directory = model_directory
 
+    def save_model_to_external(self) -> None:
+        self.log_to_warning(
+            "Saving model to external is not implemented for TorchTrainer, if you want uploaded models. Please overwrite"
+        )
+        pass
+
     def _training_loop(
         self,
         train_loader: DataLoader[tuple[Tensor, ...]],
@@ -442,7 +453,11 @@ class TorchTrainer(TrainingBlock):
         """
         losses = []
         self.model.train()
-        pbar = tqdm(dataloader, unit="batch", desc=f"Epoch {epoch} Train")
+        pbar = tqdm(
+            dataloader,
+            unit="batch",
+            desc=f"Epoch {epoch} Train ({self.initialized_optimizer.param_groups[0]['lr']})",
+        )
         for batch in pbar:
             X_batch, y_batch = batch
             X_batch = X_batch.to(self.device).float()
@@ -513,12 +528,6 @@ class TorchTrainer(TrainingBlock):
             f"Model saved to {self.model_directory}/{self.get_hash()}.pt"
         )
         self.save_model_to_external()
-
-    def save_model_to_external(self) -> None:
-        self.log_to_warning(
-            "Saving model to external is not implemented for TorchTrainer, if you want uploaded models. Please overwrite"
-        )
-        pass
 
     def _load_model(self) -> None:
         """Load the model from the model_directory folder."""
@@ -599,6 +608,16 @@ class TorchTrainer(TrainingBlock):
         return TrainTestDataset(
             train_dataset, test_dataset, train_indices, test_indices
         )
+
+
+def collate_fn(batch: tuple[Tensor, ...]) -> tuple[Tensor, ...]:
+    """Collate function for the dataloader.
+
+    :param batch: The batch to collate.
+    :return: Collated batch.
+    """
+    X, y = batch
+    return X, y
 
 
 class TrainTestDataset(Dataset[T_co]):
