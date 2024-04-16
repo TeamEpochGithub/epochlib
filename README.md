@@ -44,6 +44,17 @@ For caching some imports are only required, these have to be manually installed 
 - pyarrow >= 6.0.0 (Read parquet files)
 - annotated-types >= 0.6.0
 
+### Model
+
+There is support for using timm models. To be able to do so the user must manually install timm.
+- timm >= 0.9.16
+
+### Augmentation
+
+There is also implementations of augmentations that are not in commonly used packages. Most of these are for time series data but there are implmenetations for CutMix and MixUp for images that can be used in the pipeline. To be able to use these the user must manually install kornia.
+
+- kornia >= 0.7.2
+
 ## Documentation
 
 Documentation is generated using [Sphinx](https://www.sphinx-doc.org/en/master/).

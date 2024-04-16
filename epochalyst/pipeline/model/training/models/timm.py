@@ -1,17 +1,10 @@
-"""Timm model for 2D spectrogram classification."""
+"""Timm model for 2D image classification."""
 import torch
 from torch import nn
 
 
 class Timm(nn.Module):
-    """Timm model for 2D spectrogram classification..
-
-    Input:
-        X: (n_samples, n_channel, n_width, n_height)
-        Y: (n_samples)
-
-    Output:
-        out: (n_samples)
+    """Timm model for 2D image classification.
 
     :param in_channels: Number of input channels
     :param out_channels: Number of output channels
