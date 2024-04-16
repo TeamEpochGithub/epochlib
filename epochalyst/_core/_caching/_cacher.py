@@ -136,7 +136,7 @@ class _Cacher(_Logger):
 
         return path_exists
 
-    def _get_cache(self, name: str, cache_args: CacheArgs | None = None) -> Any:  # noqa: ANN401
+    def _get_cache(self, name: str, cache_args: CacheArgs | None = None) -> Any:  # noqa: ANN401 C901 PLR0911 PLR0912
         """Load the cache.
 
         :param name: The name of the cache.
@@ -244,7 +244,7 @@ class _Cacher(_Logger):
             "storage_type must be .npy, .parquet, .csv, or .npy_stack, other types not supported yet",
         )
 
-    def _store_cache(self, name: str, data: Any, cache_args: CacheArgs | None = None) -> None:  # noqa: ANN401
+    def _store_cache(self, name: str, data: Any, cache_args: CacheArgs | None = None) -> None:  # noqa: ANN401 C901 PLR0915 PLR0912
         """Store one set of data.
 
         :param name: The name of the cache.
@@ -313,7 +313,9 @@ class _Cacher(_Logger):
         elif storage_type == ".csv":
             # Check if output_data_type is supported and store cache to output_data_type
             self.log_to_debug(f"Storing .csv file to {storage_path + name}")
-            if output_data_type in {"pandas_dataframe", "dask_dataframe"}:
+            if output_data_type == "pandas_dataframe":
+                data.to_csv(storage_path + name + ".csv", **({"index": False} | store_args))
+            elif output_data_type == "dask_dataframe":
                 data.to_csv(storage_path + name, **({"index": False} | store_args))
             elif output_data_type == "polars_dataframe":
                 data.write_csv(storage_path + name + ".csv", **store_args)

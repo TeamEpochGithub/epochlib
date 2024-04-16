@@ -24,6 +24,7 @@ pandas==2.2.1
 partd==1.4.1
 pillow==10.2.0
 pluggy==1.4.0
+timm==0.9.16
 polars==0.20.16
 pre-commit==3.7.0
 pyarrow>=6.0.0
