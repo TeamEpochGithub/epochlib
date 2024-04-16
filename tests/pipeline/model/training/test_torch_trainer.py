@@ -1,6 +1,10 @@
+import copy
 import functools
+from dataclasses import dataclass
 from typing import Any
 from unittest.mock import patch
+
+import numpy as np
 import torch
 from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
 import pytest
@@ -14,13 +18,22 @@ class TestTorchTrainer:
     scheduler = functools.partial(torch.optim.lr_scheduler.StepLR, step_size=1)
 
     class ImplementedTorchTrainer(TorchTrainer):
+        def __post_init__(self):
+            self.n_folds = 1
+            super().__post_init__()
+
         def log_to_terminal(self, message: str) -> None:
             print(message)
 
         def log_to_debug(self, message: str) -> None:
             pass
 
+    @dataclass
     class FullyImplementedTorchTrainer(TorchTrainer):
+        def __post_init__(self):
+            self.n_folds = 1
+            super().__post_init__()
+
         def log_to_terminal(self, message: str) -> None:
             print(message)
 
@@ -38,11 +51,17 @@ class TestTorchTrainer:
 
     def test_init_no_args(self):
         with pytest.raises(TypeError):
-            TorchTrainer()
+            TorchTrainer(n_folds=1)
 
     def test_init_none_args(self):
         with pytest.raises(TypeError):
-            TorchTrainer(model=None, criterion=None, optimizer=None, device=None)
+            TorchTrainer(
+                model=None,
+                criterion=None,
+                optimizer=None,
+                device=None,
+                n_folds=1,
+            )
 
     def test_init_proper_args(self):
         with pytest.raises(NotImplementedError):
@@ -50,6 +69,7 @@ class TestTorchTrainer:
                 model=self.simple_model,
                 criterion=torch.nn.MSELoss(),
                 optimizer=self.optimizer,
+                n_folds=0,
             )
 
     def test_init_proper_args_with_implemented(self):
@@ -178,11 +198,13 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
+        tt.n_folds = 0
         tt.update_model_directory("tests/cache")
         x = torch.rand(10, 1)
         y = torch.rand(10)
 
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
+        tt.predict(x)
 
         remove_cache_files()
 
@@ -219,8 +241,156 @@ class TestTorchTrainer:
         tt.update_model_directory("tests/cache")
         x = torch.rand(10, 1)
         y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
+        )
         tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict_3fold(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        remove_cache_files()
+        tt.n_folds = 3
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
+        )
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=1
+        )
+        tt.train(
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=2
+        )
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict_train_full(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        remove_cache_files()
+        tt.n_folds = 0
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[])
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict2(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]), fold=0
+        )
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict_all(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="all",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]), fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert len(preds) == 10
+        remove_cache_files()
+
+    def test_predict_2d(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=torch.nn.Linear(2, 2),
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="all",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 2)
+        y = torch.rand(10, 2)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert preds.shape == (10, 2)
+        assert len(preds) == 10
+        remove_cache_files()
+
+    def test_predict_partial(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="test",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 2
+        assert len(preds) == 10
+
+        remove_cache_files()
+
+    def test_predict_none(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="none",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert len(preds) == 10
 
         remove_cache_files()
 
@@ -299,3 +469,31 @@ class TestTorchTrainer:
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
 
         remove_cache_files()
+
+    def test_early_stopping_no_patience(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        orig_state_dict = copy.deepcopy(tt.model.state_dict)
+
+        tt._early_stopping()
+
+        # Lowest val loss should still be -inf
+        assert np.isinf(tt.lowest_val_loss)
+
+        # Early stopping counter should not exist
+        assert not hasattr(tt, "early_stopping_counter")
+
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        # Assert that no best model exists
+        assert tt.best_model_state_dict == {}
+        # Assert self.model still exists
+        assert tt.model.state_dict != {}
+        # Assert model chnages after training
+        assert tt.model.state_dict != orig_state_dict

@@ -37,11 +37,23 @@ python -m pytest --cov=epochalyst --cov-branch --cov-report=html:coverage_re
 ### Caching
 
 For caching some imports are only required, these have to be manually installed when needed
+
 - dask >= 2023.12.0 & dask-expr
 - pandas >= 1.3.0
 - polars
 - pyarrow >= 6.0.0 (Read parquet files)
 - annotated-types >= 0.6.0
+
+### Model
+
+There is support for using timm models. To be able to do so the user must manually install timm.
+- timm >= 0.9.16
+
+### Augmentation
+
+There is also implementations of augmentations that are not in commonly used packages. Most of these are for time series data but there are implmenetations for CutMix and MixUp for images that can be used in the pipeline. To be able to use these the user must manually install kornia.
+
+- kornia >= 0.7.2
 
 ## Documentation
 

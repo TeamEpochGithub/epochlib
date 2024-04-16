@@ -1,10 +1,13 @@
+"""ModelPipeline connects multiple transforming and training systems for extended training functionality."""
 from typing import Any
+
 from agogos.training import Pipeline
-from epochalyst._core._caching._cacher import _CacheArgs
+
+from epochalyst._core._caching._cacher import CacheArgs
 
 
 class ModelPipeline(Pipeline):
-    """ModelPipeline is the class used to create the pipeline for the model. (Currently same implementation as agogos pipeline)
+    """ModelPipeline is the class used to create the pipeline for the model. (Currently same implementation as agogos pipeline).
 
     :param x_sys: The system to transform the input data.
     :param y_sys: The system to transform the label data.
@@ -16,10 +19,11 @@ class ModelPipeline(Pipeline):
     def __post_init__(self) -> None:
         """Post init method for the Pipeline class.
 
-        Currently does nothing."""
+        Currently does nothing.
+        """
         return super().__post_init__()
 
-    def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+    def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Train the system.
 
         :param x: The input to the system.
@@ -28,7 +32,7 @@ class ModelPipeline(Pipeline):
         """
         return super().train(x, y, **train_args)
 
-    def predict(self, x: Any, **pred_args: Any) -> Any:
+    def predict(self, x: Any, **pred_args: Any) -> Any:  # noqa: ANN401
         """Predict the output of the system.
 
         :param x: The input to the system.
@@ -36,18 +40,18 @@ class ModelPipeline(Pipeline):
         """
         return super().predict(x, **pred_args)
 
-    def get_x_cache_exists(self, cache_args: _CacheArgs) -> bool:
-        """Get status of x
+    def get_x_cache_exists(self, cache_args: CacheArgs) -> bool:
+        """Get status of x.
 
         :param cache_args: Cache arguments
         :return: Whether cache exists
         """
         if self.x_sys is None:
             return False
-        return self.x_sys._cache_exists(self.x_sys.get_hash(), cache_args)
+        return self.x_sys.cache_exists(self.x_sys.get_hash(), cache_args)
 
-    def get_y_cache_exists(self, cache_args: _CacheArgs) -> bool:
-        """Get status of y cache
+    def get_y_cache_exists(self, cache_args: CacheArgs) -> bool:
+        """Get status of y cache.
 
         :param cache_args: Cache arguments
         :return: Whether cache exists
@@ -55,4 +59,4 @@ class ModelPipeline(Pipeline):
         if self.y_sys is None:
             return False
 
-        return self.y_sys._cache_exists(self.y_sys.get_hash(), cache_args)
+        return self.y_sys.cache_exists(self.y_sys.get_hash(), cache_args)

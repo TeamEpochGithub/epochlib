@@ -1,14 +1,18 @@
-from agogos.training import Trainer
-from typing import Any
-from epochalyst._core._logging._logger import _Logger
+"""TrainingBlock that can be inherited from to make blocks for a training pipeline."""
 from abc import abstractmethod
-from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
+from typing import Any
+
+from agogos.training import Trainer
+
+from epochalyst._core._caching._cacher import CacheArgs, _Cacher
+from epochalyst._core._logging._logger import _Logger
 
 
 class TrainingBlock(Trainer, _Cacher, _Logger):
     """The training block is a flexible block that allows for training of any model.
 
-    Methods:
+    Methods
+    -------
     .. code-block:: python
         @abstractmethod
         def custom_train(self, x: Any, y: Any, **train_args) -> tuple[Any, Any]: # Custom training implementation
@@ -54,9 +58,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         x = custom_training_block.predict(x)
     """
 
-    def train(
-        self, x: Any, y: Any, cache_args: _CacheArgs | None = None, **train_args: Any
-    ) -> tuple[Any, Any]:
+    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Train the model.
 
         :param x: The input data.
@@ -64,13 +66,9 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         :param cache_args: The cache arguments.
         :return: The predicted data and the labels
         """
-        if (
-            cache_args
-            and self._cache_exists(name=self.get_hash() + "x", cache_args=cache_args)
-            and self._cache_exists(name=self.get_hash() + "y", cache_args=cache_args)
-        ):
+        if cache_args and self.cache_exists(name=self.get_hash() + "x", cache_args=cache_args) and self.cache_exists(name=self.get_hash() + "y", cache_args=cache_args):
             self.log_to_terminal(
-                f"Cache exists for {self.__class__} with hash: {self.get_hash()}. Using the cache."
+                f"Cache exists for {self.__class__} with hash: {self.get_hash()}. Using the cache.",
             )
             x = self._get_cache(name=self.get_hash() + "x", cache_args=cache_args)
             y = self._get_cache(name=self.get_hash() + "y", cache_args=cache_args)
@@ -79,16 +77,20 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         x, y = self.custom_train(x, y, **train_args)
 
         self._store_cache(
-            name=self.get_hash() + "x", data=x, cache_args=cache_args
+            name=self.get_hash() + "x",
+            data=x,
+            cache_args=cache_args,
         ) if cache_args else None
         self._store_cache(
-            name=self.get_hash() + "y", data=y, cache_args=cache_args
+            name=self.get_hash() + "y",
+            data=y,
+            cache_args=cache_args,
         ) if cache_args else None
 
         return x, y
 
     @abstractmethod
-    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Train the model.
 
         :param x: The input data.
@@ -96,38 +98,39 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         :return: The predicted data and the labels
         """
         raise NotImplementedError(
-            f"Custom transform method not implemented for {self.__class__}"
+            f"Custom transform method not implemented for {self.__class__}",
         )
 
-    def predict(
-        self, x: Any, cache_args: _CacheArgs | None = None, **pred_args: Any
-    ) -> Any:
+    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:  # noqa: ANN401
         """Predict using the model.
 
         :param x: The input data.
         :param cache_args: The cache arguments.
         :return: The predicted data.
         """
-        if cache_args and self._cache_exists(
-            name=self.get_hash() + "p", cache_args=cache_args
+        if cache_args and self.cache_exists(
+            name=self.get_hash() + "p",
+            cache_args=cache_args,
         ):
             return self._get_cache(name=self.get_hash() + "p", cache_args=cache_args)
 
         x = self.custom_predict(x, **pred_args)
 
         self._store_cache(
-            name=self.get_hash() + "p", data=x, cache_args=cache_args
+            name=self.get_hash() + "p",
+            data=x,
+            cache_args=cache_args,
         ) if cache_args else None
 
         return x
 
     @abstractmethod
-    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any:  # noqa: ANN401
         """Predict using the model.
 
         :param x: The input data.
         :return: The predicted data.
         """
         raise NotImplementedError(
-            f"Custom transform method not implemented for {self.__class__}"
+            f"Custom transform method not implemented for {self.__class__}",
         )
