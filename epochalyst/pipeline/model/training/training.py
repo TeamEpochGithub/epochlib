@@ -1,9 +1,10 @@
+"""TrainingPipeline for creating a sequential pipeline of TrainType classes."""
 from typing import Any
 
 from agogos.training import TrainingSystem, TrainType
 
+from epochalyst._core._caching._cacher import CacheArgs, _Cacher
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 
 
 class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
@@ -12,16 +13,14 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
     :param steps: The steps to train the model.
     """
 
-    def train(
-        self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any
-    ) -> tuple[Any, Any]:
+    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Train the system.
 
         :param x: The input to the system.
         :param y: The expected output of the system.
         :return: The input and output of the system.
         """
-        if cache_args and self._cache_exists(name=self.get_hash() + "x", cache_args=cache_args) and self._cache_exists(name=self.get_hash() + "y", cache_args=cache_args):
+        if cache_args and self.cache_exists(name=self.get_hash() + "x", cache_args=cache_args) and self.cache_exists(name=self.get_hash() + "y", cache_args=cache_args):
             self.log_to_terminal(
                 f"Cache exists for training pipeline with hash: {self.get_hash()}. Using the cache.",
             )
@@ -51,10 +50,10 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
                 self.log_to_debug(f"{step} is not given cache_args")
                 continue
 
-            step_cache_exists = step._cache_exists(
+            step_cache_exists = step.cache_exists(
                 step.get_hash() + "x",
                 step_cache_args,
-            ) and step._cache_exists(step.get_hash() + "y", step_cache_args)
+            ) and step.cache_exists(step.get_hash() + "y", step_cache_args)
             if step_cache_exists:
                 self.log_to_debug(
                     f"Cache exists for {step}, moving index of steps to {i}",
@@ -72,16 +71,14 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
 
         return x, y
 
-    def predict(
-        self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any
-    ) -> Any:
+    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:  # noqa: ANN401
         """Predict the output of the system.
 
         :param x: The input to the system.
         :param cache_args: The cache arguments.
         :return: The output of the system.
         """
-        if cache_args and self._cache_exists(self.get_hash() + "p", cache_args):
+        if cache_args and self.cache_exists(self.get_hash() + "p", cache_args):
             return self._get_cache(self.get_hash() + "p", cache_args)
 
         if self.get_steps():
@@ -106,7 +103,7 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
                 self.log_to_debug(f"{step} is not given cache_args")
                 continue
 
-            step_cache_exists = step._cache_exists(
+            step_cache_exists = step.cache_exists(
                 step.get_hash() + "p",
                 step_cache_args,
             )

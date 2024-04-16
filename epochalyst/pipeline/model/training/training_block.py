@@ -1,10 +1,11 @@
+"""TrainingBlock that can be inherited from to make blocks for a training pipeline."""
 from abc import abstractmethod
 from typing import Any
 
 from agogos.training import Trainer
 
+from epochalyst._core._caching._cacher import CacheArgs, _Cacher
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 
 
 class TrainingBlock(Trainer, _Cacher, _Logger):
@@ -57,9 +58,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         x = custom_training_block.predict(x)
     """
 
-    def train(
-        self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any
-    ) -> tuple[Any, Any]:
+    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Train the model.
 
         :param x: The input data.
@@ -91,7 +90,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         return x, y
 
     @abstractmethod
-    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Train the model.
 
         :param x: The input data.
@@ -102,9 +101,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
             f"Custom transform method not implemented for {self.__class__}",
         )
 
-    def predict(
-        self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any
-    ) -> Any:
+    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:  # noqa: ANN401
         """Predict using the model.
 
         :param x: The input data.
@@ -128,7 +125,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         return x
 
     @abstractmethod
-    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any:  # noqa: ANN401
         """Predict using the model.
 
         :param x: The input data.

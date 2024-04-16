@@ -2,7 +2,7 @@ import glob
 import os
 import pickle
 import sys
-from typing import Any, TypedDict, Literal
+from typing import Any, Literal, TypedDict
 
 try:
     import dask.array as da
@@ -186,11 +186,13 @@ class _Cacher(_Logger):
                 return dd.read_parquet(storage_path + name + ".parquet", **read_args)
             elif output_data_type == "numpy_array":
                 return pd.read_parquet(
-                    storage_path + name + ".parquet", **read_args
+                    storage_path + name + ".parquet",
+                    **read_args,
                 ).to_numpy()
             elif output_data_type == "dask_array":
                 return dd.read_parquet(
-                    storage_path + name + ".parquet", **read_args
+                    storage_path + name + ".parquet",
+                    **read_args,
                 ).to_dask_array()
             elif output_data_type == "polars_dataframe":
                 return pl.read_parquet(storage_path + name + ".parquet", **read_args)
@@ -242,7 +244,10 @@ class _Cacher(_Logger):
             )
 
     def _store_cache(
-        self, name: str, data: Any, cache_args: CacheArgs | None = None
+        self,
+        name: str,
+        data: Any,
+        cache_args: CacheArgs | None = None,
     ) -> None:
         """Store one set of data.
 
@@ -293,7 +298,8 @@ class _Cacher(_Logger):
                 data.to_parquet(storage_path + name + ".parquet", **store_args)
             elif output_data_type == "numpy_array":
                 pd.DataFrame(data).to_parquet(
-                    storage_path + name + ".parquet", **store_args
+                    storage_path + name + ".parquet",
+                    **store_args,
                 )
             elif output_data_type == "dask_array":
                 new_dd = dd.from_dask_array(data)
@@ -315,7 +321,8 @@ class _Cacher(_Logger):
             self.log_to_debug(f"Storing .csv file to {storage_path + name}")
             if output_data_type == "pandas_dataframe":
                 data.to_csv(
-                    storage_path + name + ".csv", **({"index": False} | store_args)
+                    storage_path + name + ".csv",
+                    **({"index": False} | store_args),
                 )
             elif output_data_type == "dask_dataframe":
                 data.to_csv(storage_path + name, **({"index": False} | store_args))

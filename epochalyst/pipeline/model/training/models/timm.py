@@ -27,8 +27,8 @@ class Timm(nn.Module):
         """
         try:
             import timm
-        except ImportError:
-            raise ImportError("Need to install timm if you want to use timm models")
+        except ImportError as err:
+            raise ImportError("Need to install timm if you want to use timm models") from err
 
         super(Timm, self).__init__()  # noqa: UP008
         self.in_channels = in_channels

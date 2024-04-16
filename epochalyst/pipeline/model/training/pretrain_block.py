@@ -1,3 +1,4 @@
+"""PretrainBlock to implement modules such as scalers."""
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
@@ -9,7 +10,7 @@ from epochalyst.pipeline.model.training.training_block import TrainingBlock
 
 @dataclass
 class PretrainBlock(TrainingBlock):
-    """Pretrain block class
+    """Pretrain block class.
 
     Parameters
     ----------
@@ -52,15 +53,7 @@ class PretrainBlock(TrainingBlock):
     test_size: float = 0.2
 
     @abstractmethod
-    def pretrain_train(
-        self,
-        x: Any,
-        y: Any,
-        train_indices: list[int],
-        *,
-        save_pretrain: bool = True,
-        save_pretrain_with_split: bool = False,
-    ) -> tuple[Any, Any]:
+    def pretrain_train(self, x: Any, y: Any, train_indices: list[int], *, save_pretrain: bool = True, save_pretrain_with_split: bool = False) -> tuple[Any, Any]:  # noqa: ANN401
         """Train pretrain block method.
 
         :param x: The input to the system.
@@ -73,7 +66,7 @@ class PretrainBlock(TrainingBlock):
             f"Train method not implemented for {self.__class__.__name__}",
         )
 
-    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
         """Call the pretrain train method.
 
         :param x: The input to the system.
@@ -94,7 +87,7 @@ class PretrainBlock(TrainingBlock):
         )
 
     def train_split_hash(self, train_indices: list[int]) -> str:
-        """Split the hash on train split
+        """Split the hash on train split.
 
         :param train_indices: Train indices
         :return: Split hash
