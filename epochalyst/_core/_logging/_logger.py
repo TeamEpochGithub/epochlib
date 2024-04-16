@@ -1,3 +1,4 @@
+"""_Logger add abstract logging functionality to other classes."""
 from abc import abstractmethod
 from typing import Any
 
@@ -71,7 +72,7 @@ class _Logger:
 
     @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None:
-        """Define metric for external. Example: (wandb.define_metric("Training/Train Loss", summary="min"))
+        """Define metric for external. Example: (wandb.define_metric("Training/Train Loss", summary="min")).
 
         :param metric: The metric to define.
         :param metric_type: The type of the metric.

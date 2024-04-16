@@ -66,7 +66,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         :param cache_args: The cache arguments.
         :return: The predicted data and the labels
         """
-        if cache_args and self._cache_exists(name=self.get_hash() + "x", cache_args=cache_args) and self._cache_exists(name=self.get_hash() + "y", cache_args=cache_args):
+        if cache_args and self.cache_exists(name=self.get_hash() + "x", cache_args=cache_args) and self.cache_exists(name=self.get_hash() + "y", cache_args=cache_args):
             self.log_to_terminal(
                 f"Cache exists for {self.__class__} with hash: {self.get_hash()}. Using the cache.",
             )
@@ -108,7 +108,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         :param cache_args: The cache arguments.
         :return: The predicted data.
         """
-        if cache_args and self._cache_exists(
+        if cache_args and self.cache_exists(
             name=self.get_hash() + "p",
             cache_args=cache_args,
         ):

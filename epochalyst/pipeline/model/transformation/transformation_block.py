@@ -62,7 +62,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         :param cache_args: The cache arguments.
         :return: The transformed data.
         """
-        if cache_args and self._cache_exists(
+        if cache_args and self.cache_exists(
             name=self.get_hash(),
             cache_args=cache_args,
         ):
