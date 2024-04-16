@@ -17,7 +17,7 @@ import torch
 class CustomApplyOne:
     """Custom sequential class for augmentations."""
 
-    probabilities_tensor: torch.Tensor
+    probabilities_tensor: torch.Tensor = field(init=False)
     x_transforms: list[Any] = field(default_factory=list)
     xy_transforms: list[Any] = field(default_factory=list)
 
@@ -32,7 +32,7 @@ class CustomApplyOne:
                 self.probabilities.append(transform.p)
 
         # Make tensor from probs
-        self.probabilities_tensor = torch.tensor(self.probabilities_tensor)
+        self.probabilities_tensor = torch.tensor(self.probabilities)
         # Ensure sum is 1
         self.probabilities_tensor /= self.probabilities_tensor.sum()
         self.all_transforms = self.x_transforms + self.xy_transforms
@@ -42,12 +42,9 @@ class CustomApplyOne:
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Apply the augmentations sequentially.
 
-        Args:
-            x (torch.Tensor): The input tensor.
-            y (torch.Tensor): The target tensor.
-
-        Returns:
-            tuple[torch.Tensor, torch.Tensor]: The augmented input and target tensors.
+        :param x: Input features
+        :param y: Input labels
+        :return: Augmented features and labels
         """
         transform = self.all_transforms[
             int(

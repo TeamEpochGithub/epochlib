@@ -38,7 +38,7 @@ class TestTimeSeriesAugmentations:
 
     def test_mixup1d(self):
         set_torch_seed(42)
-        mixup1d = time_series_augmentations.CutMix1D(p=1.0)
+        mixup1d = time_series_augmentations.MixUp1D(p=1.0)
         # Create dummy input and labels
         x = torch.cat([torch.ones(16, 1, 100), torch.zeros(16, 1, 100)], dim=0)
         # Multiclass labels
