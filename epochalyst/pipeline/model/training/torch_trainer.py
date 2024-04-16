@@ -109,7 +109,8 @@ class TorchTrainer(TrainingBlock):
         patience = 5
         test_size = 0.2
 
-        trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler, epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
+        trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler,
+                                 epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
 
         x, y = trainer.train(x, y)
         x = trainer.predict(x)
@@ -255,7 +256,7 @@ class TorchTrainer(TrainingBlock):
 
         return self.predict_on_loader(pred_dataloader).numpy(), y
 
-    def custom_predict(self, x: Any, **pred_args: Any) -> torch.Tensor:
+    def custom_predict(self, x: Any, **pred_args: Any) -> npt.NDArray[np.float32]:
         """Predict on the test data
 
         :param x: The input to the system.
@@ -279,7 +280,7 @@ class TorchTrainer(TrainingBlock):
         )
 
         # Predict
-        return self.predict_on_loader(pred_dataloader)
+        return self.predict_on_loader(pred_dataloader).numpy()
 
     def predict_on_loader(self, loader: DataLoader[tuple[Tensor, ...]]) -> torch.Tensor:
         """Predict on the loader.
