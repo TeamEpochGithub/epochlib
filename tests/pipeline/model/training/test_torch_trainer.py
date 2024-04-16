@@ -3,6 +3,7 @@ import functools
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import patch
+
 import numpy as np
 import torch
 from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
@@ -284,6 +285,112 @@ class TestTorchTrainer:
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[])
         tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict2(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]), fold=0
+        )
+        tt.predict(x)
+
+        remove_cache_files()
+
+    def test_predict_all(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="all",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]), fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert len(preds) == 10
+        remove_cache_files()
+
+    def test_predict_2d(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=torch.nn.Linear(2, 2),
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="all",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 2)
+        y = torch.rand(10, 2)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert preds.shape == (10, 2)
+        assert len(preds) == 10
+        remove_cache_files()
+
+    def test_predict_partial(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="test",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 2
+        assert len(preds) == 10
+
+        remove_cache_files()
+
+    def test_predict_none(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            to_predict="none",
+        )
+        tt.update_model_directory("tests/cache")
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        train_preds = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            test_indices=np.array([8, 9]),fold=0
+        )
+        preds = tt.predict(x)
+        assert len(train_preds[0]) == 10
+        assert len(preds) == 10
 
         remove_cache_files()
 

@@ -39,6 +39,8 @@ class TorchTrainer(TrainingBlock):
     - `batch_size` (int): Batch size
     - `patience` (int): Patience for early stopping
     - `test_size` (float): Relative size of the test set
+    - `to_predict` (str): Whether to predict on the test set, all data or none
+    - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `fold` (int): Fold number
 
@@ -134,6 +136,7 @@ class TorchTrainer(TrainingBlock):
     batch_size: Annotated[int, Gt(0)] = 32
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
+    to_predict: str = "test"
     model_name: str = "MODEL_NAME_NOT_SPECIFIED"  # No spaces allowed
 
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
@@ -141,6 +144,10 @@ class TorchTrainer(TrainingBlock):
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
+        # Make sure to_predict is either "test" or "all" or "none"
+        if self.to_predict not in ["test", "all", "none"]:
+            raise ValueError("to_predict should be either 'test', 'all' or 'none'")
+
         if self.n_folds == -1:
             raise ValueError(
                 "Please specify the number of folds for cross validation or set n_folds to 0 for train full.",
@@ -214,28 +221,21 @@ class TorchTrainer(TrainingBlock):
         # Create dataloaders
         train_loader, test_loader = self.create_dataloaders(train_dataset, test_dataset)
 
-        concat_dataset: Dataset[Any] = self._concat_datasets(
-            train_dataset,
-            test_dataset,
-            train_indices,
-            test_indices,
-        )
-        pred_dataloader = DataLoader(
-            concat_dataset,
-            batch_size=self.batch_size,
-            shuffle=False,
-            collate_fn=(
-                collate_fn if hasattr(concat_dataset, "__getitems__") else None  # type: ignore[arg-type]
-            ),
-        )
-
         if self._model_exists():
             self.log_to_terminal(
                 f"Model exists in {self.model_directory}/{self.get_hash()}.pt, loading model",
             )
             self._load_model()
             # Return the predictions
-            return self.predict_on_loader(pred_dataloader), y
+
+            return self._predict_after_train(
+                x,
+                y,
+                train_dataset,
+                test_dataset,
+                train_indices,
+                test_indices,
+            )
 
         self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
@@ -274,7 +274,62 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self.predict_on_loader(pred_dataloader), y
+        return self._predict_after_train(
+            x,
+            y,
+            train_dataset,
+            test_dataset,
+            train_indices,
+            test_indices,
+        )
+
+    def _predict_after_train(
+        self,
+        x: npt.NDArray[np.float32],
+        y: npt.NDArray[np.float32],
+        train_dataset: Dataset[Any],
+        test_dataset: Dataset[Any],
+        train_indices: list[int],
+        test_indices: list[int],
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+        """Predict after training the model.
+
+        :param x: The input to the system.
+        :param y: The expected output of the system.
+        :param train_dataset: The training dataset.
+        :param test_dataset: The test dataset.
+        :param train_indices: The indices to train on.
+        :param test_indices: The indices to test on.
+
+        :return: The predictions and the expected output.
+        """
+        match self.to_predict:
+            case "all":
+                concat_dataset: Dataset[Any] = self._concat_datasets(
+                    train_dataset,
+                    test_dataset,
+                    train_indices,
+                    test_indices,
+                )
+                pred_dataloader = DataLoader(
+                    concat_dataset,
+                    batch_size=self.batch_size,
+                    shuffle=False,
+                    collate_fn=(
+                        collate_fn if hasattr(concat_dataset, "__getitems__") else None  # type: ignore[arg-type]
+                    ),
+                )
+                return self.predict_on_loader(pred_dataloader), y
+            case "test":
+                train_loader, test_loader = self.create_dataloaders(
+                    train_dataset,
+                    test_dataset,
+                )
+                return self.predict_on_loader(test_loader), y[test_indices]
+            case "none":
+                return x, y
+            case _:
+                raise ValueError("to_predict should be either 'test', 'all' or 'none")
 
     def custom_predict(self, x: Any, **pred_args: Any) -> npt.NDArray[np.float32]:  # noqa: ANN401
         """Predict on the test data.
@@ -299,12 +354,6 @@ class TorchTrainer(TrainingBlock):
             collate_fn=(collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
 
-        # Predict with a single model, n_folds lower than 1 means a single test size, no CV
-        if self.n_folds < 1 or pred_args.get("use_single_model", False):
-            self._load_model()
-            return self.predict_on_loader(pred_dataloader)
-
-        # Ensemble the fold models:
         predictions = []
         for i in range(int(self.n_folds)):
             self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
@@ -664,8 +713,8 @@ class TorchTrainer(TrainingBlock):
         self,
         train_dataset: T,
         test_dataset: T,
-        train_indices: list[int],
-        test_indices: list[int],
+        train_indices: list[int] | npt.NDArray[np.int32],
+        test_indices: list[int] | npt.NDArray[np.int32],
     ) -> Dataset[T_co]:
         """Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
 
@@ -678,8 +727,8 @@ class TorchTrainer(TrainingBlock):
         return TrainTestDataset(
             train_dataset,
             test_dataset,
-            train_indices,
-            test_indices,
+            list(train_indices),
+            list(test_indices),
         )
 
 
