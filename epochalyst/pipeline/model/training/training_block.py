@@ -2,7 +2,7 @@ from agogos.training import Trainer
 from typing import Any
 from epochalyst._core._logging._logger import _Logger
 from abc import abstractmethod
-from epochalyst._core._caching._cacher import _Cacher, _CacheArgs
+from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 
 
 class TrainingBlock(Trainer, _Cacher, _Logger):
@@ -55,7 +55,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
     """
 
     def train(
-        self, x: Any, y: Any, cache_args: _CacheArgs | None = None, **train_args: Any
+        self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any
     ) -> tuple[Any, Any]:
         """Train the model.
 
@@ -100,7 +100,7 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
         )
 
     def predict(
-        self, x: Any, cache_args: _CacheArgs | None = None, **pred_args: Any
+        self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any
     ) -> Any:
         """Predict using the model.
 
