@@ -23,6 +23,11 @@ class TestImageAugmentations:
         # Because the images are all ones and zeros the mean of the pixels should be equal to the labels after being transformed
         assert torch.allclose(augmented_x.mean(dim=-1).mean(dim=-1), augmented_y)
 
+        cutmix = image_augmentations.CutMix(p=0)
+        augmented_x, augmented_y = cutmix(x, y)
+
+        assert torch.all(augmented_x == x) & torch.all(augmented_y == y)
+
     def test_mixup(self):
         mixup = image_augmentations.MixUp(p=1.0)
         # Create dummy input and labels
@@ -39,3 +44,8 @@ class TestImageAugmentations:
 
         # Because the images are all ones and zeros the mean of the pixels should be equal to the labels after being transformed
         assert torch.allclose(augmented_x.mean(dim=-1).mean(dim=-1), augmented_y)
+
+        mixup = image_augmentations.MixUp(p=0)
+        augmented_x, augmented_y = mixup(x, y)
+
+        assert torch.all(augmented_x == x) & torch.all(augmented_y == y)

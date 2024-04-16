@@ -36,6 +36,10 @@ class TestTimeSeriesAugmentations:
         # Because the images are all ones and zeros the mean of the pixels should be equal to the labels after being transformed
         assert torch.allclose(augmented_x.mean(dim=-1), augmented_y)
 
+        cutmix1d = time_series_augmentations.CutMix1D(p=0)
+        augmented_x, augmented_y = cutmix1d(x, y)
+        assert torch.all(augmented_x == x) & torch.all(augmented_y == y)
+
     def test_mixup1d(self):
         set_torch_seed(42)
         mixup1d = time_series_augmentations.MixUp1D(p=1.0)
@@ -53,6 +57,10 @@ class TestTimeSeriesAugmentations:
         # Because the images are all ones and zeros the mean of the pixels should be equal to the labels after being transformed
         assert torch.allclose(augmented_x.mean(dim=-1), augmented_y)
 
+        mixup1d = time_series_augmentations.MixUp1D(p=0)
+        augmented_x, augmented_y = mixup1d(x, y)
+        assert torch.all(augmented_x == x) & torch.all(augmented_y == y)
+
     def test_mirror1d(self):
         set_torch_seed(42)
         mirror1d = time_series_augmentations.Mirror1D(p=1.0)
@@ -68,6 +76,10 @@ class TestTimeSeriesAugmentations:
             augmented_x,
             torch.cat([torch.zeros(32, 1, 50), torch.ones(32, 1, 50)], dim=-1),
         )
+
+        mirror1d = time_series_augmentations.Mirror1D(p=0)
+        augmented_x = mirror1d(x)
+        assert torch.all(augmented_x == x)
 
     def test_random_amplitude_shift(self):
         set_torch_seed(42)
@@ -92,6 +104,10 @@ class TestTimeSeriesAugmentations:
             <= torch.abs(torch.fft.rfft(x)) * high
         )
 
+        random_amplitude_shift = time_series_augmentations.RandomAmplitudeShift(p=0)
+        augmented_x = random_amplitude_shift(x)
+        assert torch.all(augmented_x == x)
+
     def test_random_phase_shift(self):
         set_torch_seed(42)
         random_phase_shift = time_series_augmentations.RandomPhaseShift(p=1.0)
@@ -113,17 +129,25 @@ class TestTimeSeriesAugmentations:
         assert torch.isclose(augmented_x.mean(), x.mean())
         assert torch.isclose(augmented_x.mean(), torch.tensor([0]).float())
 
+        random_phase_shift = time_series_augmentations.RandomPhaseShift(p=0)
+        augmented_x = random_phase_shift(x)
+        assert torch.all(augmented_x == x)
+
     def test_reverse_1d(self):
         set_torch_seed(42)
-        reverse = time_series_augmentations.Reverse1D(p=1.0)
+        reverse1d = time_series_augmentations.Reverse1D(p=1.0)
         x = torch.sin(torch.linspace(0, 2 * np.pi, 1000)).unsqueeze(0)
         test_x = torch.sin(torch.linspace(np.pi, 3 * np.pi, 1000)).unsqueeze(0)
-        augmented_x = reverse(x)
+        augmented_x = reverse1d(x)
 
         # Assert the output shape is correct
         assert augmented_x.shape == x.shape
         # Assert the reversed sine wave is equal to 180 degrees phase shifted version
         assert torch.allclose(test_x, augmented_x, atol=0.0000005)
+
+        reverse1d = time_series_augmentations.Reverse1D(p=0)
+        augmented_x = reverse1d(x)
+        assert torch.all(augmented_x == x)
 
     def test_subtract_channels(self):
         set_torch_seed(42)
@@ -136,3 +160,7 @@ class TestTimeSeriesAugmentations:
         assert augmented_x.shape == x.shape
 
         assert torch.allclose(torch.zeros(*augmented_x.shape), augmented_x)
+
+        subtract_channels = time_series_augmentations.SubstractChannels(p=0)
+        augmented_x = subtract_channels(x)
+        assert torch.all(augmented_x == x)
