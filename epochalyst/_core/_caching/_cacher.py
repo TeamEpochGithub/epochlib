@@ -1,7 +1,7 @@
 import glob
 import os
 import pickle
-from typing import Any, TypedDict, Literal
+from typing import Any, Literal, TypedDict
 
 try:
     import dask.array as da
@@ -69,7 +69,8 @@ class _Cacher(_Logger):
     The cacher uses cache_args to determine if the data is already cached and if so, return the cached data.
     cache_args is a dictionary that contains the arguments to determine if the data is already cached.
 
-    Methods:
+    Methods
+    -------
     .. code-block:: python
         def _cache_exists(name: str, cache_args: _CacheArgs | None = None) -> bool: # Check if the cache exists
 
@@ -78,7 +79,7 @@ class _Cacher(_Logger):
         def _store_cache(name: str, data: Any, cache_args: _CacheArgs | None = None) -> None: # Store data
     """
 
-    def _cache_exists(self, name: str, cache_args: _CacheArgs | None = None) -> bool:
+    def cache_exists(self, name: str, cache_args: _CacheArgs | None = None) -> bool:
         """Check if the cache exists.
 
         :param cache_args: The cache arguments.
@@ -95,7 +96,7 @@ class _Cacher(_Logger):
         storage_path = cache_args["storage_path"]
 
         self.log_to_debug(
-            f"Checking if cache exists for type: {storage_type} and path: {storage_path}"
+            f"Checking if cache exists for type: {storage_type} and path: {storage_path}",
         )
 
         # If storage path does not end a slash, add it
@@ -111,17 +112,14 @@ class _Cacher(_Logger):
             path_exists = os.path.exists(storage_path + name + ".parquet")
         elif storage_type == ".csv":
             # Check if the file exists or if there are any parts inside the folder
-            path_exists = (
-                os.path.exists(storage_path + name + ".csv")
-                or glob.glob(storage_path + name + "/*.part") != []
-            )
+            path_exists = os.path.exists(storage_path + name + ".csv") or glob.glob(storage_path + name + "/*.part") != []
         elif storage_type == ".npy_stack":
             path_exists = os.path.exists(storage_path + name)
         elif storage_type == ".pkl":
             path_exists = os.path.exists(storage_path + name + ".pkl")
 
         self.log_to_debug(
-            f"Cache exists is {path_exists} for type: {storage_type} and path: {storage_path}"
+            f"Cache exists is {path_exists} for type: {storage_type} and path: {storage_path}",
         )
 
         return path_exists
@@ -133,19 +131,14 @@ class _Cacher(_Logger):
         :param cache_args: The cache arguments.
         :return: The cached data.
         """
-
         # Check if cache_args is empty
         if not cache_args:
             raise ValueError("cache_args is empty")
 
         # Check if storage type, storage_path and output_data_type are in cache_args
-        if (
-            "storage_type" not in cache_args
-            or "storage_path" not in cache_args
-            or "output_data_type" not in cache_args
-        ):
+        if "storage_type" not in cache_args or "storage_path" not in cache_args or "output_data_type" not in cache_args:
             raise ValueError(
-                "cache_args must contain storage_type, storage_path and output_data_type"
+                "cache_args must contain storage_type, storage_path and output_data_type",
             )
 
         storage_type = cache_args["storage_type"]
@@ -166,10 +159,10 @@ class _Cacher(_Logger):
                 return da.from_array(np.load(storage_path + name + ".npy"))
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for loading .npy file."
+                    f"Invalid output data type: {output_data_type}, for loading .npy file.",
                 )
                 raise ValueError(
-                    "output_data_type must be numpy_array or dask_array, other types not supported yet"
+                    "output_data_type must be numpy_array or dask_array, other types not supported yet",
                 )
         elif storage_type == ".parquet":
             # Check if output_data_type is supported and load cache to output_data_type
@@ -186,10 +179,10 @@ class _Cacher(_Logger):
                 return pl.read_parquet(storage_path + name + ".parquet")
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for loading .parquet file."
+                    f"Invalid output data type: {output_data_type}, for loading .parquet file.",
                 )
                 raise ValueError(
-                    "output_data_type must be pandas_dataframe, dask_dataframe, numpy_array, dask_array, or polars_dataframe, other types not supported yet"
+                    "output_data_type must be pandas_dataframe, dask_dataframe, numpy_array, dask_array, or polars_dataframe, other types not supported yet",
                 )
         elif storage_type == ".csv":
             # Check if output_data_type is supported and load cache to output_data_type
@@ -202,10 +195,10 @@ class _Cacher(_Logger):
                 return pl.read_csv(storage_path + name + ".csv")
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for loading .csv file."
+                    f"Invalid output data type: {output_data_type}, for loading .csv file.",
                 )
                 raise ValueError(
-                    "output_data_type must be pandas_dataframe, dask_dataframe, or polars_dataframe, other types not supported yet"
+                    "output_data_type must be pandas_dataframe, dask_dataframe, or polars_dataframe, other types not supported yet",
                 )
         elif storage_type == ".npy_stack":
             # Check if output_data_type is supported and load cache to output_data_type
@@ -214,25 +207,28 @@ class _Cacher(_Logger):
                 return da.from_npy_stack(storage_path + name)
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for loading .npy_stack file."
+                    f"Invalid output data type: {output_data_type}, for loading .npy_stack file.",
                 )
                 raise ValueError(
-                    "output_data_type must be dask_array, other types not supported yet"
+                    "output_data_type must be dask_array, other types not supported yet",
                 )
         elif storage_type == ".pkl":
             # Load the pickle file
             self.log_to_debug(
-                f"Loading pickle file from {storage_path + name + '.pkl'}"
+                f"Loading pickle file from {storage_path + name + '.pkl'}",
             )
             return pickle.load(open(storage_path + name + ".pkl", "rb"))
         else:
             self.log_to_debug(f"Invalid storage type: {storage_type}")
             raise ValueError(
-                "storage_type must be .npy, .parquet, .csv, or .npy_stack, other types not supported yet"
+                "storage_type must be .npy, .parquet, .csv, or .npy_stack, other types not supported yet",
             )
 
     def _store_cache(
-        self, name: str, data: Any, cache_args: _CacheArgs | None = None
+        self,
+        name: str,
+        data: Any,
+        cache_args: _CacheArgs | None = None,
     ) -> None:
         """Store one set of data.
 
@@ -240,19 +236,14 @@ class _Cacher(_Logger):
         :param data: The data to store.
         :param cache_args: The cache arguments.
         """
-
         # Check if cache_args is empty
         if not cache_args:
             raise ValueError("cache_args is empty")
 
         # Check if storage type, storage_path and output_data_type are in cache_args
-        if (
-            "storage_type" not in cache_args
-            or "storage_path" not in cache_args
-            or "output_data_type" not in cache_args
-        ):
+        if "storage_type" not in cache_args or "storage_path" not in cache_args or "output_data_type" not in cache_args:
             raise ValueError(
-                "cache_args must contain storage_type, storage_path and output_data_type"
+                "cache_args must contain storage_type, storage_path and output_data_type",
             )
 
         storage_type = cache_args["storage_type"]
@@ -273,10 +264,10 @@ class _Cacher(_Logger):
                 np.save(storage_path + name + ".npy", data.compute())
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for storing .npy file."
+                    f"Invalid output data type: {output_data_type}, for storing .npy file.",
                 )
                 raise ValueError(
-                    "output_data_type must be numpy_array or dask_array, other types not supported yet"
+                    "output_data_type must be numpy_array or dask_array, other types not supported yet",
                 )
         elif storage_type == ".parquet":
             # Check if output_data_type is supported and store cache to output_data_type
@@ -290,17 +281,17 @@ class _Cacher(_Logger):
             elif output_data_type == "dask_array":
                 new_dd = dd.from_dask_array(data)
                 new_dd = new_dd.rename(
-                    columns={col: str(col) for col in new_dd.columns}
+                    columns={col: str(col) for col in new_dd.columns},
                 )
                 new_dd.to_parquet(storage_path + name + ".parquet")
             elif output_data_type == "polars_dataframe":
                 data.write_parquet(storage_path + name + ".parquet")
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for storing .parquet file."
+                    f"Invalid output data type: {output_data_type}, for storing .parquet file.",
                 )
                 raise ValueError(
-                    "output_data_type must be pandas_dataframe, dask_dataframe, numpy_array, dask_array, or polars_dataframe, other types not supported yet"
+                    "output_data_type must be pandas_dataframe, dask_dataframe, numpy_array, dask_array, or polars_dataframe, other types not supported yet",
                 )
         elif storage_type == ".csv":
             # Check if output_data_type is supported and store cache to output_data_type
@@ -313,10 +304,10 @@ class _Cacher(_Logger):
                 data.write_csv(storage_path + name + ".csv")
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for storing .csv file."
+                    f"Invalid output data type: {output_data_type}, for storing .csv file.",
                 )
                 raise ValueError(
-                    "output_data_type must be pandas_dataframe, dask_dataframe, or polars_dataframe, other types not supported yet"
+                    "output_data_type must be pandas_dataframe, dask_dataframe, or polars_dataframe, other types not supported yet",
                 )
         elif storage_type == ".npy_stack":
             # Check if output_data_type is supported and store cache to output_data_type
@@ -325,10 +316,10 @@ class _Cacher(_Logger):
                 da.to_npy_stack(storage_path + name, data)
             else:
                 self.log_to_debug(
-                    f"Invalid output data type: {output_data_type}, for storing .npy_stack file."
+                    f"Invalid output data type: {output_data_type}, for storing .npy_stack file.",
                 )
                 raise ValueError(
-                    "output_data_type must be numpy_array other types not supported yet"
+                    "output_data_type must be numpy_array other types not supported yet",
                 )
         elif storage_type == ".pkl":
             # Store the pickle file
@@ -341,5 +332,5 @@ class _Cacher(_Logger):
         else:
             self.log_to_debug(f"Invalid storage type: {storage_type}")
             raise ValueError(
-                "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet"
+                "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet",
             )

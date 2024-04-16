@@ -1,5 +1,7 @@
-from agogos.training import ParallelTrainingSystem
 from typing import Any
+
+from agogos.training import ParallelTrainingSystem
+
 from epochalyst._core._caching._cacher import _CacheArgs
 
 
@@ -40,7 +42,10 @@ class EnsemblePipeline(ParallelTrainingSystem):
         return True
 
     def concat(
-        self, original_data: Any, data_to_concat: Any, weight: float = 1.0
+        self,
+        original_data: Any,
+        data_to_concat: Any,
+        weight: float = 1.0,
     ) -> Any:
         """Concatenate the trained data.
 

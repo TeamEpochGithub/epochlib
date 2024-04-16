@@ -1,5 +1,7 @@
 from typing import Any
+
 from agogos.training import Pipeline
+
 from epochalyst._core._caching._cacher import _CacheArgs
 
 
@@ -16,7 +18,8 @@ class ModelPipeline(Pipeline):
     def __post_init__(self) -> None:
         """Post init method for the Pipeline class.
 
-        Currently does nothing."""
+        Currently does nothing.
+        """
         return super().__post_init__()
 
     def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
