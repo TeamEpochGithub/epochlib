@@ -109,7 +109,8 @@ class TorchTrainer(TrainingBlock):
         patience = 5
         test_size = 0.2
 
-        trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler, epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
+        trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler,
+                                 epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
 
         x, y = trainer.train(x, y)
         x = trainer.predict(x)
@@ -123,6 +124,7 @@ class TorchTrainer(TrainingBlock):
     batch_size: Annotated[int, Gt(0)] = 32
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
+    model_name: str = "MODEL_NAME_NOT_SPECIFIED"  # No spaces allowed
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -155,6 +157,10 @@ class TorchTrainer(TrainingBlock):
         # Early stopping
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
+
+        # Check validity of model_name
+        if " " in self.model_name:
+            raise ValueError("Spaces in model_name not allowed")
 
         super().__post_init__()
 
@@ -201,7 +207,12 @@ class TorchTrainer(TrainingBlock):
             train_dataset, test_dataset, train_indices, test_indices
         )
         pred_dataloader = DataLoader(
-            concat_dataset, batch_size=self.batch_size, shuffle=False
+            concat_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=(
+                collate_fn if hasattr(concat_dataset, "__getitems__") else None  # type: ignore[arg-type]
+            ),
         )
 
         if self._model_exists():
@@ -210,7 +221,7 @@ class TorchTrainer(TrainingBlock):
             )
             self._load_model()
             # Return the predictions
-            return self.predict_on_loader(pred_dataloader), y
+            return self.predict_on_loader(pred_dataloader).numpy(), y
 
         self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
@@ -243,11 +254,9 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self.predict_on_loader(pred_dataloader), y
+        return self.predict_on_loader(pred_dataloader).numpy(), y
 
-    def custom_predict(
-        self, x: npt.NDArray[np.float32], **pred_args: Any
-    ) -> npt.NDArray[np.float32]:
+    def custom_predict(self, x: Any, **pred_args: Any) -> npt.NDArray[np.float32]:
         """Predict on the test data
 
         :param x: The input to the system.
@@ -264,15 +273,16 @@ class TorchTrainer(TrainingBlock):
         # Create dataset
         pred_dataset = self.create_prediction_dataset(x)
         pred_dataloader = DataLoader(
-            pred_dataset, batch_size=curr_batch_size, shuffle=False
+            pred_dataset,
+            batch_size=curr_batch_size,
+            shuffle=False,
+            collate_fn=(collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
 
         # Predict
-        return self.predict_on_loader(pred_dataloader)
+        return self.predict_on_loader(pred_dataloader).numpy()
 
-    def predict_on_loader(
-        self, loader: DataLoader[tuple[Tensor, ...]]
-    ) -> npt.NDArray[np.float32]:
+    def predict_on_loader(self, loader: DataLoader[tuple[Tensor, ...]]) -> torch.Tensor:
         """Predict on the loader.
 
         :param loader: The loader to predict on.
@@ -281,15 +291,24 @@ class TorchTrainer(TrainingBlock):
         self.log_to_terminal("Predicting on the test data")
         self.model.eval()
         predictions = []
+        # Create a new dataloader from the dataset of the input dataloader with collate_fn
+        loader = DataLoader(
+            loader.dataset,
+            batch_size=loader.batch_size,
+            shuffle=False,
+            collate_fn=(
+                collate_fn if hasattr(loader.dataset, "__getitems__") else None  # type: ignore[arg-type]
+            ),
+        )
         with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
             for data in tepoch:
                 X_batch = data[0].to(self.device).float()
 
-                y_pred = self.model(X_batch).cpu().numpy()
+                y_pred = self.model(X_batch).cpu()
                 predictions.extend(y_pred)
 
         self.log_to_terminal("Done predicting")
-        return np.array(predictions)
+        return torch.stack(predictions)
 
     def create_datasets(
         self,
@@ -338,10 +357,16 @@ class TorchTrainer(TrainingBlock):
         :return: The training and validation dataloaders.
         """
         train_loader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True
+            train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            collate_fn=(collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
         test_loader = DataLoader(
-            test_dataset, batch_size=self.batch_size, shuffle=False
+            test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=(collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
         return train_loader, test_loader
 
@@ -351,6 +376,12 @@ class TorchTrainer(TrainingBlock):
         :param model_directory: The model directory.
         """
         self.model_directory = model_directory
+
+    def save_model_to_external(self) -> None:
+        self.log_to_warning(
+            "Saving model to external is not implemented for TorchTrainer, if you want uploaded models. Please overwrite"
+        )
+        pass
 
     def _training_loop(
         self,
@@ -442,7 +473,11 @@ class TorchTrainer(TrainingBlock):
         """
         losses = []
         self.model.train()
-        pbar = tqdm(dataloader, unit="batch", desc=f"Epoch {epoch} Train")
+        pbar = tqdm(
+            dataloader,
+            unit="batch",
+            desc=f"Epoch {epoch} Train ({self.initialized_optimizer.param_groups[0]['lr']})",
+        )
         for batch in pbar:
             X_batch, y_batch = batch
             X_batch = X_batch.to(self.device).float()
@@ -513,12 +548,6 @@ class TorchTrainer(TrainingBlock):
             f"Model saved to {self.model_directory}/{self.get_hash()}.pt"
         )
         self.save_model_to_external()
-
-    def save_model_to_external(self) -> None:
-        self.log_to_warning(
-            "Saving model to external is not implemented for TorchTrainer, if you want uploaded models. Please overwrite"
-        )
-        pass
 
     def _load_model(self) -> None:
         """Load the model from the model_directory folder."""
@@ -599,6 +628,16 @@ class TorchTrainer(TrainingBlock):
         return TrainTestDataset(
             train_dataset, test_dataset, train_indices, test_indices
         )
+
+
+def collate_fn(batch: tuple[Tensor, ...]) -> tuple[Tensor, ...]:
+    """Collate function for the dataloader.
+
+    :param batch: The batch to collate.
+    :return: Collated batch.
+    """
+    X, y = batch
+    return X, y
 
 
 class TrainTestDataset(Dataset[T_co]):

@@ -37,6 +37,7 @@ python -m pytest --cov=epochalyst --cov-branch --cov-report=html:coverage_re
 ### Caching
 
 For caching some imports are only required, these have to be manually installed when needed
+
 - dask >= 2023.12.0 & dask-expr
 - pandas >= 1.3.0
 - polars
