@@ -42,3 +42,4 @@ tqdm==4.66.2
 typing_extensions==4.10.0
 urllib3==2.2.1
 zipp==3.17.0
+kornia==0.7.2

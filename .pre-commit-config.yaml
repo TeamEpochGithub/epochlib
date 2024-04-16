@@ -50,4 +50,5 @@ repos:
           - torch
           - traitlets
           - timm
+          - kornia
         args: [ --disallow-any-generics, --disallow-untyped-defs, --disable-error-code=import-untyped]
