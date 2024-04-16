@@ -206,7 +206,12 @@ class TorchTrainer(TrainingBlock):
             train_dataset, test_dataset, train_indices, test_indices
         )
         pred_dataloader = DataLoader(
-            concat_dataset, batch_size=self.batch_size, shuffle=False
+            concat_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=(
+                collate_fn if hasattr(concat_dataset, "__getitems__") else None  # type: ignore[arg-type]
+            ),
         )
 
         if self._model_exists():
@@ -215,7 +220,7 @@ class TorchTrainer(TrainingBlock):
             )
             self._load_model()
             # Return the predictions
-            return self.predict_on_loader(pred_dataloader), y
+            return self.predict_on_loader(pred_dataloader).numpy(), y
 
         self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
@@ -248,11 +253,9 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self.predict_on_loader(pred_dataloader), y
+        return self.predict_on_loader(pred_dataloader).numpy(), y
 
-    def custom_predict(
-        self, x: npt.NDArray[np.float32], **pred_args: Any
-    ) -> npt.NDArray[np.float32]:
+    def custom_predict(self, x: Any, **pred_args: Any) -> torch.Tensor:
         """Predict on the test data
 
         :param x: The input to the system.
@@ -269,15 +272,16 @@ class TorchTrainer(TrainingBlock):
         # Create dataset
         pred_dataset = self.create_prediction_dataset(x)
         pred_dataloader = DataLoader(
-            pred_dataset, batch_size=curr_batch_size, shuffle=False
+            pred_dataset,
+            batch_size=curr_batch_size,
+            shuffle=False,
+            collate_fn=(collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
 
         # Predict
         return self.predict_on_loader(pred_dataloader)
 
-    def predict_on_loader(
-        self, loader: DataLoader[tuple[Tensor, ...]]
-    ) -> npt.NDArray[np.float32]:
+    def predict_on_loader(self, loader: DataLoader[tuple[Tensor, ...]]) -> torch.Tensor:
         """Predict on the loader.
 
         :param loader: The loader to predict on.
@@ -286,15 +290,24 @@ class TorchTrainer(TrainingBlock):
         self.log_to_terminal("Predicting on the test data")
         self.model.eval()
         predictions = []
+        # Create a new dataloader from the dataset of the input dataloader with collate_fn
+        loader = DataLoader(
+            loader.dataset,
+            batch_size=loader.batch_size,
+            shuffle=False,
+            collate_fn=(
+                collate_fn if hasattr(loader.dataset, "__getitems__") else None  # type: ignore[arg-type]
+            ),
+        )
         with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
             for data in tepoch:
                 X_batch = data[0].to(self.device).float()
 
-                y_pred = self.model(X_batch).cpu().numpy()
+                y_pred = self.model(X_batch).cpu()
                 predictions.extend(y_pred)
 
         self.log_to_terminal("Done predicting")
-        return np.array(predictions)
+        return torch.stack(predictions)
 
     def create_datasets(
         self,
@@ -343,10 +356,16 @@ class TorchTrainer(TrainingBlock):
         :return: The training and validation dataloaders.
         """
         train_loader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True
+            train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            collate_fn=(collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
         test_loader = DataLoader(
-            test_dataset, batch_size=self.batch_size, shuffle=False
+            test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            collate_fn=(collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
         return train_loader, test_loader
 
