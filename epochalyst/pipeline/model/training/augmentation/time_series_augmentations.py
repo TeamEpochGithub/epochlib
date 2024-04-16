@@ -176,3 +176,21 @@ class Reverse1D(torch.nn.Module):
             if torch.rand(1) < self.p:
                 augmented_x[i] = torch.flip(x[i], [-1])
         return augmented_x
+
+
+@dataclass
+class SubstractChannels(torch.nn.Module):
+    """Randomly substract other channels from the current one."""
+
+    p: float = 0.5
+
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply substracting other channels to the input signal.
+        :param x: Input features. (N,C,L)
+        :return: Augmented features. (N,C,L)
+        """
+        if torch.rand(1) < self.p:
+            length = x.shape[1] - 1
+            total = x.sum(dim=1) / length
+            x = x - total.unsqueeze(1) + (x / length)
+        return x
