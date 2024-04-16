@@ -6,15 +6,18 @@ from typing import Any
 import torch
 
 
-def get_kornia_mix() -> Any:
+def get_kornia_mix() -> Any:  # noqa: ANN401
+    """Return kornia mix."""
     try:
         import kornia
 
-        return kornia.augmentation._2d.mix
     except ImportError:
         raise ImportError(
-            "If you want to use this augmentation you must install kornia"
-        )
+            "If you want to use this augmentation you must install kornia",
+        ) from None
+
+    else:
+        return kornia.augmentation._2d.mix  # noqa: SLF001
 
 
 @dataclass
@@ -40,9 +43,12 @@ class CutMix:
         )
 
     def __call__(
-        self, x: torch.Tensor, y: torch.Tensor
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Randomly patch the input with another sample.
+
         :param x: Input images. (N,C,W,H)
         :param y: Input labels. (N,C)
         """
@@ -53,10 +59,7 @@ class CutMix:
         y = y.float()
         y_result = y.clone()
         for i in range(augmentation_info.shape[0]):
-            y_result[i] = (
-                y[i] * (1 - augmentation_info[i, 2])
-                + y[int(augmentation_info[i, 1])] * augmentation_info[i, 2]
-            )
+            y_result[i] = y[i] * (1 - augmentation_info[i, 2]) + y[int(augmentation_info[i, 1])] * augmentation_info[i, 2]
 
         return augmented_x, y_result
 
@@ -84,7 +87,9 @@ class MixUp:
         )
 
     def __call__(
-        self, x: torch.Tensor, y: torch.Tensor
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Randomly patch the input with another sample."""
         dummy_labels = torch.arange(x.size(0))
@@ -93,9 +98,6 @@ class MixUp:
         y = y.float()
         y_result = y.clone()
         for i in range(augmentation_info.shape[0]):
-            y_result[i] = (
-                y[i] * (1 - augmentation_info[i, 2])
-                + y[int(augmentation_info[i, 1])] * augmentation_info[i, 2]
-            )
+            y_result[i] = y[i] * (1 - augmentation_info[i, 2]) + y[int(augmentation_info[i, 1])] * augmentation_info[i, 2]
 
         return augmented_x, y_result

@@ -9,6 +9,7 @@ import torch
 @dataclass
 class CutMix1D(torch.nn.Module):
     """CutMix augmentation for 1D signals.
+
     Randomly select a percentage between 'low' and 'high' to preserve on the left side of the signal.
     The right side will be replaced by the corresponding range from another sample from the batch.
     The labels become the weighted average of the mixed signals where weights are the mix ratios.
@@ -19,21 +20,27 @@ class CutMix1D(torch.nn.Module):
     high: float = 1
 
     def __call__(
-        self, x: torch.Tensor, y: torch.Tensor
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Appply CutMix to the batch of 1D signal.
 
         :param x: Input features. (N,C,L)
         :param y: Input labels. (N,C)
-        :return: The augmented features and labels"""
-
+        :return: The augmented features and labels
+        """
         indices = torch.arange(x.shape[0], device=x.device, dtype=torch.int)
         shuffled_indices = torch.randperm(indices.shape[0])
 
         low_len = int(self.low * x.shape[-1])
         high_len = int(self.high * x.shape[-1])
         cutoff_indices = torch.randint(
-            low_len, high_len, (x.shape[-1],), device=x.device, dtype=torch.int
+            low_len,
+            high_len,
+            (x.shape[-1],),
+            device=x.device,
+            dtype=torch.int,
         )
         cutoff_rates = cutoff_indices.float() / x.shape[-1]
 
@@ -42,29 +49,34 @@ class CutMix1D(torch.nn.Module):
         for i in range(x.shape[0]):
             if torch.rand(1) < self.p:
                 augmented_x[i, :, cutoff_indices[i] :] = x[
-                    shuffled_indices[i], :, cutoff_indices[i] :
+                    shuffled_indices[i],
+                    :,
+                    cutoff_indices[i] :,
                 ]
-                augmented_y[i] = y[i] * cutoff_rates[i] + y[shuffled_indices[i]] * (
-                    1 - cutoff_rates[i]
-                )
+                augmented_y[i] = y[i] * cutoff_rates[i] + y[shuffled_indices[i]] * (1 - cutoff_rates[i])
         return augmented_x, augmented_y
 
 
 @dataclass
 class MixUp1D(torch.nn.Module):
     """MixUp augmentation for 1D signals.
-    Randomly takes the weighted average of 2 samples and their labels with random weights."""
+
+    Randomly takes the weighted average of 2 samples and their labels with random weights.
+    """
 
     p: float = 0.5
 
     def __call__(
-        self, x: torch.Tensor, y: torch.Tensor
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Appply MixUp to the batch of 1D signal.
 
         :param x: Input features. (N,C,L)|(N,L)
         :param y: Input labels. (N,C)
-        :return: The augmented features and labels"""
+        :return: The augmented features and labels
+        """
         indices = torch.arange(x.shape[0], device=x.device, dtype=torch.int)
         shuffled_indices = torch.randperm(indices.shape[0])
 
@@ -81,7 +93,9 @@ class MixUp1D(torch.nn.Module):
 @dataclass
 class Mirror1D(torch.nn.Module):
     """Mirror augmentation for 1D signals.
-    Mirrors the signal around its mean in the horizontal(time) axis."""
+
+    Mirrors the signal around its mean in the horizontal(time) axis.
+    """
 
     p: float = 0.5
 
@@ -116,11 +130,7 @@ class RandomAmplitudeShift(torch.nn.Module):
             # Take the rfft of the input tensor
             x_freq = torch.fft.rfft(x, dim=-1)
             # Create a random tensor of scaler in the range [low,high]
-            random_amplitude = (
-                torch.rand(*x_freq.shape, device=x.device, dtype=x.dtype)
-                * (self.high - self.low)
-                + self.low
-            )
+            random_amplitude = torch.rand(*x_freq.shape, device=x.device, dtype=x.dtype) * (self.high - self.low) + self.low
             # Multiply the rfft with the random amplitude
             x_freq = x_freq * random_amplitude
             # Take the irfft of the result
@@ -145,12 +155,7 @@ class RandomPhaseShift(torch.nn.Module):
             # Take the rfft of the input tensor
             x_freq = torch.fft.rfft(x, dim=-1)
             # Create a random tensor of complex numbers each with a random phase but with magnitude of 1
-            random_phase = (
-                torch.rand(*x_freq.shape, device=x.device, dtype=x.dtype)
-                * 2
-                * np.pi
-                * self.shift_limit
-            )
+            random_phase = torch.rand(*x_freq.shape, device=x.device, dtype=x.dtype) * 2 * np.pi * self.shift_limit
             random_phase = torch.cos(random_phase) + 1j * torch.sin(random_phase)
             # Multiply the rfft with the random phase
             x_freq = x_freq * random_phase
@@ -186,12 +191,13 @@ class SubstractChannels(torch.nn.Module):
 
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         """Apply substracting other channels to the input signal.
+
         :param x: Input features. (N,C,L)
         :return: Augmented features. (N,C,L)
         """
         if x.shape[1] == 1:
             raise ValueError(
-                "Sequence only has 1 channel. No channels to subtract from each other"
+                "Sequence only has 1 channel. No channels to subtract from each other",
             )
         if torch.rand(1) < self.p:
             length = x.shape[1] - 1

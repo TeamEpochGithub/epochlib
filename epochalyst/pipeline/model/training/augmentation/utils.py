@@ -1,5 +1,4 @@
-"""
-This module provides utility classes for applying augmentations to data.
+"""Module providing utility classes for applying augmentations to data.
 
 Classes:
 - CustomApplyOne: A custom sequential class for applying a single augmentation fro a selection based on their probabilities.
@@ -38,7 +37,9 @@ class CustomApplyOne:
         self.all_transforms = self.x_transforms + self.xy_transforms
 
     def __call__(
-        self, x: torch.Tensor, y: torch.Tensor
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Apply the augmentations sequentially.
 
@@ -49,8 +50,10 @@ class CustomApplyOne:
         transform = self.all_transforms[
             int(
                 torch.multinomial(
-                    self.probabilities_tensor, 1, replacement=False
-                ).item()
+                    self.probabilities_tensor,
+                    1,
+                    replacement=False,
+                ).item(),
             )
         ]
         if transform in self.x_transforms:
@@ -71,16 +74,15 @@ class CustomSequential:
     xy_transforms: list[Any] = field(default_factory=list)
 
     def __call__(
-        self, x: torch.Tensor, y: torch.Tensor
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Apply the augmentations sequentially.
 
-        Args:
-            x (torch.Tensor): The input tensor.
-            y (torch.Tensor): The target tensor.
-
-        Returns:
-            tuple[torch.Tensor, torch.Tensor]: The augmented input and target tensors.
+        :param x: Input features.
+        :param y: input labels.
+        :return: Augmented features and labels.
         """
         if self.x_transforms is not None:
             for transform in self.x_transforms:
@@ -104,9 +106,11 @@ class NoOp(torch.nn.Module):
         """Apply the augmentation to the input signal.
 
         Args:
+        ----
             x (torch.Tensor): The input signal tensor.
 
         Returns:
+        -------
             torch.Tensor: The augmented input signal tensor.
         """
         return x
