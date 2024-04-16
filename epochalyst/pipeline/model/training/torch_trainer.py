@@ -512,6 +512,13 @@ class TorchTrainer(TrainingBlock):
         self.log_to_terminal(
             f"Model saved to {self.model_directory}/{self.get_hash()}.pt"
         )
+        self.save_model_to_external()
+
+    def save_model_to_external(self) -> None:
+        self.log_to_warning(
+            "Saving model to external is not implemented for TorchTrainer, if you want uploaded models. Please overwrite"
+        )
+        pass
 
     def _load_model(self) -> None:
         """Load the model from the model_directory folder."""
@@ -558,17 +565,18 @@ class TorchTrainer(TrainingBlock):
         """
 
         # Store the best model so far based on validation loss
-        if self.last_val_loss < self.lowest_val_loss:
-            self.lowest_val_loss = self.last_val_loss
-            self.best_model_state_dict = copy.deepcopy(self.model.state_dict())
-            self.early_stopping_counter = 0
-        else:
-            self.early_stopping_counter += 1
-            if self.early_stopping_counter >= self.patience:
-                self.log_to_terminal(
-                    f"Early stopping after {self.early_stopping_counter} epochs"
-                )
-                return True
+        if self.patience != -1:
+            if self.last_val_loss < self.lowest_val_loss:
+                self.lowest_val_loss = self.last_val_loss
+                self.best_model_state_dict = copy.deepcopy(self.model.state_dict())
+                self.early_stopping_counter = 0
+            else:
+                self.early_stopping_counter += 1
+                if self.early_stopping_counter >= self.patience:
+                    self.log_to_terminal(
+                        f"Early stopping after {self.early_stopping_counter} epochs"
+                    )
+                    return True
         return False
 
     def _concat_datasets(
