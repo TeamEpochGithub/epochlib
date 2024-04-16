@@ -1,4 +1,4 @@
-"""Contains implementation of several custom time series augmentations using PyTorch"""
+"""Contains implementation of several custom time series augmentations using PyTorch."""
 
 from dataclasses import dataclass
 
