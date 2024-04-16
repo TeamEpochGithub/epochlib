@@ -42,7 +42,10 @@ class CutMix:
     def __call__(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Randomly patch the input with another sample."""
+        """Randomly patch the input with another sample.
+        :param x: Input images. (N,C,W,H)
+        :param y: Input labels. (N,C)
+        """
         dummy_labels = torch.arange(x.size(0))
         augmented_x, augmentation_info = self.cutmix(x, dummy_labels)
         augmentation_info = augmentation_info[0]
