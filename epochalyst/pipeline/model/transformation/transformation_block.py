@@ -1,10 +1,13 @@
 """TransformationBlock module than can be extended by implementing the custom_transform method."""
+from typing import Any
+from agogos.transforming import Transformer
+from epochalyst._core._logging._logger import _Logger
+from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 from abc import abstractmethod
 from typing import Any
 
 from agogos.transforming import Transformer
 
-from epochalyst._core._caching._cacher import _CacheArgs, _Cacher
 from epochalyst._core._logging._logger import _Logger
 
 
@@ -55,7 +58,9 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         data = custom_transformation_block.transform(data, cache=cache_args)
     """
 
-    def transform(self, data: Any, cache_args: _CacheArgs | None = None, **transform_args: Any) -> Any:  # noqa: ANN401
+    def transform(
+        self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any
+    ) -> Any:
         """Transform the input data using a custom method.
 
         :param data: The input data.

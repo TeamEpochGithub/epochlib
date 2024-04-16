@@ -2,8 +2,8 @@ from typing import Any
 
 from agogos.training import TrainingSystem, TrainType
 
-from epochalyst._core._caching._cacher import _CacheArgs, _Cacher
 from epochalyst._core._logging._logger import _Logger
+from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 
 
 class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
@@ -13,11 +13,7 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
     """
 
     def train(
-        self,
-        x: Any,
-        y: Any,
-        cache_args: _CacheArgs | None = None,
-        **train_args: Any,
+        self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any
     ) -> tuple[Any, Any]:
         """Train the system.
 
@@ -77,10 +73,7 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
         return x, y
 
     def predict(
-        self,
-        x: Any,
-        cache_args: _CacheArgs | None = None,
-        **pred_args: Any,
+        self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any
     ) -> Any:
         """Predict the output of the system.
 

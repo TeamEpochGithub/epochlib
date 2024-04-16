@@ -2,7 +2,7 @@ from typing import Any
 
 from agogos.training import ParallelTrainingSystem
 
-from epochalyst._core._caching._cacher import _CacheArgs
+from epochalyst._core._caching._cacher import CacheArgs
 
 
 class EnsemblePipeline(ParallelTrainingSystem):
@@ -11,7 +11,7 @@ class EnsemblePipeline(ParallelTrainingSystem):
     :param steps: Trainers to ensemble
     """
 
-    def get_x_cache_exists(self, cache_args: _CacheArgs) -> bool:
+    def get_x_cache_exists(self, cache_args: CacheArgs) -> bool:
         """Get status of x
 
         :param cache_args: Cache arguments
@@ -26,7 +26,7 @@ class EnsemblePipeline(ParallelTrainingSystem):
 
         return True
 
-    def get_y_cache_exists(self, cache_args: _CacheArgs) -> bool:
+    def get_y_cache_exists(self, cache_args: CacheArgs) -> bool:
         """Get status of y cache
 
         :param cache_args: Cache arguments

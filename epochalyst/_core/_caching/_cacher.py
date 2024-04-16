@@ -1,7 +1,8 @@
 import glob
 import os
 import pickle
-from typing import Any, Literal, TypedDict
+import sys
+from typing import Any, TypedDict, Literal
 
 try:
     import dask.array as da
@@ -26,8 +27,13 @@ except ImportError:
 
 from epochalyst._core._logging._logger import _Logger
 
+if sys.version_info < (3, 11):
+    from typing_extensions import NotRequired
+else:
+    from typing import NotRequired
 
-class _CacheArgs(TypedDict):
+
+class CacheArgs(TypedDict):
     """The cache arguments.
 
     Currently listed cache_args are supported. If more are required, create a new GitHub issue.
@@ -44,12 +50,16 @@ class _CacheArgs(TypedDict):
             - ".parquet": The storage type is a Parquet file.
             - ".csv": The storage type is a CSV file.
             - ".npy_stack": The storage type is a NumPy stack.
-            - ".pkl": The storage type is a pickle file
+            - ".pkl": The storage type is a pickle file.
         - storage_path: The path to the storage.
+        - read_args: The arguments for reading the data.
+        - store_args: The arguments for storing the data.
 
     :param output_data_type: The type of the output data.
     :param storage_type: The type of the storage.
     :param storage_path: The path to the storage.
+    :param read_args: The optional additional arguments for reading the data.
+    :param store_args: The optional additional arguments for storing the data.
     """
 
     output_data_type: Literal[
@@ -61,6 +71,8 @@ class _CacheArgs(TypedDict):
     ]
     storage_type: Literal[".npy", ".parquet", ".csv", ".npy_stack", ".pkl"]
     storage_path: str  # TODO(Jeffrey) Allow str | bytes | os.PathLike[str] | os.PathLike[bytes] instead of just str
+    read_args: NotRequired[dict[str, Any]]
+    store_args: NotRequired[dict[str, Any]]
 
 
 class _Cacher(_Logger):
@@ -79,7 +91,7 @@ class _Cacher(_Logger):
         def _store_cache(name: str, data: Any, cache_args: _CacheArgs | None = None) -> None: # Store data
     """
 
-    def cache_exists(self, name: str, cache_args: _CacheArgs | None = None) -> bool:
+    def _cache_exists(self, name: str, cache_args: CacheArgs | None = None) -> bool:
         """Check if the cache exists.
 
         :param cache_args: The cache arguments.
@@ -124,7 +136,7 @@ class _Cacher(_Logger):
 
         return path_exists
 
-    def _get_cache(self, name: str, cache_args: _CacheArgs | None = None) -> Any:
+    def _get_cache(self, name: str, cache_args: CacheArgs | None = None) -> Any:
         """Load the cache.
 
         :param name: The name of the cache.
@@ -144,6 +156,7 @@ class _Cacher(_Logger):
         storage_type = cache_args["storage_type"]
         storage_path = cache_args["storage_path"]
         output_data_type = cache_args["output_data_type"]
+        read_args = cache_args.get("read_args", {})
 
         # If storage path does not end a slash, add it
         if storage_path[-1] != "/":
@@ -154,9 +167,9 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and load cache to output_data_type
             self.log_to_debug(f"Loading .npy file from {storage_path + name}")
             if output_data_type == "numpy_array":
-                return np.load(storage_path + name + ".npy")
+                return np.load(storage_path + name + ".npy", **read_args)
             elif output_data_type == "dask_array":
-                return da.from_array(np.load(storage_path + name + ".npy"))
+                return da.from_array(np.load(storage_path + name + ".npy"), **read_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for loading .npy file.",
@@ -168,15 +181,19 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and load cache to output_data_type
             self.log_to_debug(f"Loading .parquet file from {storage_path + name}")
             if output_data_type == "pandas_dataframe":
-                return pd.read_parquet(storage_path + name + ".parquet")
+                return pd.read_parquet(storage_path + name + ".parquet", **read_args)
             elif output_data_type == "dask_dataframe":
-                return dd.read_parquet(storage_path + name + ".parquet")
+                return dd.read_parquet(storage_path + name + ".parquet", **read_args)
             elif output_data_type == "numpy_array":
-                return pd.read_parquet(storage_path + name + ".parquet").to_numpy()
+                return pd.read_parquet(
+                    storage_path + name + ".parquet", **read_args
+                ).to_numpy()
             elif output_data_type == "dask_array":
-                return dd.read_parquet(storage_path + name + ".parquet").to_dask_array()
+                return dd.read_parquet(
+                    storage_path + name + ".parquet", **read_args
+                ).to_dask_array()
             elif output_data_type == "polars_dataframe":
-                return pl.read_parquet(storage_path + name + ".parquet")
+                return pl.read_parquet(storage_path + name + ".parquet", **read_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for loading .parquet file.",
@@ -188,11 +205,11 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and load cache to output_data_type
             self.log_to_debug(f"Loading .csv file from {storage_path + name}")
             if output_data_type == "pandas_dataframe":
-                return pd.read_csv(storage_path + name + ".csv")
+                return pd.read_csv(storage_path + name + ".csv", **read_args)
             elif output_data_type == "dask_dataframe":
-                return dd.read_csv(storage_path + name + "/*.part")
+                return dd.read_csv(storage_path + name + "/*.part", **read_args)
             elif output_data_type == "polars_dataframe":
-                return pl.read_csv(storage_path + name + ".csv")
+                return pl.read_csv(storage_path + name + ".csv", **read_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for loading .csv file.",
@@ -204,7 +221,7 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and load cache to output_data_type
             self.log_to_debug(f"Loading .npy_stack file from {storage_path + name}")
             if output_data_type == "dask_array":
-                return da.from_npy_stack(storage_path + name)
+                return da.from_npy_stack(storage_path + name, **read_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for loading .npy_stack file.",
@@ -217,7 +234,7 @@ class _Cacher(_Logger):
             self.log_to_debug(
                 f"Loading pickle file from {storage_path + name + '.pkl'}",
             )
-            return pickle.load(open(storage_path + name + ".pkl", "rb"))
+            return pickle.load(open(storage_path + name + ".pkl", "rb"), **read_args)
         else:
             self.log_to_debug(f"Invalid storage type: {storage_type}")
             raise ValueError(
@@ -225,10 +242,7 @@ class _Cacher(_Logger):
             )
 
     def _store_cache(
-        self,
-        name: str,
-        data: Any,
-        cache_args: _CacheArgs | None = None,
+        self, name: str, data: Any, cache_args: CacheArgs | None = None
     ) -> None:
         """Store one set of data.
 
@@ -249,6 +263,7 @@ class _Cacher(_Logger):
         storage_type = cache_args["storage_type"]
         storage_path = cache_args["storage_path"]
         output_data_type = cache_args["output_data_type"]
+        store_args = cache_args.get("store_args", {})
 
         # If storage path does not end a slash, add it
         if storage_path[-1] != "/":
@@ -259,9 +274,9 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and store cache to output_data_type
             self.log_to_debug(f"Storing .npy file to {storage_path + name}")
             if output_data_type == "numpy_array":
-                np.save(storage_path + name + ".npy", data)
+                np.save(storage_path + name + ".npy", data, **store_args)
             elif output_data_type == "dask_array":
-                np.save(storage_path + name + ".npy", data.compute())
+                np.save(storage_path + name + ".npy", data.compute(), **store_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for storing .npy file.",
@@ -273,19 +288,21 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and store cache to output_data_type
             self.log_to_debug(f"Storing .parquet file to {storage_path + name}")
             if output_data_type == "pandas_dataframe":
-                data.to_parquet(storage_path + name + ".parquet")
+                data.to_parquet(storage_path + name + ".parquet", **store_args)
             elif output_data_type == "dask_dataframe":
-                data.to_parquet(storage_path + name + ".parquet")
+                data.to_parquet(storage_path + name + ".parquet", **store_args)
             elif output_data_type == "numpy_array":
-                pd.DataFrame(data).to_parquet(storage_path + name + ".parquet")
+                pd.DataFrame(data).to_parquet(
+                    storage_path + name + ".parquet", **store_args
+                )
             elif output_data_type == "dask_array":
                 new_dd = dd.from_dask_array(data)
                 new_dd = new_dd.rename(
                     columns={col: str(col) for col in new_dd.columns},
                 )
-                new_dd.to_parquet(storage_path + name + ".parquet")
+                new_dd.to_parquet(storage_path + name + ".parquet", **store_args)
             elif output_data_type == "polars_dataframe":
-                data.write_parquet(storage_path + name + ".parquet")
+                data.write_parquet(storage_path + name + ".parquet", **store_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for storing .parquet file.",
@@ -297,11 +314,13 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and store cache to output_data_type
             self.log_to_debug(f"Storing .csv file to {storage_path + name}")
             if output_data_type == "pandas_dataframe":
-                data.to_csv(storage_path + name + ".csv", index=False)
+                data.to_csv(
+                    storage_path + name + ".csv", **({"index": False} | store_args)
+                )
             elif output_data_type == "dask_dataframe":
-                data.to_csv(storage_path + name, index=False)
+                data.to_csv(storage_path + name, **({"index": False} | store_args))
             elif output_data_type == "polars_dataframe":
-                data.write_csv(storage_path + name + ".csv")
+                data.write_csv(storage_path + name + ".csv", **store_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for storing .csv file.",
@@ -313,7 +332,7 @@ class _Cacher(_Logger):
             # Check if output_data_type is supported and store cache to output_data_type
             self.log_to_debug(f"Storing .npy_stack file to {storage_path + name}")
             if output_data_type == "dask_array":
-                da.to_npy_stack(storage_path + name, data)
+                da.to_npy_stack(storage_path + name, data, **store_args)
             else:
                 self.log_to_debug(
                     f"Invalid output data type: {output_data_type}, for storing .npy_stack file.",
@@ -327,7 +346,7 @@ class _Cacher(_Logger):
             pickle.dump(
                 data,
                 open(storage_path + name + ".pkl", "wb"),
-                protocol=pickle.HIGHEST_PROTOCOL,
+                **({"protocol": pickle.HIGHEST_PROTOCOL} | store_args),
             )
         else:
             self.log_to_debug(f"Invalid storage type: {storage_type}")
