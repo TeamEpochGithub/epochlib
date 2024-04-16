@@ -23,7 +23,7 @@ class CutMix1D(torch.nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Appply CutMix to the batch of 1D signal.
 
-        :param x: Input features. (N,C,L)
+        :param x: Input features. (N,C,L)|(N,L)
         :param y: Input labels. (N,C)
         :return: The augmented features and labels"""
 
@@ -62,7 +62,7 @@ class MixUp1D(torch.nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Appply MixUp to the batch of 1D signal.
 
-        :param x: Input features. (N,C,L)
+        :param x: Input features. (N,C,L)|(N,L)
         :param y: Input labels. (N,C)
         :return: The augmented features and labels"""
         indices = torch.arange(x.shape[0], device=x.device, dtype=torch.int)
@@ -88,8 +88,8 @@ class Mirror1D(torch.nn.Module):
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the augmentation to the input signal.
 
-        :param x: Input features. (N,C,L)
-        :return: Augmented features. (N,C,L)
+        :param x: Input features. (N,C,L)|(N,L)
+        :return: Augmented features. (N,C,L)|(N,L)
         """
         augmented_x = x.clone()
         for i in range(x.shape[0]):
@@ -109,8 +109,8 @@ class RandomAmplitudeShift(torch.nn.Module):
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the augmentation to the input signal.
 
-        :param x: Input features. (N,C,L)
-        :return: Augmented features. (N,C,L)
+        :param x: Input features. (N,C,L)|(N,L)
+        :return: Augmented features. (N,C,L)|(N,L)
         """
         if torch.rand(1) < self.p:
             # Take the rfft of the input tensor
@@ -138,8 +138,8 @@ class RandomPhaseShift(torch.nn.Module):
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         """Apply Random phase shift to each frequency of the fft of the input signal.
 
-        :param x: Input features. (N,C,L)
-        :return: augmented features. (N,C,L)
+        :param x: Input features. (N,C,L)|(N,L)
+        :return: augmented features. (N,C,L)|(N,L)
         """
         if torch.rand(1) < self.p:
             # Take the rfft of the input tensor
@@ -168,8 +168,8 @@ class Reverse1D(torch.nn.Module):
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the augmentation to the input signal.
 
-        :param x: Input features. (N,C,L)
-        :return: Augmented features (N,C,L)
+        :param x: Input features. (N,C,L)|(N,L)
+        :return: Augmented features (N,C,L)|(N,L)
         """
         augmented_x = x.clone()
         for i in range(x.shape[0]):
