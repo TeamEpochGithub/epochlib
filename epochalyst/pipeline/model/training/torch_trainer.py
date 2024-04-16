@@ -123,10 +123,14 @@ class TorchTrainer(TrainingBlock):
     batch_size: Annotated[int, Gt(0)] = 32
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
-    predict_all: bool = False
+    to_predict: str = "test"
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
+
+        # Make sure to_predict is either "test" or "all" or "none"
+        if self.to_predict not in ["test", "all", "none"]:
+            raise ValueError("to_predict should be either 'test', 'all' or 'none'")
 
         self.save_model_to_disk = True
         self.model_directory = "tm"
@@ -198,24 +202,15 @@ class TorchTrainer(TrainingBlock):
         # Create dataloaders
         train_loader, test_loader = self.create_dataloaders(train_dataset, test_dataset)
 
-        concat_dataset: Dataset[Any] = self._concat_datasets(
-            train_dataset, test_dataset, train_indices, test_indices
-        )
-
-        if self.predict_all:
-            pred_dataloader = DataLoader(
-                concat_dataset, batch_size=self.batch_size, shuffle=False
-            )
-        else:
-            pred_dataloader = test_loader
-
         if self._model_exists():
             self.log_to_terminal(
                 f"Model exists in {self.model_directory}/{self.get_hash()}.pt, loading model"
             )
             self._load_model()
             # Return the predictions
-            return self.predict_on_loader(pred_dataloader), y
+            return self._predict_after_train(
+                x, y, train_dataset, test_dataset, train_indices, test_indices
+            )
 
         self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
@@ -248,7 +243,48 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self.predict_on_loader(pred_dataloader), y
+        return self._predict_after_train(
+            x, y, train_dataset, test_dataset, train_indices, test_indices
+        )
+
+    def _predict_after_train(
+        self,
+        x: npt.NDArray[np.float32],
+        y: npt.NDArray[np.float32],
+        train_dataset: Dataset[Any],
+        test_dataset: Dataset[Any],
+        train_indices: list[int],
+        test_indices: list[int],
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+        """Predict after training the model.
+
+        :param x: The input to the system.
+        :param y: The expected output of the system.
+        :param train_dataset: The training dataset.
+        :param test_dataset: The test dataset.
+        :param train_indices: The indices to train on.
+        :param test_indices: The indices to test on.
+
+        :return: The predictions and the expected output.
+        """
+        match self.to_predict:
+            case "all":
+                concat_dataset: Dataset[Any] = self._concat_datasets(
+                    train_dataset, test_dataset, train_indices, test_indices
+                )
+                pred_dataloader = DataLoader(
+                    concat_dataset, batch_size=self.batch_size, shuffle=False
+                )
+                return self.predict_on_loader(pred_dataloader), y
+            case "test":
+                train_loader, test_loader = self.create_dataloaders(
+                    train_dataset, test_dataset
+                )
+                return self.predict_on_loader(test_loader), y[test_indices]
+            case "none":
+                return x, y
+            case _:
+                raise ValueError("to_predict should be either 'test', 'all' or 'none")
 
     def custom_predict(
         self, x: npt.NDArray[np.float32], **pred_args: Any
