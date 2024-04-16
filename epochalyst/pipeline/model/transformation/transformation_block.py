@@ -1,14 +1,18 @@
-from typing import Any
-from agogos.transforming import Transformer
-from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher, CacheArgs
+"""TransformationBlock module than can be extended by implementing the custom_transform method."""
 from abc import abstractmethod
+from typing import Any
+
+from agogos.transforming import Transformer
+
+from epochalyst._core._caching._cacher import CacheArgs, _Cacher
+from epochalyst._core._logging._logger import _Logger
 
 
 class TransformationBlock(Transformer, _Cacher, _Logger):
     """The transformation block is a flexible block that allows for transformation of any data.
 
-    Methods:
+    Methods
+    -------
     .. code-block:: python
         @abstractmethod
         def custom_transform(self, data: Any, **transform_args) -> Any: # Custom transformation implementation
@@ -51,21 +55,19 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         data = custom_transformation_block.transform(data, cache=cache_args)
     """
 
-    def transform(
-        self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any
-    ) -> Any:
+    def transform(self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any) -> Any:  # noqa: ANN401
         """Transform the input data using a custom method.
 
         :param data: The input data.
         :param cache_args: The cache arguments.
         :return: The transformed data.
         """
-
-        if cache_args and self._cache_exists(
-            name=self.get_hash(), cache_args=cache_args
+        if cache_args and self.cache_exists(
+            name=self.get_hash(),
+            cache_args=cache_args,
         ):
             self.log_to_terminal(
-                f"Cache exists for {self.__class__} with hash: {self.get_hash()}. Using the cache."
+                f"Cache exists for {self.__class__} with hash: {self.get_hash()}. Using the cache.",
             )
             return self._get_cache(name=self.get_hash(), cache_args=cache_args)
 
@@ -75,12 +77,12 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
         return data
 
     @abstractmethod
-    def custom_transform(self, data: Any, **transform_args: Any) -> Any:
+    def custom_transform(self, data: Any, **transform_args: Any) -> Any:  # noqa: ANN401
         """Transform the input data using a custom method.
 
         :param data: The input data.
         :return: The transformed data.
         """
         raise NotImplementedError(
-            f"Custom transform method not implemented for {self.__class__}"
+            f"Custom transform method not implemented for {self.__class__}",
         )

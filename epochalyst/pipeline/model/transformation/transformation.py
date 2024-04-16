@@ -1,9 +1,11 @@
+"""TransformationPipeline that extends from TransformingSystem, _Cacher and _Logger."""
 from dataclasses import dataclass
 from typing import Any
+
 from agogos.transforming import TransformingSystem, TransformType
 
+from epochalyst._core._caching._cacher import CacheArgs, _Cacher
 from epochalyst._core._logging._logger import _Logger
-from epochalyst._core._caching._cacher import _Cacher, CacheArgs
 
 
 @dataclass
@@ -14,7 +16,8 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
     - `steps` (List[Union[Transformer, TransformationPipeline]]): The steps to transform the data. Can be a list of any Transformer type.
     - `title` (str): The title of the pipeline. (Default: "Transformation Pipeline")
 
-    Methods:
+    Methods
+    -------
     .. code-block:: python
         @abstractmethod
         def log_to_terminal(self, message: str) -> None: # Log the message to the terminal.
@@ -57,19 +60,16 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
 
     title: str = "Transformation Pipeline"  # The title of the pipeline since transformation pipeline can be used for multiple purposes. (Feature, Label, etc.)
 
-    def transform(
-        self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any
-    ) -> Any:
+    def transform(self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any) -> Any:  # noqa: ANN401
         """Transform the input data.
 
         :param data: The input data.
         :param cache_args: The cache arguments.
         :return: The transformed data.
         """
-
-        if cache_args and self._cache_exists(self.get_hash(), cache_args):
+        if cache_args and self.cache_exists(self.get_hash(), cache_args):
             self.log_to_terminal(
-                f"Cache exists for {self.title} with hash: {self.get_hash()}. Using the cache."
+                f"Cache exists for {self.title} with hash: {self.get_hash()}. Using the cache.",
             )
             return self._get_cache(self.get_hash(), cache_args)
 
@@ -95,10 +95,10 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
                 self.log_to_debug(f"{step} is not given cache_args")
                 continue
 
-            step_cache_exists = step._cache_exists(step.get_hash(), step_cache_args)
+            step_cache_exists = step.cache_exists(step.get_hash(), step_cache_args)
             if step_cache_exists:
                 self.log_to_debug(
-                    f"Cache exists for {step}, moving index of steps to {i}"
+                    f"Cache exists for {step}, moving index of steps to {i}",
                 )
                 self.steps = self.all_steps[i:]
 
