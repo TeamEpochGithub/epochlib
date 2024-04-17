@@ -3,6 +3,7 @@ import functools
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import patch
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -16,6 +17,7 @@ class TestTorchTrainer:
     simple_model = torch.nn.Linear(1, 1)
     optimizer = functools.partial(torch.optim.SGD, lr=0.01)
     scheduler = functools.partial(torch.optim.lr_scheduler.StepLR, step_size=1)
+    model_path = Path("tests/cache")
 
     class ImplementedTorchTrainer(TorchTrainer):
         def __post_init__(self):
@@ -171,7 +173,7 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
@@ -184,7 +186,7 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
@@ -199,7 +201,7 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
         tt.n_folds = 0
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
 
@@ -215,7 +217,7 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             patience=-1,
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
@@ -238,7 +240,7 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(
@@ -256,7 +258,7 @@ class TestTorchTrainer:
         )
         remove_cache_files()
         tt.n_folds = 3
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(
@@ -280,7 +282,7 @@ class TestTorchTrainer:
         )
         remove_cache_files()
         tt.n_folds = 0
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[])
@@ -294,7 +296,7 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(
@@ -314,7 +316,7 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="all",
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         train_preds = tt.train(
@@ -335,14 +337,14 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="all",
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 2)
         y = torch.rand(10, 2)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),fold=0
+            test_indices=np.array([8, 9]), fold=0
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 10
@@ -357,14 +359,14 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="test",
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),fold=0
+            test_indices=np.array([8, 9]), fold=0
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 2
@@ -379,14 +381,14 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="none",
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),fold=0
+            test_indices=np.array([8, 9]), fold=0
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 10
@@ -411,7 +413,7 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             scheduler=self.scheduler,
         )
-        tt.update_model_directory("tests/cache")
+        tt.update_model_directory(self.model_path)
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
@@ -427,7 +429,7 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            tt.update_model_directory("tests/cache/tm")
+            tt.update_model_directory(self.model_path / "tm")
             x = torch.rand(10, 1)
             y = torch.rand(10)
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
@@ -442,7 +444,7 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            tt.update_model_directory("tests/cache")
+            tt.update_model_directory(self.model_path)
             x = torch.rand(10, 1)
             y = torch.rand(10)
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
@@ -462,7 +464,7 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            tt.update_model_directory("tests/cache")
+            tt.update_model_directory(self.model_path)
             x = torch.rand(10, 1)
             y = torch.rand(10)
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])

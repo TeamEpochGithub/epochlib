@@ -39,7 +39,7 @@ class TorchTrainer(TrainingBlock):
     - `batch_size` (int): Batch size
     - `patience` (int): Patience for early stopping
     - `test_size` (float): Relative size of the test set
-    - `to_predict` (str): Whether to predict on the test set, all data or none
+    - `to_predict` (str): Whether to predict on the 'test' set, 'all' data or 'none'
     - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `fold` (int): Fold number
@@ -153,7 +153,7 @@ class TorchTrainer(TrainingBlock):
                 "Please specify the number of folds for cross validation or set n_folds to 0 for train full.",
             )
         self.save_model_to_disk = True
-        self.model_directory = "tm"
+        self._model_directory = Path("tm")
         self.best_model_state_dict: dict[Any, Any] = {}
 
         # Set optimizer
@@ -223,7 +223,7 @@ class TorchTrainer(TrainingBlock):
 
         if self._model_exists():
             self.log_to_terminal(
-                f"Model exists in {self.model_directory}/{self.get_hash()}.pt, loading model",
+                f"Model exists in {self._model_directory}/{self.get_hash()}.pt, loading model",
             )
             self._load_model()
             # Return the predictions
@@ -337,8 +337,6 @@ class TorchTrainer(TrainingBlock):
         :param x: The input to the system.
         :return: The output of the system.
         """
-        self._load_model()
-
         print_section_separator(f"Predicting model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Predicting model: {self.model.__class__.__name__}")
 
@@ -354,11 +352,24 @@ class TorchTrainer(TrainingBlock):
             collate_fn=(collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
 
+        # Predict with a single model
+        if self.n_folds < 1 or pred_args.get("use_single_model", False):
+            self._load_model()
+            return self.predict_on_loader(pred_dataloader)
+
         predictions = []
+        # Predict with multiple models
         for i in range(int(self.n_folds)):
-            self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
             self._fold = i  # set the fold, which updates the hash
-            self._load_model()  # load the model for this fold
+            # Try to load the next fold if it exists
+            try:
+                self._load_model()
+            except FileNotFoundError as e:
+                if i == 0:
+                    raise FileNotFoundError(f"First model of {self.n_folds} folds not found...") from e
+                self.log_to_warning(f"Model for fold {self._fold} not found, skipping the rest of the folds...")
+                break
+            self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
             predictions.append(self.predict_on_loader(pred_dataloader))
 
         # Average the predictions using numpy
@@ -471,12 +482,18 @@ class TorchTrainer(TrainingBlock):
         )
         return train_loader, test_loader
 
-    def update_model_directory(self, model_directory: str) -> None:
+    def update_model_directory(self, model_directory: Path) -> None:
         """Update the model directory.
 
         :param model_directory: The model directory.
         """
-        self.model_directory = model_directory
+        if model_directory.exists() and model_directory.is_dir():
+            self._model_directory = model_directory
+        elif not model_directory.exists():
+            model_directory.mkdir()
+            self._model_directory = model_directory
+        else:
+            raise ValueError(f"{model_directory} is not a valid model_directory")
 
     def save_model_to_external(self) -> None:
         """Save model to external database."""
@@ -643,31 +660,31 @@ class TorchTrainer(TrainingBlock):
     def _save_model(self) -> None:
         """Save the model in the model_directory folder."""
         self.log_to_terminal(
-            f"Saving model to {self.model_directory}/{self.get_hash()}.pt",
+            f"Saving model to {self._model_directory}/{self.get_hash()}.pt",
         )
-        path = Path(self.model_directory)
+        path = Path(self._model_directory)
         if not Path.exists(path):
             Path.mkdir(path)
 
-        torch.save(self.model, f"{self.model_directory}/{self.get_hash()}.pt")
+        torch.save(self.model, f"{self._model_directory}/{self.get_hash()}.pt")
         self.log_to_terminal(
-            f"Model saved to {self.model_directory}/{self.get_hash()}.pt",
+            f"Model saved to {self._model_directory}/{self.get_hash()}.pt",
         )
         self.save_model_to_external()
 
     def _load_model(self) -> None:
         """Load the model from the model_directory folder."""
         # Check if the model exists
-        if not Path(f"{self.model_directory}/{self.get_hash()}.pt").exists():
+        if not Path(f"{self._model_directory}/{self.get_hash()}.pt").exists():
             raise FileNotFoundError(
-                f"Model not found in {self.model_directory}/{self.get_hash()}.pt",
+                f"Model not found in {self._model_directory}/{self.get_hash()}.pt",
             )
 
         # Load model
         self.log_to_terminal(
-            f"Loading model from {self.model_directory}/{self.get_hash()}.pt",
+            f"Loading model from {self._model_directory}/{self.get_hash()}.pt",
         )
-        checkpoint = torch.load(f"{self.model_directory}/{self.get_hash()}.pt")
+        checkpoint = torch.load(f"{self._model_directory}/{self.get_hash()}.pt")
 
         # Load the weights from the checkpoint
         if isinstance(checkpoint, nn.DataParallel):
@@ -682,12 +699,12 @@ class TorchTrainer(TrainingBlock):
             self.model.load_state_dict(model.state_dict())
 
         self.log_to_terminal(
-            f"Model loaded from {self.model_directory}/{self.get_hash()}.pt",
+            f"Model loaded from {self._model_directory}/{self.get_hash()}.pt",
         )
 
     def _model_exists(self) -> bool:
         """Check if the model exists in the model_directory folder."""
-        return Path(f"{self.model_directory}/{self.get_hash()}.pt").exists() and self.save_model_to_disk
+        return Path(f"{self._model_directory}/{self.get_hash()}.pt").exists() and self.save_model_to_disk
 
     def _early_stopping(self) -> bool:
         """Check if early stopping should be performed.
