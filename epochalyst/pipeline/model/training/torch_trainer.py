@@ -367,6 +367,7 @@ class TorchTrainer(TrainingBlock):
             except FileNotFoundError as e:
                 if i == 0:
                     raise FileNotFoundError(f"First model of {self.n_folds} folds not found...") from e
+                self.log_to_warning(f"Model for fold {self._fold} not found, skipping the rest of the folds...")
                 break
             self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
             predictions.append(self.predict_on_loader(pred_dataloader))
