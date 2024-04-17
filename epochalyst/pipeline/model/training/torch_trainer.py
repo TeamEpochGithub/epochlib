@@ -337,8 +337,6 @@ class TorchTrainer(TrainingBlock):
         :param x: The input to the system.
         :return: The output of the system.
         """
-        self._load_model()
-
         print_section_separator(f"Predicting model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Predicting model: {self.model.__class__.__name__}")
 
@@ -354,11 +352,23 @@ class TorchTrainer(TrainingBlock):
             collate_fn=(collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
 
+        # Predict with a single model
+        if self.n_folds < 1 or pred_args.get("use_single_model", False):
+            self._load_model()
+            return self.predict_on_loader(pred_dataloader)
+
         predictions = []
+        # Predict with multiple models
         for i in range(int(self.n_folds)):
-            self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
             self._fold = i  # set the fold, which updates the hash
-            self._load_model()  # load the model for this fold
+            # Try to load the next fold if it exists
+            try:
+                self._load_model()
+            except FileNotFoundError as e:
+                if i == 0:
+                    raise FileNotFoundError(f"First model of {self.n_folds} folds not found...") from e
+                break
+            self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
             predictions.append(self.predict_on_loader(pred_dataloader))
 
         # Average the predictions using numpy
