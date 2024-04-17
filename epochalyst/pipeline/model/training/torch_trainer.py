@@ -402,7 +402,7 @@ class TorchTrainer(TrainingBlock):
             for data in tepoch:
                 X_batch = data[0].to(self.device).float()
 
-                y_pred = self.model(X_batch).cpu().numpy()
+                y_pred = self.model(X_batch).squeeze(1).cpu().numpy()
                 predictions.extend(y_pred)
 
         self.log_to_terminal("Done predicting")
