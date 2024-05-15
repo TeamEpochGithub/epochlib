@@ -73,6 +73,7 @@ class TransformationBlock(Transformer, _Cacher, _Logger):
 
         data = self.custom_transform(data, **transform_args)
         if cache_args:
+            self.log_to_terminal(f"Storing cache to {cache_args["storage_path"]}")
             self._store_cache(name=self.get_hash(), data=data, cache_args=cache_args)
         return data
 

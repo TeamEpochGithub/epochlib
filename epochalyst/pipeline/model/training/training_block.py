@@ -76,16 +76,18 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
 
         x, y = self.custom_train(x, y, **train_args)
 
-        self._store_cache(
-            name=self.get_hash() + "x",
-            data=x,
-            cache_args=cache_args,
-        ) if cache_args else None
-        self._store_cache(
-            name=self.get_hash() + "y",
-            data=y,
-            cache_args=cache_args,
-        ) if cache_args else None
+        if cache_args:
+            self.log_to_terminal(f"Storing cache for x and y to {cache_args["storage_path"]}")
+            self._store_cache(
+                name=self.get_hash() + "x",
+                data=x,
+                cache_args=cache_args,
+            )
+            self._store_cache(
+                name=self.get_hash() + "y",
+                data=y,
+                cache_args=cache_args,
+            )
 
         return x, y
 
@@ -116,11 +118,13 @@ class TrainingBlock(Trainer, _Cacher, _Logger):
 
         x = self.custom_predict(x, **pred_args)
 
-        self._store_cache(
-            name=self.get_hash() + "p",
-            data=x,
-            cache_args=cache_args,
-        ) if cache_args else None
+        if cache_args:
+            self.log_to_terminal(f"Store cache for predictions to {cache_args["storage_path"]}")
+            self._store_cache(
+                name=self.get_hash() + "p",
+                data=x,
+                cache_args=cache_args,
+            )
 
         return x
 
