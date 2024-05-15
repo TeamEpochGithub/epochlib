@@ -105,7 +105,7 @@ class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
         data = super().transform(data, **transform_args)
 
         if cache_args:
-            self.log_to_terminal(f"Storing cache for pipeline to {cache_args["storage_path"]}")
+            self.log_to_terminal(f"Storing cache for pipeline to {cache_args['storage_path']}")
             self._store_cache(self.get_hash(), data, cache_args)
 
         # Set steps to original in case class is called again

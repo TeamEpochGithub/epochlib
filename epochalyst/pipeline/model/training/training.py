@@ -63,7 +63,7 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
         x, y = super().train(x, y, **train_args)
 
         if cache_args:
-            self.log_to_terminal(f"Storing cache for x and y to {cache_args["storage_path"]}")
+            self.log_to_terminal(f"Storing cache for x and y to {cache_args['storage_path']}")
             self._store_cache(name=self.get_hash() + "x", data=x, cache_args=cache_args)
             self._store_cache(name=self.get_hash() + "y", data=y, cache_args=cache_args)
 
@@ -117,7 +117,7 @@ class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
         x = super().predict(x, **pred_args)
 
         if cache_args:
-            self.log_to_terminal(f"Storing cache for x to {cache_args["storage_path"]}")
+            self.log_to_terminal(f"Storing cache for x to {cache_args['storage_path']}")
             self._store_cache(self.get_hash() + "p", x, cache_args)
 
         # Set steps to original in case class is called again
