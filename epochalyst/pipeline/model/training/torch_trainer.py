@@ -20,6 +20,7 @@ from tqdm import tqdm
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
+from epochalyst.pipeline.model.training.utils.tensor_functions import batch_to_device
 
 T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
 T_co = TypeVar("T_co", covariant=True)
@@ -44,6 +45,8 @@ class TorchTrainer(TrainingBlock):
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `fold` (int): Fold number
     - `dataloader_args (dict): Arguments for the dataloader`
+    - `x_tensor_type` (str): Type of x tensor for data
+    - `y_tensor_type` (str): Type of y tensor for labels
 
     Methods
     -------
@@ -144,6 +147,10 @@ class TorchTrainer(TrainingBlock):
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
 
     dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    # Types for tensors
+    x_tensor_type: str = "float"
+    y_tensor_type: str = "float"
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -404,7 +411,7 @@ class TorchTrainer(TrainingBlock):
         )
         with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
             for data in tepoch:
-                X_batch = data[0].to(self.device).float()
+                X_batch = batch_to_device(data[0], self.x_tensor_type, self.device)
 
                 y_pred = self.model(X_batch).squeeze(1).cpu().numpy()
                 predictions.extend(y_pred)
@@ -607,8 +614,9 @@ class TorchTrainer(TrainingBlock):
         )
         for batch in pbar:
             X_batch, y_batch = batch
-            X_batch = X_batch.to(self.device).float()
-            y_batch = y_batch.to(self.device).float()
+
+            X_batch = batch_to_device(X_batch, self.x_tensor_type, self.device)
+            y_batch = batch_to_device(y_batch, self.x_tensor_type, self.device)
 
             # Forward pass
             y_pred = self.model(X_batch).squeeze(1)
@@ -650,8 +658,9 @@ class TorchTrainer(TrainingBlock):
         with torch.no_grad():
             for batch in pbar:
                 X_batch, y_batch = batch
-                X_batch = X_batch.to(self.device).float()
-                y_batch = y_batch.to(self.device).float()
+
+                X_batch = batch_to_device(X_batch, self.x_tensor_type, self.device)
+                y_batch = batch_to_device(y_batch, self.y_tensor_type, self.device)
 
                 # Forward pass
                 y_pred = self.model(X_batch).squeeze(1)
