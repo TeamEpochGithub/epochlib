@@ -43,6 +43,7 @@ class TorchTrainer(TrainingBlock):
     - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `fold` (int): Fold number
+    - `dataloader_args (dict): Arguments for the dataloader`
 
     Methods
     -------
@@ -141,6 +142,8 @@ class TorchTrainer(TrainingBlock):
 
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
+
+    dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -397,6 +400,7 @@ class TorchTrainer(TrainingBlock):
             collate_fn=(
                 collate_fn if hasattr(loader.dataset, "__getitems__") else None  # type: ignore[arg-type]
             ),
+            **self.dataloader_args,
         )
         with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
             for data in tepoch:
@@ -473,12 +477,14 @@ class TorchTrainer(TrainingBlock):
             batch_size=self.batch_size,
             shuffle=True,
             collate_fn=(collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            **self.dataloader_args,
         )
         test_loader = DataLoader(
             test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
             collate_fn=(collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            **self.dataloader_args,
         )
         return train_loader, test_loader
 
