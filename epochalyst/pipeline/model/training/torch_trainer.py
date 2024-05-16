@@ -20,6 +20,7 @@ from tqdm import tqdm
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
+from epochalyst.pipeline.model.training.utils.tensor_functions import batch_to_device
 
 T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
 T_co = TypeVar("T_co", covariant=True)
@@ -43,6 +44,9 @@ class TorchTrainer(TrainingBlock):
     - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `fold` (int): Fold number
+    - `dataloader_args (dict): Arguments for the dataloader`
+    - `x_tensor_type` (str): Type of x tensor for data
+    - `y_tensor_type` (str): Type of y tensor for labels
 
     Methods
     -------
@@ -141,6 +145,12 @@ class TorchTrainer(TrainingBlock):
 
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
+
+    dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    # Types for tensors
+    x_tensor_type: str = "float"
+    y_tensor_type: str = "float"
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -397,10 +407,11 @@ class TorchTrainer(TrainingBlock):
             collate_fn=(
                 collate_fn if hasattr(loader.dataset, "__getitems__") else None  # type: ignore[arg-type]
             ),
+            **self.dataloader_args,
         )
         with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
             for data in tepoch:
-                X_batch = data[0].to(self.device).float()
+                X_batch = batch_to_device(data[0], self.x_tensor_type, self.device)
 
                 y_pred = self.model(X_batch).squeeze(1).cpu().numpy()
                 predictions.extend(y_pred)
@@ -473,12 +484,14 @@ class TorchTrainer(TrainingBlock):
             batch_size=self.batch_size,
             shuffle=True,
             collate_fn=(collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            **self.dataloader_args,
         )
         test_loader = DataLoader(
             test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
             collate_fn=(collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            **self.dataloader_args,
         )
         return train_loader, test_loader
 
@@ -601,8 +614,9 @@ class TorchTrainer(TrainingBlock):
         )
         for batch in pbar:
             X_batch, y_batch = batch
-            X_batch = X_batch.to(self.device).float()
-            y_batch = y_batch.to(self.device).float()
+
+            X_batch = batch_to_device(X_batch, self.x_tensor_type, self.device)
+            y_batch = batch_to_device(y_batch, self.x_tensor_type, self.device)
 
             # Forward pass
             y_pred = self.model(X_batch).squeeze(1)
@@ -619,7 +633,7 @@ class TorchTrainer(TrainingBlock):
 
         # Step the scheduler
         if self.initialized_scheduler is not None:
-            self.initialized_scheduler.step(epoch=epoch)
+            self.initialized_scheduler.step(epoch=epoch + 1)
 
         # Remove the cuda cache
         torch.cuda.empty_cache()
@@ -644,8 +658,9 @@ class TorchTrainer(TrainingBlock):
         with torch.no_grad():
             for batch in pbar:
                 X_batch, y_batch = batch
-                X_batch = X_batch.to(self.device).float()
-                y_batch = y_batch.to(self.device).float()
+
+                X_batch = batch_to_device(X_batch, self.x_tensor_type, self.device)
+                y_batch = batch_to_device(y_batch, self.y_tensor_type, self.device)
 
                 # Forward pass
                 y_pred = self.model(X_batch).squeeze(1)
