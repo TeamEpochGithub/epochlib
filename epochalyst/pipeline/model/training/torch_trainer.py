@@ -619,7 +619,7 @@ class TorchTrainer(TrainingBlock):
 
         # Step the scheduler
         if self.initialized_scheduler is not None:
-            self.initialized_scheduler.step(epoch=epoch)
+            self.initialized_scheduler.step(epoch=epoch + 1)
 
         # Remove the cuda cache
         torch.cuda.empty_cache()
