@@ -43,6 +43,7 @@ class TorchTrainer(TrainingBlock):
     - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `fold` (int): Fold number
+    - `dataloader_args (dict): Arguments for the dataloader`
 
     Methods
     -------
