@@ -616,7 +616,7 @@ class TorchTrainer(TrainingBlock):
             X_batch, y_batch = batch
 
             X_batch = batch_to_device(X_batch, self.x_tensor_type, self.device)
-            y_batch = batch_to_device(y_batch, self.x_tensor_type, self.device)
+            y_batch = batch_to_device(y_batch, self.y_tensor_type, self.device)
 
             # Forward pass
             y_pred = self.model(X_batch).squeeze(1)
