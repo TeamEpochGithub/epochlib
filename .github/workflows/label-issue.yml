@@ -2,7 +2,9 @@ name: Label New Issues
 
 on:
   issues:
-    types: [opened]
+    types:
+      - reopened
+      - opened
 
 jobs:
   add-label:
