@@ -30,21 +30,33 @@ T_co = TypeVar("T_co", covariant=True)
 class TorchTrainer(TrainingBlock):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
 
-    Parameters
+    Parameters Modules
     ----------
     - `model` (nn.Module): The model to train.
     - `optimizer` (functools.partial[Optimizer]): Optimizer to use for training.
     - `criterion` (nn.Module): Criterion to use for training.
     - `scheduler` (Callable[[Optimizer], LRScheduler] | None): Scheduler to use for training.
+    - `dataloader_args (dict): Arguments for the dataloader`
+
+    Parameters Training
+    ----------
     - `epochs` (int): Number of epochs
+    - `patience` (int): Stopping training after x epochs of no improvement (early stopping)
     - `batch_size` (int): Batch size
-    - `patience` (int): Patience for early stopping
-    - `test_size` (float): Relative size of the test set
+
+    Parameters Checkpointing
+    ----------
+    - `checkpointing_enabled` (bool): Whether to save checkpoints after each epoch
+    - `checkpointing_keep_every` (int): Keep every i'th checkpoint (1 to keep all, 0 to keep only the last one)
+    - `checkpointing_resume_if_exists` (bool): Resume training if a checkpoint exists
+
+    Parameters Misc
+    ----------
     - `to_predict` (str): Whether to predict on the 'test' set, 'all' data or 'none'
     - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
-    - `fold` (int): Fold number
-    - `dataloader_args (dict): Arguments for the dataloader`
+    - `_fold` (int): Fold number
+    - `test_size` (float): Relative size of the test set
     - `x_tensor_type` (str): Type of x tensor for data
     - `y_tensor_type` (str): Type of y tensor for labels
 
@@ -132,21 +144,33 @@ class TorchTrainer(TrainingBlock):
         x = trainer.predict(x)
     """
 
+    # Modules
     model: nn.Module
     optimizer: functools.partial[Optimizer]
     criterion: nn.Module
     scheduler: Callable[[Optimizer], LRScheduler] | None = None
+    dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
+
+    # Training parameters
     epochs: Annotated[int, Gt(0)] = 10
+    patience: Annotated[int, Gt(0)] = 5  # Early stopping
     batch_size: Annotated[int, Gt(0)] = 32
-    patience: Annotated[int, Gt(0)] = 5
-    test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
+
+    # Checkpointing
+    checkpointing_enabled: bool = field(default=True, init=True, repr=False, compare=False)
+    checkpointing_keep_every: Annotated[int, Gt(0)] = field(default=0, init=True, repr=False, compare=False)
+    checkpointing_resume_if_exists: bool = field(default=True, init=True, repr=False, compare=False)
+
+    # Final prediction
     to_predict: str = "test"
+
+    # Logging
     model_name: str | None = None  # No spaces allowed
 
-    _fold: int = field(default=-1, init=False, repr=False, compare=False)
+    # Parameters relevant for Hashing
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
-
-    dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
+    _fold: int = field(default=-1, init=False, repr=False, compare=False)
+    test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2
 
     # Types for tensors
     x_tensor_type: str = "float"
@@ -167,7 +191,7 @@ class TorchTrainer(TrainingBlock):
             raise ValueError("self.model_name is None, please specify a model_name")
 
         self.save_model_to_disk = True
-        self._model_directory = Path("tm")
+        self._trained_models_directory = Path("tm")
         self.best_model_state_dict: dict[Any, Any] = {}
 
         # Set optimizer
@@ -235,13 +259,14 @@ class TorchTrainer(TrainingBlock):
         # Create dataloaders
         train_loader, test_loader = self.create_dataloaders(train_dataset, test_dataset)
 
+        # Check if a trained model exists
         if self._model_exists():
             self.log_to_terminal(
-                f"Model exists in {self._model_directory}/{self.get_hash()}.pt, loading model",
+                f"Model exists in {self.get_model_path()}. Loading model...",
             )
             self._load_model()
-            # Return the predictions
 
+            # Return the predictions
             return self._predict_after_train(
                 x,
                 y,
@@ -251,11 +276,21 @@ class TorchTrainer(TrainingBlock):
                 test_indices,
             )
 
+        # Log the model being trained
         self.log_to_terminal(f"Training model: {self.model.__class__.__name__}")
-        self.log_to_debug(f"Training model: {self.model.__class__.__name__}")
+
+        # Resume from checkpoint if enabled and checkpoint exists
+        start_epoch = 0
+        if self.checkpointing_resume_if_exists:
+            saved_checkpoints = list(Path(self._trained_models_directory).glob(f"{self.get_hash()}_checkpoint_*.pt"))
+            if len(saved_checkpoints) > 0:
+                self.log_to_terminal("Resuming training from checkpoint")
+                epochs = [int(checkpoint.stem.split("_")[-1]) for checkpoint in saved_checkpoints]
+                self._load_model(saved_checkpoints[np.argmax(epochs)])
+                start_epoch = max(epochs) + 1
 
         # Train the model
-        self.log_to_terminal(f"Training model for {self.epochs} epochs")
+        self.log_to_terminal(f"Training model for {self.epochs} epochs{', starting at epoch ' + str(start_epoch) if start_epoch > 0 else ''}")
 
         train_losses: list[float] = []
         val_losses: list[float] = []
@@ -272,8 +307,8 @@ class TorchTrainer(TrainingBlock):
             train_losses,
             val_losses,
             self._fold,
+            start_epoch,
         )
-
         self.log_to_terminal(
             f"Done training the model: {self.model.__class__.__name__}",
         )
@@ -500,15 +535,15 @@ class TorchTrainer(TrainingBlock):
         return train_loader, test_loader
 
     def update_model_directory(self, model_directory: Path) -> None:
-        """Update the model directory.
+        """Update the trained models directory. This is where trained models are saved to, e.g. 'tm/'.
 
         :param model_directory: The model directory.
         """
         if model_directory.exists() and model_directory.is_dir():
-            self._model_directory = model_directory
+            self._trained_models_directory = model_directory
         elif not model_directory.exists():
             model_directory.mkdir()
-            self._model_directory = model_directory
+            self._trained_models_directory = model_directory
         else:
             raise ValueError(f"{model_directory} is not a valid model_directory")
 
@@ -525,6 +560,7 @@ class TorchTrainer(TrainingBlock):
         train_losses: list[float],
         val_losses: list[float],
         fold: int = -1,
+        start_epoch: int = 0,
     ) -> None:
         """Training loop for the model.
 
@@ -541,7 +577,11 @@ class TorchTrainer(TrainingBlock):
         self.external_define_metric(f"Training/Train Loss{fold_no}", "epoch")
         self.external_define_metric(f"Validation/Validation Loss{fold_no}", "epoch")
 
-        for epoch in range(self.epochs):
+        # Set the scheduler to the correct epoch
+        if self.initialized_scheduler is not None:
+            self.initialized_scheduler.step(epoch=start_epoch)
+
+        for epoch in range(start_epoch, self.epochs):
             # Train using train_loader
             train_loss = self._train_one_epoch(train_loader, epoch)
             self.log_to_debug(f"Epoch {epoch} Train Loss: {train_loss}")
@@ -554,6 +594,19 @@ class TorchTrainer(TrainingBlock):
                     "epoch": epoch,
                 },
             )
+
+            # Step the scheduler
+            if self.initialized_scheduler is not None:
+                self.initialized_scheduler.step(epoch=epoch + 1)
+
+            # Checkpointing
+            if self.checkpointing_enabled:
+                # Save checkpoint
+                self._save_model(self.get_model_checkpoint_path(epoch), save_to_external=False, quiet=True)
+
+                # Remove old checkpoints
+                if (self.checkpointing_keep_every == 0 or epoch % self.checkpointing_keep_every != 0) and self.get_model_checkpoint_path(epoch - 1).exists():
+                    self.get_model_checkpoint_path(epoch - 1).unlink()
 
             # Compute validation loss
             if len(test_loader) > 0:
@@ -614,7 +667,7 @@ class TorchTrainer(TrainingBlock):
         pbar = tqdm(
             dataloader,
             unit="batch",
-            desc=f"Epoch {epoch} Train ({self.initialized_optimizer.param_groups[0]['lr']})",
+            desc=f"Epoch {epoch} Train ({self.initialized_optimizer.param_groups[0]['lr']:0.8f})",
         )
         for batch in pbar:
             X_batch, y_batch = batch
@@ -634,10 +687,6 @@ class TorchTrainer(TrainingBlock):
             # Print tqdm
             losses.append(loss.item())
             pbar.set_postfix(loss=sum(losses) / len(losses))
-
-        # Step the scheduler
-        if self.initialized_scheduler is not None:
-            self.initialized_scheduler.step(epoch=epoch + 1)
 
         # Remove the cuda cache
         torch.cuda.empty_cache()
@@ -676,33 +725,36 @@ class TorchTrainer(TrainingBlock):
                 pbar.set_postfix(loss=sum(losses) / len(losses))
         return sum(losses) / len(losses)
 
-    def _save_model(self) -> None:
+    def _save_model(self, model_path: Path | None = None, *, save_to_external: bool = True, quiet: bool = False) -> None:
         """Save the model in the model_directory folder."""
-        self.log_to_terminal(
-            f"Saving model to {self._model_directory}/{self.get_hash()}.pt",
-        )
-        path = Path(self._model_directory)
-        path.mkdir(exist_ok=True, parents=True)
+        model_path = model_path if model_path is not None else self.get_model_path()
 
-        torch.save(self.model, f"{self._model_directory}/{self.get_hash()}.pt")
-        self.log_to_terminal(
-            f"Model saved to {self._model_directory}/{self.get_hash()}.pt",
-        )
-        self.save_model_to_external()
+        if not quiet:
+            self.log_to_terminal(
+                f"Saving model to {model_path}",
+            )
 
-    def _load_model(self) -> None:
+        model_path.parent.mkdir(exist_ok=True, parents=True)
+        torch.save(self.model, model_path)
+
+        if save_to_external:
+            self.save_model_to_external()
+
+    def _load_model(self, path: Path | None = None) -> None:
         """Load the model from the model_directory folder."""
+        model_path = path if path is not None else self.get_model_path()
+
         # Check if the model exists
-        if not Path(f"{self._model_directory}/{self.get_hash()}.pt").exists():
+        if not model_path.exists():
             raise FileNotFoundError(
-                f"Model not found in {self._model_directory}/{self.get_hash()}.pt",
+                f"Model not found in {model_path}",
             )
 
         # Load model
         self.log_to_terminal(
-            f"Loading model from {self._model_directory}/{self.get_hash()}.pt",
+            f"Loading model from {model_path}",
         )
-        checkpoint = torch.load(f"{self._model_directory}/{self.get_hash()}.pt")
+        checkpoint = torch.load(model_path)
 
         # Load the weights from the checkpoint
         if isinstance(checkpoint, nn.DataParallel):
@@ -716,13 +768,9 @@ class TorchTrainer(TrainingBlock):
         else:
             self.model.load_state_dict(model.state_dict())
 
-        self.log_to_terminal(
-            f"Model loaded from {self._model_directory}/{self.get_hash()}.pt",
-        )
-
     def _model_exists(self) -> bool:
         """Check if the model exists in the model_directory folder."""
-        return Path(f"{self._model_directory}/{self.get_hash()}.pt").exists() and self.save_model_to_disk
+        return self.get_model_path().exists() and self.save_model_to_disk
 
     def _early_stopping(self) -> bool:
         """Check if early stopping should be performed.
@@ -765,6 +813,21 @@ class TorchTrainer(TrainingBlock):
             list(train_indices),
             list(test_indices),
         )
+
+    def get_model_path(self) -> Path:
+        """Get the model path.
+
+        :return: The model path.
+        """
+        return Path(f"{self._trained_models_directory}/{self.get_hash()}.pt")
+
+    def get_model_checkpoint_path(self, epoch: int) -> Path:
+        """Get the checkpoint path.
+
+        :param epoch: The epoch number.
+        :return: The checkpoint path.
+        """
+        return Path(f"{self._trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
 
 
 def collate_fn(batch: tuple[Tensor, ...]) -> tuple[Tensor, ...]:
