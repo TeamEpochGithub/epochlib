@@ -22,6 +22,7 @@ class TestTorchTrainer:
     class ImplementedTorchTrainer(TorchTrainer):
         def __post_init__(self):
             self.n_folds = 1
+            self.model_name = "ImplementedTorchTrainer"
             super().__post_init__()
 
         def log_to_terminal(self, message: str) -> None:
@@ -34,6 +35,7 @@ class TestTorchTrainer:
     class FullyImplementedTorchTrainer(TorchTrainer):
         def __post_init__(self):
             self.n_folds = 1
+            self.model_name = "FullyImplementedTorchTrainer"
             super().__post_init__()
 
         def log_to_terminal(self, message: str) -> None:
@@ -72,6 +74,7 @@ class TestTorchTrainer:
                 criterion=torch.nn.MSELoss(),
                 optimizer=self.optimizer,
                 n_folds=0,
+                model_name="Simple"
             )
 
     def test_init_proper_args_with_implemented(self):
