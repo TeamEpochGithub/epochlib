@@ -9,14 +9,16 @@ class Timm(nn.Module):
     :param in_channels: Number of input channels
     :param out_channels: Number of output channels
     :param model_name: Model to use
+    :param pretrained: Whether to use a pretrained model
     """
 
-    def __init__(self, in_channels: int, out_channels: int, model_name: str) -> None:
+    def __init__(self, in_channels: int, out_channels: int, model_name: str, *, pretrained: bool = True) -> None:
         """Initialize the Timm model.
 
         :param in_channels: The number of input channels.
         :param out_channels: The number of output channels.
         :param model_name: The model to use.
+        :param pretrained: Whether to use a pretrained model
         """
         try:
             import timm
@@ -26,9 +28,10 @@ class Timm(nn.Module):
         super(Timm, self).__init__()  # noqa: UP008
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.pretrained = pretrained
 
         try:
-            self.model = timm.create_model(model_name, pretrained=True, in_chans=self.in_channels, num_classes=self.out_channels)
+            self.model = timm.create_model(model_name, pretrained=self.pretrained, in_chans=self.in_channels, num_classes=self.out_channels)
         except Exception:  # noqa: BLE001
             self.model = timm.create_model(model_name, pretrained=False, in_chans=self.in_channels, num_classes=self.out_channels)
 
