@@ -161,11 +161,10 @@ class TorchTrainer(TrainingBlock):
     checkpointing_keep_every: Annotated[int, Gt(0)] = field(default=0, init=True, repr=False, compare=False)
     checkpointing_resume_if_exists: bool = field(default=True, init=True, repr=False, compare=False)
 
-    # Final prediction
-    to_predict: str = "test"
-
-    # Logging
+    # Misc
     model_name: str | None = None  # No spaces allowed
+    trained_models_directory: Path = Path("tm")
+    to_predict: str = "test"
 
     # Parameters relevant for Hashing
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
@@ -191,7 +190,6 @@ class TorchTrainer(TrainingBlock):
             raise ValueError("self.model_name is None, please specify a model_name")
 
         self.save_model_to_disk = True
-        self._trained_models_directory = Path("tm")
         self.best_model_state_dict: dict[Any, Any] = {}
 
         # Set optimizer
@@ -282,7 +280,7 @@ class TorchTrainer(TrainingBlock):
         # Resume from checkpoint if enabled and checkpoint exists
         start_epoch = 0
         if self.checkpointing_resume_if_exists:
-            saved_checkpoints = list(Path(self._trained_models_directory).glob(f"{self.get_hash()}_checkpoint_*.pt"))
+            saved_checkpoints = list(Path(self.trained_models_directory).glob(f"{self.get_hash()}_checkpoint_*.pt"))
             if len(saved_checkpoints) > 0:
                 self.log_to_terminal("Resuming training from checkpoint")
                 epochs = [int(checkpoint.stem.split("_")[-1]) for checkpoint in saved_checkpoints]
@@ -533,19 +531,6 @@ class TorchTrainer(TrainingBlock):
             **self.dataloader_args,
         )
         return train_loader, test_loader
-
-    def update_model_directory(self, model_directory: Path) -> None:
-        """Update the trained models directory. This is where trained models are saved to, e.g. 'tm/'.
-
-        :param model_directory: The model directory.
-        """
-        if model_directory.exists() and model_directory.is_dir():
-            self._trained_models_directory = model_directory
-        elif not model_directory.exists():
-            model_directory.mkdir()
-            self._trained_models_directory = model_directory
-        else:
-            raise ValueError(f"{model_directory} is not a valid model_directory")
 
     def save_model_to_external(self) -> None:
         """Save model to external database."""
@@ -819,7 +804,7 @@ class TorchTrainer(TrainingBlock):
 
         :return: The model path.
         """
-        return Path(f"{self._trained_models_directory}/{self.get_hash()}.pt")
+        return Path(f"{self.trained_models_directory}/{self.get_hash()}.pt")
 
     def get_model_checkpoint_path(self, epoch: int) -> Path:
         """Get the checkpoint path.
@@ -827,7 +812,7 @@ class TorchTrainer(TrainingBlock):
         :param epoch: The epoch number.
         :return: The checkpoint path.
         """
-        return Path(f"{self._trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
+        return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
 
 
 def collate_fn(batch: tuple[Tensor, ...]) -> tuple[Tensor, ...]:

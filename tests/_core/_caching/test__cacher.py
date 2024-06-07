@@ -1,3 +1,4 @@
+import shutil
 from epochalyst._core._caching._cacher import _Cacher
 import numpy as np
 import dask.dataframe as dd
@@ -6,6 +7,9 @@ import polars as pl
 import dask.array as da
 from tests.util import remove_cache_files
 import pytest
+from pathlib import Path
+
+TEMP_DIR = Path("tests/temp")
 
 
 class Implemented_Cacher(_Cacher):
@@ -14,6 +18,19 @@ class Implemented_Cacher(_Cacher):
 
 
 class Test_Cacher:
+    cache_path = TEMP_DIR
+
+    @pytest.fixture(autouse=True)
+    def run_around_tests(self):
+        # Code that will run before each test
+        TEMP_DIR.mkdir(exist_ok=True)
+
+        yield
+
+        # Code that will run after each
+        if TEMP_DIR.exists():
+            shutil.rmtree(TEMP_DIR)
+
     def test_cacher_init(self):
         c = Implemented_Cacher()
         assert c is not None
@@ -32,18 +49,18 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_npy_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.npy", "w") as f:
+        with open(self.cache_path / "test.npy", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -53,18 +70,18 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_parquet_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.parquet", "w") as f:
+        with open(self.cache_path / "test.parquet", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -74,18 +91,18 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_csv_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.csv", "w") as f:
+        with open(self.cache_path / "test.csv", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -95,18 +112,18 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy_stack", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_npy_stack_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test", "w") as f:
+        with open(self.cache_path / "test", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy_stack", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -116,18 +133,18 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_pkl_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.pkl", "w") as f:
+        with open(self.cache_path / "test.pkl", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -137,7 +154,7 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".new_type", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".new_type", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
@@ -162,7 +179,7 @@ class Test_Cacher:
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
             c._store_cache(
-                "test", "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
 
     # storage type .npy
@@ -173,13 +190,13 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -194,13 +211,13 @@ class Test_Cacher:
             x,
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -214,7 +231,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "pandas_dataframe",
                 },
             )
@@ -229,13 +246,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -251,13 +268,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -272,13 +289,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -293,13 +310,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -314,13 +331,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -334,7 +351,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".parquet",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -349,13 +366,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -371,13 +388,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -392,13 +409,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -412,7 +429,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".csv",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -427,13 +444,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".npy_stack",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy_stack", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -446,7 +463,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy_stack",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -459,7 +476,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".new_type",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -474,13 +491,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -496,13 +513,13 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
@@ -528,7 +545,7 @@ class Test_Cacher:
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
             c._get_cache(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
 
     # storage type .npy
@@ -539,7 +556,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
@@ -548,7 +565,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -565,7 +582,7 @@ class Test_Cacher:
             x,
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -575,7 +592,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "dask_array",
                 },
             )
@@ -592,7 +609,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "pandas_dataframe",
                 },
             )
@@ -607,7 +624,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -615,7 +632,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         ).equals(data)
@@ -631,7 +648,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -640,7 +657,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".parquet",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "dask_dataframe",
                 },
             )
@@ -658,7 +675,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
@@ -666,7 +683,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
@@ -682,7 +699,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -690,7 +707,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -706,7 +723,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
@@ -714,7 +731,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
@@ -728,7 +745,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".parquet",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -743,7 +760,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -751,7 +768,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -768,7 +785,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -776,7 +793,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -792,7 +809,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
@@ -800,7 +817,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
@@ -814,7 +831,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".csv",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -829,7 +846,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".npy_stack",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -837,7 +854,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".npy_stack",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -851,7 +868,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy_stack",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -863,7 +880,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".new_type",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -878,7 +895,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -886,7 +903,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -903,7 +920,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -911,7 +928,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
