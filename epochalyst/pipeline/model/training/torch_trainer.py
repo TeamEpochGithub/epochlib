@@ -26,6 +26,16 @@ T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
 T_co = TypeVar("T_co", covariant=True)
 
 
+def custom_collate(batch: tuple[Tensor, ...]) -> tuple[Tensor, ...]:
+    """Collate function for the dataloader.
+
+    :param batch: The batch to collate.
+    :return: Collated batch.
+    """
+    X, y = batch
+    return X, y
+
+
 @dataclass
 class TorchTrainer(TrainingBlock):
     """Abstract class for torch trainers, override necessary functions for custom implementation.
@@ -155,6 +165,7 @@ class TorchTrainer(TrainingBlock):
     epochs: Annotated[int, Gt(0)] = 10
     patience: Annotated[int, Gt(0)] = 5  # Early stopping
     batch_size: Annotated[int, Gt(0)] = 32
+    collate_fn: Callable[[tuple[Tensor, ...]], tuple[Tensor, ...]] = custom_collate
 
     # Checkpointing
     checkpointing_enabled: bool = field(default=True, init=True, repr=False, compare=False)
@@ -363,7 +374,7 @@ class TorchTrainer(TrainingBlock):
                     batch_size=self.batch_size,
                     shuffle=False,
                     collate_fn=(
-                        collate_fn if hasattr(concat_dataset, "__getitems__") else None  # type: ignore[arg-type]
+                        self.collate_fn if hasattr(concat_dataset, "__getitems__") else None  # type: ignore[arg-type]
                     ),
                 )
                 return self.predict_on_loader(pred_dataloader), y
@@ -396,7 +407,7 @@ class TorchTrainer(TrainingBlock):
             pred_dataset,
             batch_size=curr_batch_size,
             shuffle=False,
-            collate_fn=(collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            collate_fn=(self.collate_fn if hasattr(pred_dataset, "__getitems__") else None),  # type: ignore[arg-type]
         )
 
         # Predict with a single model
@@ -442,7 +453,7 @@ class TorchTrainer(TrainingBlock):
             batch_size=loader.batch_size,
             shuffle=False,
             collate_fn=(
-                collate_fn if hasattr(loader.dataset, "__getitems__") else None  # type: ignore[arg-type]
+                self.collate_fn if hasattr(loader.dataset, "__getitems__") else None  # type: ignore[arg-type]
             ),
             **self.dataloader_args,
         )
@@ -520,14 +531,14 @@ class TorchTrainer(TrainingBlock):
             train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            collate_fn=(collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            collate_fn=(self.collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
             **self.dataloader_args,
         )
         test_loader = DataLoader(
             test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            collate_fn=(collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            collate_fn=(self.collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
             **self.dataloader_args,
         )
         return train_loader, test_loader
@@ -813,16 +824,6 @@ class TorchTrainer(TrainingBlock):
         :return: The checkpoint path.
         """
         return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
-
-
-def collate_fn(batch: tuple[Tensor, ...]) -> tuple[Tensor, ...]:
-    """Collate function for the dataloader.
-
-    :param batch: The batch to collate.
-    :return: Collated batch.
-    """
-    X, y = batch
-    return X, y
 
 
 class TrainTestDataset(Dataset[T_co]):
