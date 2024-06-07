@@ -1,0 +1,27 @@
+name: Label New Issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if issue has a milestone
+        id: check_milestone
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (!issue.milestone) {
+              return { hasMilestone: false };
+            }
+            return { hasMilestone: true };
+
+      - name: Add "needs milestone" label
+        if: steps.check_milestone.outputs.hasMilestone == 'false'
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'needs milestone'
