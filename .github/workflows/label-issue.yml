@@ -7,7 +7,11 @@ on:
 jobs:
   add-label:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
+      - name: checkout
+        uses: actions/checkout@v2
       - name: Check if issue has a milestone
         id: check_milestone
         uses: actions/github-script@v6
@@ -23,5 +27,4 @@ jobs:
         if: steps.check_milestone.outputs.hasMilestone == 'false'
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           labels: 'needs milestone'
