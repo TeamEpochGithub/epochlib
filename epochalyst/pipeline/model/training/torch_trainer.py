@@ -141,7 +141,7 @@ class TorchTrainer(TrainingBlock):
     patience: Annotated[int, Gt(0)] = 5
     test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2  # Hashing purposes
     to_predict: str = "test"
-    model_name: str = "MODEL_NAME_NOT_SPECIFIED"  # No spaces allowed
+    model_name: str | None = None  # No spaces allowed
 
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
@@ -162,6 +162,10 @@ class TorchTrainer(TrainingBlock):
             raise ValueError(
                 "Please specify the number of folds for cross validation or set n_folds to 0 for train full.",
             )
+
+        if self.model_name is None:
+            raise ValueError("self.model_name is None, please specify a model_name")
+
         self.save_model_to_disk = True
         self._model_directory = Path("tm")
         self.best_model_state_dict: dict[Any, Any] = {}
