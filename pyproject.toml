@@ -1,6 +1,6 @@
 [project]
 name = "epochalyst"
-version = "0.3.4"
+version = "0.3.5"
 authors = [
     { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
     { name = "Ariel Ebersberger", email = "arielebersberger@gmail.com" },
@@ -36,9 +36,6 @@ dependencies= [
     # Agogos
     "agogos==0.4",
 ]
-
-[tool.setuptools]
-packages = ["epochalyst"]
 
 [tool.mypy]
 exclude = ["external/", "venv/", ".cache"]
