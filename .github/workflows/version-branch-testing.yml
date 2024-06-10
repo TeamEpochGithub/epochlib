@@ -5,62 +5,74 @@ on:
         branches: ["v*"]
 
 jobs:
-    pytest:
-        runs-on: ubuntu-latest
-        container:
-          image: python:3.11-slim
-          env:
-            NODE_VERSION: 20
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: 3.11
+    - name: Install pre-commit
+      run: pip install pre-commit
+    - name: Run pre-commit
+      run: pre-commit run --all-files
 
-        strategy:
-          fail-fast: false
-          matrix:
-            python-version: ["3.10", "3.11", "3.12"]
+  pytest:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11-slim
+      env:
+        NODE_VERSION: 20
 
-        steps:
-        - name: Install Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: ${{ env.NODE_VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
 
-        - uses: actions/checkout@v3
+    steps:
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
 
-        - name: Set up Python ${{ matrix.python-version }}
-          uses: actions/setup-python@v3
-          with:
-            python-version: ${{ matrix.python-version }}
+    - uses: actions/checkout@v3
 
-        - name: Create virtual environment
-          run: python -m venv venv
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
 
-        - name: Activate virtual environment
-          run: |
-            . venv/bin/activate
+    - name: Create virtual environment
+      run: python -m venv venv
 
-        - name: Install dependencies
-          run: |
-            venv/bin/python -m pip install --upgrade pip
-            venv/bin/python -m pip install pytest
-            venv/bin/python -m pip install -r requirements.txt
-            venv/bin/python -m pip install pytest-cov coverage
+    - name: Activate virtual environment
+      run: |
+        . venv/bin/activate
 
-        - name: Test with pytest
-          run: |
-            venv/bin/python -m pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
+    - name: Install dependencies
+      run: |
+        venv/bin/python -m pip install --upgrade pip
+        venv/bin/python -m pip install pytest
+        venv/bin/python -m pip install -r requirements.txt
+        venv/bin/python -m pip install pytest-cov coverage
 
-    build:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v3
+    - name: Test with pytest
+      run: |
+        venv/bin/python -m pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
 
-        - uses: actions/setup-python@v3
-          with:
-            python-version: 3.11
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
 
-        - run: |
-            pip install build
-            python -m build
+    - uses: actions/setup-python@v3
+      with:
+        python-version: 3.11
 
-        - uses: actions/upload-artifact@v3
-          with:
-            path: ./dist
+    - run: |
+        pip install build
+        python -m build
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./dist

@@ -62,11 +62,11 @@ class TorchTrainer(TrainingBlock):
 
     Parameters Misc
     ----------
-    - `to_predict` (str): Whether to predict on the 'test' set, 'all' data or 'none'
+    - `to_predict` (str): Whether to predict on the 'validation' set, 'all' data or 'none'
     - `model_name` (str): Name of the model
     - `n_folds` (float): Number of folds for cross validation (0 for train full,
     - `_fold` (int): Fold number
-    - `test_size` (float): Relative size of the test set
+    - `validation_size` (float): Relative size of the validation set
     - `x_tensor_type` (str): Type of x tensor for data
     - `y_tensor_type` (str): Type of y tensor for labels
 
@@ -109,7 +109,7 @@ class TorchTrainer(TrainingBlock):
             # Predict using a dataloader.
 
         def create_datasets(
-            x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], test_indices: list[int], cache_size: int = -1
+            x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], train_indices: list[int], validation_indices: list[int], cache_size: int = -1
         ) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
             # Create the datasets for training and validation.
 
@@ -117,7 +117,7 @@ class TorchTrainer(TrainingBlock):
             # Create the prediction dataset.
 
         def create_dataloaders(
-            train_dataset: Dataset[tuple[Tensor, ...]], test_dataset: Dataset[tuple[Tensor, ...]]
+            train_dataset: Dataset[tuple[Tensor, ...]], validation_dataset: Dataset[tuple[Tensor, ...]]
         ) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
             # Create the dataloaders for training and validation.
 
@@ -145,10 +145,10 @@ class TorchTrainer(TrainingBlock):
         epochs = 10
         batch_size = 32
         patience = 5
-        test_size = 0.2
+        validation_size = 0.2
 
         trainer = MyTorchTrainer(model=model, optimizer=optimizer, criterion=criterion, scheduler=scheduler,
-                                 epochs=epochs, batch_size=batch_size, patience=patience, test_size=test_size)
+                                 epochs=epochs, batch_size=batch_size, patience=patience, validation_size=validation_size)
 
         x, y = trainer.train(x, y)
         x = trainer.predict(x)
@@ -175,12 +175,12 @@ class TorchTrainer(TrainingBlock):
     # Misc
     model_name: str | None = None  # No spaces allowed
     trained_models_directory: Path = Path("tm")
-    to_predict: str = "test"
+    to_predict: str = "validation"
 
     # Parameters relevant for Hashing
     n_folds: float = field(default=-1, init=True, repr=False, compare=False)
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
-    test_size: Annotated[float, Interval(ge=0, le=1)] = 0.2
+    validation_size: Annotated[float, Interval(ge=0, le=1)] = 0.2
 
     # Types for tensors
     x_tensor_type: str = "float"
@@ -188,9 +188,9 @@ class TorchTrainer(TrainingBlock):
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
-        # Make sure to_predict is either "test" or "all" or "none"
-        if self.to_predict not in ["test", "all", "none"]:
-            raise ValueError("to_predict should be either 'test', 'all' or 'none'")
+        # Make sure to_predict is either "validation" or "all" or "none"
+        if self.to_predict not in ["validation", "all", "none"]:
+            raise ValueError("to_predict should be either 'validation', 'all' or 'none'")
 
         if self.n_folds == -1:
             raise ValueError(
@@ -241,7 +241,7 @@ class TorchTrainer(TrainingBlock):
         :param y: The expected output of the system.
         :param train_args: The keyword arguments.
             - train_indices: The indices to train on.
-            - test_indices: The indices to test on.
+            - validation_indices: The indices to validate on.
             - save_model: Whether to save the model.
             - fold: Fold number if running cv.
         :return: The input and output of the system.
@@ -249,24 +249,24 @@ class TorchTrainer(TrainingBlock):
         train_indices = train_args.get("train_indices")
         if train_indices is None:
             raise ValueError("train_indices not provided")
-        test_indices = train_args.get("test_indices")
-        if test_indices is None:
-            raise ValueError("test_indices not provided")
+        validation_indices = train_args.get("validation_indices")
+        if validation_indices is None:
+            raise ValueError("validation_indices not provided")
         save_model = train_args.get("save_model", True)
         self._fold = train_args.get("fold", -1)
 
         self.save_model_to_disk = save_model
 
         # Create datasets
-        train_dataset, test_dataset = self.create_datasets(
+        train_dataset, validation_dataset = self.create_datasets(
             x,
             y,
             train_indices,
-            test_indices,
+            validation_indices,
         )
 
         # Create dataloaders
-        train_loader, test_loader = self.create_dataloaders(train_dataset, test_dataset)
+        train_loader, validation_loader = self.create_dataloaders(train_dataset, validation_dataset)
 
         # Check if a trained model exists
         if self._model_exists():
@@ -280,9 +280,9 @@ class TorchTrainer(TrainingBlock):
                 x,
                 y,
                 train_dataset,
-                test_dataset,
+                validation_dataset,
                 train_indices,
-                test_indices,
+                validation_indices,
             )
 
         # Log the model being trained
@@ -305,14 +305,14 @@ class TorchTrainer(TrainingBlock):
         val_losses: list[float] = []
 
         self.lowest_val_loss = np.inf
-        if len(test_loader) == 0:
+        if len(validation_loader) == 0:
             self.log_to_warning(
                 f"Doing train full, model will be trained for {self.epochs} epochs",
             )
 
         self._training_loop(
             train_loader,
-            test_loader,
+            validation_loader,
             train_losses,
             val_losses,
             self._fold,
@@ -336,9 +336,9 @@ class TorchTrainer(TrainingBlock):
             x,
             y,
             train_dataset,
-            test_dataset,
+            validation_dataset,
             train_indices,
-            test_indices,
+            validation_indices,
         )
 
     def _predict_after_train(
@@ -346,18 +346,18 @@ class TorchTrainer(TrainingBlock):
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
         train_dataset: Dataset[Any],
-        test_dataset: Dataset[Any],
+        validation_dataset: Dataset[Any],
         train_indices: list[int],
-        test_indices: list[int],
+        validation_indices: list[int],
     ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         """Predict after training the model.
 
         :param x: The input to the system.
         :param y: The expected output of the system.
         :param train_dataset: The training dataset.
-        :param test_dataset: The test dataset.
+        :param validation_dataset: The validation dataset.
         :param train_indices: The indices to train on.
-        :param test_indices: The indices to test on.
+        :param validation_indices: The indices to validate on.
 
         :return: The predictions and the expected output.
         """
@@ -365,9 +365,9 @@ class TorchTrainer(TrainingBlock):
             case "all":
                 concat_dataset: Dataset[Any] = self._concat_datasets(
                     train_dataset,
-                    test_dataset,
+                    validation_dataset,
                     train_indices,
-                    test_indices,
+                    validation_indices,
                 )
                 pred_dataloader = DataLoader(
                     concat_dataset,
@@ -378,19 +378,19 @@ class TorchTrainer(TrainingBlock):
                     ),
                 )
                 return self.predict_on_loader(pred_dataloader), y
-            case "test":
-                train_loader, test_loader = self.create_dataloaders(
+            case "validation":
+                train_loader, validation_loader = self.create_dataloaders(
                     train_dataset,
-                    test_dataset,
+                    validation_dataset,
                 )
-                return self.predict_on_loader(test_loader), y[test_indices]
+                return self.predict_on_loader(validation_loader), y[validation_indices]
             case "none":
                 return x, y
             case _:
-                raise ValueError("to_predict should be either 'test', 'all' or 'none")
+                raise ValueError("to_predict should be either 'validation', 'all' or 'none")
 
     def custom_predict(self, x: Any, **pred_args: Any) -> npt.NDArray[np.float32]:  # noqa: ANN401
-        """Predict on the test data.
+        """Predict on the validation data.
 
         :param x: The input to the system.
         :return: The output of the system.
@@ -431,9 +431,9 @@ class TorchTrainer(TrainingBlock):
             predictions.append(self.predict_on_loader(pred_dataloader))
 
         # Average the predictions using numpy
-        test_predictions = np.array(predictions)
+        validation_predictions = np.array(predictions)
 
-        return np.mean(test_predictions, axis=0)
+        return np.mean(validation_predictions, axis=0)
 
     def predict_on_loader(
         self,
@@ -444,7 +444,7 @@ class TorchTrainer(TrainingBlock):
         :param loader: The loader to predict on.
         :return: The predictions.
         """
-        self.log_to_terminal("Predicting on the test data")
+        self.log_to_terminal("Predicting on the validation data")
         self.model.eval()
         predictions = []
         # Create a new dataloader from the dataset of the input dataloader with collate_fn
@@ -484,26 +484,26 @@ class TorchTrainer(TrainingBlock):
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
         train_indices: list[int],
-        test_indices: list[int],
+        validation_indices: list[int],
     ) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
         """Create the datasets for training and validation.
 
         :param x: The input data.
         :param y: The target variable.
         :param train_indices: The indices to train on.
-        :param test_indices: The indices to test on.
+        :param validation_indices: The indices to validate on.
         :return: The training and validation datasets.
         """
         train_dataset = TensorDataset(
-            x[train_indices].clone().detach(),
-            y[train_indices].clone().detach(),
+            torch.from_numpy(x[train_indices]),
+            torch.from_numpy(y[train_indices]),
         )
-        test_dataset = TensorDataset(
-            x[test_indices].clone().detach(),
-            y[test_indices].clone().detach(),
+        validation_dataset = TensorDataset(
+            torch.from_numpy(x[validation_indices]),
+            torch.from_numpy(y[validation_indices]),
         )
 
-        return train_dataset, test_dataset
+        return train_dataset, validation_dataset
 
     def create_prediction_dataset(
         self,
@@ -514,17 +514,17 @@ class TorchTrainer(TrainingBlock):
         :param x: The input data.
         :return: The prediction dataset.
         """
-        return TensorDataset(x.clone().detach())
+        return TensorDataset(torch.from_numpy(x))
 
     def create_dataloaders(
         self,
         train_dataset: Dataset[tuple[Tensor, ...]],
-        test_dataset: Dataset[tuple[Tensor, ...]],
+        validation_dataset: Dataset[tuple[Tensor, ...]],
     ) -> tuple[DataLoader[tuple[Tensor, ...]], DataLoader[tuple[Tensor, ...]]]:
         """Create the dataloaders for training and validation.
 
         :param train_dataset: The training dataset.
-        :param test_dataset: The validation dataset.
+        :param validation_dataset: The validation dataset.
         :return: The training and validation dataloaders.
         """
         train_loader = DataLoader(
@@ -534,14 +534,14 @@ class TorchTrainer(TrainingBlock):
             collate_fn=(self.collate_fn if hasattr(train_dataset, "__getitems__") else None),  # type: ignore[arg-type]
             **self.dataloader_args,
         )
-        test_loader = DataLoader(
-            test_dataset,
+        validation_loader = DataLoader(
+            validation_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            collate_fn=(self.collate_fn if hasattr(test_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            collate_fn=(self.collate_fn if hasattr(validation_dataset, "__getitems__") else None),  # type: ignore[arg-type]
             **self.dataloader_args,
         )
-        return train_loader, test_loader
+        return train_loader, validation_loader
 
     def save_model_to_external(self) -> None:
         """Save model to external database."""
@@ -552,7 +552,7 @@ class TorchTrainer(TrainingBlock):
     def _training_loop(
         self,
         train_loader: DataLoader[tuple[Tensor, ...]],
-        test_loader: DataLoader[tuple[Tensor, ...]],
+        validation_loader: DataLoader[tuple[Tensor, ...]],
         train_losses: list[float],
         val_losses: list[float],
         fold: int = -1,
@@ -560,8 +560,8 @@ class TorchTrainer(TrainingBlock):
     ) -> None:
         """Training loop for the model.
 
-        :param train_loader: Dataloader for the testing data.
-        :param test_loader: Dataloader for the training data. (can be empty)
+        :param train_loader: Dataloader for the validation data.
+        :param validation_loader: Dataloader for the training data. (can be empty)
         :param train_losses: List of train losses.
         :param val_losses: List of validation losses.
         """
@@ -605,9 +605,9 @@ class TorchTrainer(TrainingBlock):
                     self.get_model_checkpoint_path(epoch - 1).unlink()
 
             # Compute validation loss
-            if len(test_loader) > 0:
+            if len(validation_loader) > 0:
                 self.last_val_loss = self._val_one_epoch(
-                    test_loader,
+                    validation_loader,
                     desc=f"Epoch {epoch} Valid",
                 )
                 self.log_to_debug(f"Epoch {epoch} Valid Loss: {self.last_val_loss}")
@@ -697,7 +697,7 @@ class TorchTrainer(TrainingBlock):
     ) -> float:
         """Compute validation loss of the model for one epoch.
 
-        :param dataloader: Dataloader for the testing data.
+        :param dataloader: Dataloader for the validation data.
         :param desc: Description for the tqdm progress bar.
         :return: Average loss for the epoch.
         """
@@ -791,23 +791,23 @@ class TorchTrainer(TrainingBlock):
     def _concat_datasets(
         self,
         train_dataset: T,
-        test_dataset: T,
+        validation_dataset: T,
         train_indices: list[int] | npt.NDArray[np.int32],
-        test_indices: list[int] | npt.NDArray[np.int32],
+        validation_indices: list[int] | npt.NDArray[np.int32],
     ) -> Dataset[T_co]:
-        """Concatenate the training and test datasets according to original order specified by train_indices and test_indices.
+        """Concatenate the training and validation datasets according to original order specified by train_indices and validation_indices.
 
         :param train_dataset: The training dataset.
-        :param test_dataset: The test dataset.
+        :param validation_dataset: The validation dataset.
         :param train_indices: The indices for the training data.
-        :param test_indices: The indices for the test data.
+        :param validation_indices: The indices for the validation data.
         :return: A new dataset containing the concatenated data in the original order.
         """
-        return TrainTestDataset(
+        return TrainValidationDataset(
             train_dataset,
-            test_dataset,
+            validation_dataset,
             list(train_indices),
-            list(test_indices),
+            list(validation_indices),
         )
 
     def get_model_path(self) -> Path:
@@ -826,52 +826,52 @@ class TorchTrainer(TrainingBlock):
         return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
 
 
-class TrainTestDataset(Dataset[T_co]):
+class TrainValidationDataset(Dataset[T_co]):
     """Dataset as a concatenation of multiple datasets.
 
     This class is useful to assemble different existing datasets.
 
     :param train_dataset: The train dataset
-    :param test_dataset: The test dataset
+    :param validation_dataset: The validation dataset
     :param train_indices: The train indices
-    :param test_indices: The test indices
+    :param validation_indices: The validation indices
     """
 
     train_dataset: Dataset[T_co]
-    test_dataset: Dataset[T_co]
+    validation_dataset: Dataset[T_co]
     train_indices: list[int]
-    test_indices: list[int]
+    validation_indices: list[int]
 
     def __init__(
         self,
         train_dataset: Dataset[T_co],
-        test_dataset: Dataset[T_co],
+        validation_dataset: Dataset[T_co],
         train_indices: list[int],
-        test_indices: list[int],
+        validation_indices: list[int],
     ) -> None:
-        """Initialize TrainTestDataset.
+        """Initialize TrainValidationDataset.
 
         :param train_dataset: The train dataset.
-        :param test_dataset: The test dataset.
+        :param validation_dataset: The validation dataset.
         :param train_indices: The train indices.
-        :param test_indices: The test indices.
+        :param validation_indices: The validation indices.
         """
         super().__init__()
         if len(train_dataset) != len(train_indices):  # type: ignore[arg-type]
             raise ValueError("Train_dataset should be the same length as train_indices")
-        if len(test_dataset) != len(test_indices):  # type: ignore[arg-type]
-            raise ValueError("Test_dataset should be the same length as test_indices")
+        if len(validation_dataset) != len(validation_indices):  # type: ignore[arg-type]
+            raise ValueError("Validation_dataset should be the same length as validation_indices")
         self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
+        self.validation_dataset = validation_dataset
         self.train_indices = train_indices
-        self.test_indices = test_indices
+        self.validation_indices = validation_indices
 
     def __len__(self) -> int:
         """Get the length of the dataset.
 
         :return: The length of the dataset.
         """
-        return len(self.train_dataset) + len(self.test_dataset)  # type: ignore[arg-type]
+        return len(self.train_dataset) + len(self.validation_dataset)  # type: ignore[arg-type]
 
     def __getitem__(self, idx: int) -> T_co:
         """Get the item at an idx.
@@ -892,7 +892,7 @@ class TrainTestDataset(Dataset[T_co]):
             train_index = self.train_indices.index(idx)
             item = self.train_dataset[train_index]
         else:
-            test_index = self.test_indices.index(idx)
-            item = self.test_dataset[test_index]
+            validation_index = self.validation_indices.index(idx)
+            item = self.validation_dataset[validation_index]
 
         return item
