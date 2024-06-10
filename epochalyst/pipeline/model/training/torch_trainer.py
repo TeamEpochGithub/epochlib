@@ -165,7 +165,7 @@ class TorchTrainer(TrainingBlock):
     epochs: Annotated[int, Gt(0)] = 10
     patience: Annotated[int, Gt(0)] = 5  # Early stopping
     batch_size: Annotated[int, Gt(0)] = 32
-    collate_fn: Callable[[tuple[Tensor, ...]], tuple[Tensor, ...]] = custom_collate
+    collate_fn: Callable[[tuple[Tensor, ...]], tuple[Tensor, ...]] = field(default=custom_collate, init=True, repr=False, compare=False)
 
     # Checkpointing
     checkpointing_enabled: bool = field(default=True, init=True, repr=False, compare=False)
