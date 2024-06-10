@@ -98,17 +98,19 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         train_indices = [0, 1, 2, 3, 4, 5, 6, 7]
-        test_indices = [8, 9]
-        train_dataset, test_dataset = tt.create_datasets(
-            x, y, train_indices, test_indices
+        validation_indices = [8, 9]
+        train_dataset, validation_dataset = tt.create_datasets(
+            x, y, train_indices, validation_indices
         )
+        x = torch.from_numpy(x)
+        y = torch.from_numpy(y)
 
         # Concatenate the datasets
         dataset = tt._concat_datasets(
-            train_dataset, test_dataset, train_indices, test_indices
+            train_dataset, validation_dataset, train_indices, validation_indices
         )
         assert len(dataset) == 10
 
@@ -123,17 +125,19 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         train_indices = [0, 1, 2, 4, 5, 7, 8, 9]
-        test_indices = [3, 6]
-        train_dataset, test_dataset = tt.create_datasets(
-            x, y, train_indices, test_indices
+        validation_indices = [3, 6]
+        train_dataset, validation_dataset = tt.create_datasets(
+            x, y, train_indices, validation_indices
         )
+        x = torch.from_numpy(x)
+        y = torch.from_numpy(y)
 
         # Concatenate the datasets
         dataset = tt._concat_datasets(
-            train_dataset, test_dataset, train_indices, test_indices
+            train_dataset, validation_dataset, train_indices, validation_indices
         )
 
         # Check the length of the dataset
@@ -161,7 +165,7 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
         with pytest.raises(ValueError):
-            tt.train(torch.rand(10, 1), torch.rand(10))
+            tt.train(np.random.rand(10, 1), np.random.rand(10))
 
     def test_train_no_test_indices(self):
         tt = self.ImplementedTorchTrainer(
@@ -171,8 +175,8 @@ class TestTorchTrainer:
         )
         with pytest.raises(ValueError):
             tt.train(
-                torch.rand(10, 1),
-                torch.rand(10),
+                np.random.rand(10, 1),
+                np.random.rand(10),
                 train_indices=[0, 1, 2, 3, 4, 5, 6, 7],
             )
 
@@ -183,9 +187,9 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
 
     def test_train_trained(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -194,10 +198,10 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
 
     def test_train_full(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -207,10 +211,10 @@ class TestTorchTrainer:
         )
         tt.n_folds = 0
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
 
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], validation_indices=[])
         tt.predict(x)
 
     def test_early_stopping(self):
@@ -221,9 +225,9 @@ class TestTorchTrainer:
             patience=-1,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], validation_indices=[])
 
     # Test predict
     def test_predict_no_args(self):
@@ -242,10 +246,10 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         tt.train(
-            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9], fold=0
         )
         tt.predict(x)
 
@@ -258,16 +262,16 @@ class TestTorchTrainer:
 
         tt.n_folds = 3
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         tt.train(
-            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=0
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9], fold=0
         )
         tt.train(
-            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=1
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9], fold=1
         )
         tt.train(
-            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9], fold=2
+            x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9], fold=2
         )
         tt.predict(x)
 
@@ -280,9 +284,9 @@ class TestTorchTrainer:
 
         tt.n_folds = 0
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[])
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[])
         tt.predict(x)
 
     def test_predict2(self):
@@ -292,13 +296,13 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),
+            validation_indices=np.array([8, 9]),
             fold=0,
         )
         tt.predict(x)
@@ -311,13 +315,13 @@ class TestTorchTrainer:
             to_predict="all",
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),
+            validation_indices=np.array([8, 9]),
             fold=0,
         )
         preds = tt.predict(x)
@@ -332,13 +336,13 @@ class TestTorchTrainer:
             to_predict="all",
         )
 
-        x = torch.rand(10, 2)
-        y = torch.rand(10, 2)
+        x = np.random.rand(10, 2)
+        y = np.random.rand(10, 2)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),
+            validation_indices=np.array([8, 9]),
             fold=0,
         )
         preds = tt.predict(x)
@@ -351,16 +355,16 @@ class TestTorchTrainer:
             model=self.simple_model,
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
-            to_predict="test",
+            to_predict="validation",
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),
+            validation_indices=np.array([8, 9]),
             fold=0,
         )
         preds = tt.predict(x)
@@ -375,13 +379,13 @@ class TestTorchTrainer:
             to_predict="none",
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]),
+            validation_indices=np.array([8, 9]),
             fold=0,
         )
         preds = tt.predict(x)
@@ -395,7 +399,7 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
         with pytest.raises(FileNotFoundError):
-            tt.predict(torch.rand(10, 1))
+            tt.predict(np.random.rand(10, 1))
 
     # Test with scheduler
     def test_train_with_scheduler(self):
@@ -406,9 +410,9 @@ class TestTorchTrainer:
             scheduler=self.scheduler,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
 
     # Test 1 gpu training
     def test_train_one_gpu(self):
@@ -419,9 +423,9 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            x = torch.rand(10, 1)
-            y = torch.rand(10)
-            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+            x = np.random.rand(10, 1)
+            y = np.random.rand(10)
+            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
 
     def test_train_one_gpu_saved(self):
         with patch("torch.cuda.device_count", return_value=1):
@@ -431,10 +435,10 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            x = torch.rand(10, 1)
-            y = torch.rand(10)
-            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
-            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+            x = np.random.rand(10, 1)
+            y = np.random.rand(10)
+            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
+            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
 
     def test_train_two_gpu_saved(self):
         # If test is run on a machine with 2 or more GPUs, this test will run else it will be skipped
@@ -448,10 +452,10 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
             )
 
-            x = torch.rand(10, 1)
-            y = torch.rand(10)
-            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
-            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+            x = np.random.rand(10, 1)
+            y = np.random.rand(10)
+            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
+            tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
 
     def test_early_stopping_no_patience(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -471,9 +475,9 @@ class TestTorchTrainer:
         # Early stopping counter should not exist
         assert not hasattr(tt, "early_stopping_counter")
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
         # Assert that no best model exists
         assert tt.best_model_state_dict == {}
         # Assert self.model still exists
@@ -492,16 +496,16 @@ class TestTorchTrainer:
             checkpointing_resume_if_exists=True,
         )
 
-        x = torch.rand(10, 1)
-        y = torch.rand(10)
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
 
         # Train once
         time_temp = time.time()
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
         spent_time_first_run = time.time() - time_temp
 
         # Check if checkpoints exist
-        saved_checkpoints = list(tt.trained_models_directory.glob(f"*_checkpoint_*.pt"))
+        saved_checkpoints = list(tt.trained_models_directory.glob("*_checkpoint_*.pt"))
         assert len(saved_checkpoints) == tt.epochs
 
         # Remove model and all but the 2nd to last checkpoint
@@ -517,11 +521,11 @@ class TestTorchTrainer:
 
         # Train again
         time_temp = time.time()
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
         spent_time_second_run = time.time() - time_temp
 
         # Check if checkpoints exist
-        saved_checkpoints = list(tt.trained_models_directory.glob(f"*_checkpoint_*.pt"))
+        saved_checkpoints = list(tt.trained_models_directory.glob("*_checkpoint_*.pt"))
         assert len(saved_checkpoints) == tt.epochs - start_epoch
 
         # Check if training time was signficicantly less the second time
