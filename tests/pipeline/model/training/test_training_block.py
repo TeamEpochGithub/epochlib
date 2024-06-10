@@ -1,9 +1,16 @@
+import shutil
+from pathlib import Path
+
 import pytest
+
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
-from tests.util import remove_cache_files
+
+TEMP_DIR = Path("tests/temp")
 
 
 class TestTrainingBlock:
+    cache_path = TEMP_DIR
+
     def test_training_block_init(self):
         tb = TrainingBlock()
         assert tb is not None
@@ -30,9 +37,7 @@ class TestTrainingBlock:
         assert tb.train(1, 1) == (1, 1)
         assert tb.predict(1) == 1
 
-        remove_cache_files()
-
-    def test_training_block_caching(self):
+    def test_training_block_caching(self, setup_temp_dir):
         class TestTrainingBlockImpl(TrainingBlock):
             def custom_train(self, x: int, y: int) -> tuple[int, int]:
                 return x, y
@@ -50,7 +55,7 @@ class TestTrainingBlock:
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
 
         x, y = tb.train(1, 1, cache_args=cache_args)
@@ -61,5 +66,3 @@ class TestTrainingBlock:
         pred = tb.predict(1, cache_args=cache_args)
         new_pred = tb.predict(1, cache_args=cache_args)
         assert pred == new_pred
-
-        remove_cache_files()

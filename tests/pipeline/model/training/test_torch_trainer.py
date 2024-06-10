@@ -1,19 +1,18 @@
 import copy
 import functools
-from dataclasses import dataclass
 import shutil
+import time
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
-from pathlib import Path
 
 import numpy as np
-import torch
-from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
 import pytest
+import torch
 
-from tests.util import remove_cache_files
-
-TEMP_DIR = Path("tests/temp")
+from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
+from tests.constants import TEMP_DIR
 
 
 class TestTorchTrainer:
@@ -57,21 +56,12 @@ class TestTorchTrainer:
             pass
 
     @pytest.fixture(autouse=True)
-    def run_around_tests(self):
-        # Code that will run before each test
-        TEMP_DIR.mkdir(exist_ok=True)
-
-        yield
-
-        # Code that will run after each
-        if TEMP_DIR.exists():
-            shutil.rmtree(TEMP_DIR)
-
+    def run_always(self, setup_temp_dir):
+        pass
 
     def test_init_no_args(self):
         with pytest.raises(TypeError):
             TorchTrainer(n_folds=1)
-
 
     def test_init_none_args(self):
         with pytest.raises(TypeError):
@@ -83,7 +73,6 @@ class TestTorchTrainer:
                 n_folds=1,
             )
 
-
     def test_init_proper_args(self):
         with pytest.raises(NotImplementedError):
             TorchTrainer(
@@ -91,9 +80,8 @@ class TestTorchTrainer:
                 criterion=torch.nn.MSELoss(),
                 optimizer=self.optimizer,
                 n_folds=0,
-                model_name="Simple"
+                model_name="Simple",
             )
-
 
     def test_init_proper_args_with_implemented(self):
         tt = self.ImplementedTorchTrainer(
@@ -102,7 +90,6 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
         assert tt is not None
-
 
     # Dataset concatenation
     def test__concat_datasets_in_order(self):
@@ -129,7 +116,6 @@ class TestTorchTrainer:
         for i in range(10):
             assert (dataset[i][0] == x[i]).all()
             assert (dataset[i][1] == y[i]).all()
-
 
     def test__concat_datasets_out_of_order(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -158,7 +144,6 @@ class TestTorchTrainer:
             assert (dataset[i][0] == x[i]).all()
             assert (dataset[i][1] == y[i]).all()
 
-
     # Training
     def test_train_no_args(self):
         tt = self.ImplementedTorchTrainer(
@@ -169,7 +154,6 @@ class TestTorchTrainer:
         with pytest.raises(TypeError):
             tt.train()
 
-
     def test_train_no_train_indices(self):
         tt = self.ImplementedTorchTrainer(
             model=self.simple_model,
@@ -178,7 +162,6 @@ class TestTorchTrainer:
         )
         with pytest.raises(ValueError):
             tt.train(torch.rand(10, 1), torch.rand(10))
-
 
     def test_train_no_test_indices(self):
         tt = self.ImplementedTorchTrainer(
@@ -193,18 +176,16 @@ class TestTorchTrainer:
                 train_indices=[0, 1, 2, 3, 4, 5, 6, 7],
             )
 
-
     def test_train(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
-
 
     def test_train_trained(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -212,12 +193,11 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
-
 
     def test_train_full(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -226,13 +206,12 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
         )
         tt.n_folds = 0
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
 
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
         tt.predict(x)
-
 
     def test_early_stopping(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -241,11 +220,10 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             patience=-1,
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], test_indices=[])
-
 
     # Test predict
     def test_predict_no_args(self):
@@ -263,7 +241,7 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(
@@ -271,16 +249,15 @@ class TestTorchTrainer:
         )
         tt.predict(x)
 
-
     def test_predict_3fold(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        
+
         tt.n_folds = 3
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(
@@ -294,21 +271,19 @@ class TestTorchTrainer:
         )
         tt.predict(x)
 
-
     def test_predict_train_full(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        
+
         tt.n_folds = 0
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[])
         tt.predict(x)
-
 
     def test_predict2(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -316,17 +291,17 @@ class TestTorchTrainer:
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]), fold=0
+            test_indices=np.array([8, 9]),
+            fold=0,
         )
         tt.predict(x)
-
 
     def test_predict_all(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -335,19 +310,19 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="all",
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]), fold=0
+            test_indices=np.array([8, 9]),
+            fold=0,
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 10
         assert len(preds) == 10
-        
 
     def test_predict_2d(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -356,20 +331,20 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="all",
         )
-        
+
         x = torch.rand(10, 2)
         y = torch.rand(10, 2)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]), fold=0
+            test_indices=np.array([8, 9]),
+            fold=0,
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 10
         assert preds.shape == (10, 2)
         assert len(preds) == 10
-        
 
     def test_predict_partial(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -378,19 +353,19 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="test",
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]), fold=0
+            test_indices=np.array([8, 9]),
+            fold=0,
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 2
         assert len(preds) == 10
-
 
     def test_predict_none(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -399,19 +374,19 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             to_predict="none",
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         train_preds = tt.train(
             x,
             y,
             train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
-            test_indices=np.array([8, 9]), fold=0
+            test_indices=np.array([8, 9]),
+            fold=0,
         )
         preds = tt.predict(x)
         assert len(train_preds[0]) == 10
         assert len(preds) == 10
-
 
     def test_predict_no_model_trained(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -422,7 +397,6 @@ class TestTorchTrainer:
         with pytest.raises(FileNotFoundError):
             tt.predict(torch.rand(10, 1))
 
-
     # Test with scheduler
     def test_train_with_scheduler(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -431,12 +405,11 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             scheduler=self.scheduler,
         )
-        
+
         x = torch.rand(10, 1)
         y = torch.rand(10)
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
 
-        
     # Test 1 gpu training
     def test_train_one_gpu(self):
         with patch("torch.cuda.device_count", return_value=1):
@@ -449,7 +422,6 @@ class TestTorchTrainer:
             x = torch.rand(10, 1)
             y = torch.rand(10)
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
-        
 
     def test_train_one_gpu_saved(self):
         with patch("torch.cuda.device_count", return_value=1):
@@ -464,7 +436,6 @@ class TestTorchTrainer:
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
 
-        
     def test_train_two_gpu_saved(self):
         # If test is run on a machine with 2 or more GPUs, this test will run else it will be skipped
         if torch.cuda.device_count() < 2:
@@ -482,7 +453,6 @@ class TestTorchTrainer:
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
             tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
 
-        
     def test_early_stopping_no_patience(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
@@ -511,7 +481,6 @@ class TestTorchTrainer:
         # Assert model chnages after training
         assert tt.model.state_dict != orig_state_dict
 
-
     def test_checkpointing(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
@@ -520,12 +489,40 @@ class TestTorchTrainer:
             patience=-1,
             checkpointing_enabled=True,
             checkpointing_keep_every=1,
+            checkpointing_resume_if_exists=True,
         )
 
         x = torch.rand(10, 1)
         y = torch.rand(10)
+
+        # Train once
+        time_temp = time.time()
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        spent_time_first_run = time.time() - time_temp
 
         # Check if checkpoints exist
         saved_checkpoints = list(tt.trained_models_directory.glob(f"*_checkpoint_*.pt"))
         assert len(saved_checkpoints) == tt.epochs
+
+        # Remove model and all but the 2nd to last checkpoint
+        start_epoch = tt.epochs - 2
+        epochs = [
+            int(checkpoint.stem.split("_")[-1]) for checkpoint in saved_checkpoints
+        ]
+        checkpoint_to_keep = saved_checkpoints[epochs.index(start_epoch)]
+        print(checkpoint_to_keep)
+        for file in tt.trained_models_directory.glob("*.pt"):
+            if file != checkpoint_to_keep:
+                file.unlink()
+
+        # Train again
+        time_temp = time.time()
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], test_indices=[8, 9])
+        spent_time_second_run = time.time() - time_temp
+
+        # Check if checkpoints exist
+        saved_checkpoints = list(tt.trained_models_directory.glob(f"*_checkpoint_*.pt"))
+        assert len(saved_checkpoints) == tt.epochs - start_epoch
+
+        # Check if training time was signficicantly less the second time
+        assert spent_time_second_run < (spent_time_first_run/2)

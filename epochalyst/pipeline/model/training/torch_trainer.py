@@ -484,12 +484,12 @@ class TorchTrainer(TrainingBlock):
         :return: The training and validation datasets.
         """
         train_dataset = TensorDataset(
-            torch.tensor(x[train_indices]),
-            torch.tensor(y[train_indices]),
+            x[train_indices].clone().detach(),
+            y[train_indices].clone().detach(),
         )
         test_dataset = TensorDataset(
-            torch.tensor(x[test_indices]),
-            torch.tensor(y[test_indices]),
+            x[test_indices].clone().detach(),
+            y[test_indices].clone().detach(),
         )
 
         return train_dataset, test_dataset
@@ -503,7 +503,7 @@ class TorchTrainer(TrainingBlock):
         :param x: The input data.
         :return: The prediction dataset.
         """
-        return TensorDataset(torch.tensor(x))
+        return TensorDataset(x.clone().detach())
 
     def create_dataloaders(
         self,

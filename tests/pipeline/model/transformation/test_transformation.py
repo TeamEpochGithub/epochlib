@@ -1,15 +1,18 @@
-from epochalyst.pipeline.model.transformation.transformation import (
-    TransformationPipeline,
-)
-from epochalyst.pipeline.model.transformation.transformation_block import (
-    TransformationBlock,
-)
-from agogos.transforming import Transformer
+import shutil
+from pathlib import Path
+
 import numpy as np
-from tests.util import remove_cache_files
+import pytest
+from agogos.transforming import Transformer
+
+from epochalyst.pipeline.model.transformation.transformation import \
+    TransformationPipeline
+from epochalyst.pipeline.model.transformation.transformation_block import \
+    TransformationBlock
+from tests.constants import TEMP_DIR
 
 
-class TestTransformationBlock(TransformationBlock):
+class ExampleTransformationBlock(TransformationBlock):
     def log_to_debug(self, message):
         pass
 
@@ -31,6 +34,12 @@ class CustomTransformationPipeline(TransformationPipeline):
 
 
 class TestTransformationPipeline:
+    cache_path = TEMP_DIR
+
+    @pytest.fixture(autouse=True)
+    def run_always(self, setup_temp_dir):
+        pass
+
     def test_transformation_pipeline_init(self):
         tp = CustomTransformationPipeline()
         assert tp.steps is not None
@@ -43,91 +52,87 @@ class TestTransformationPipeline:
         assert tp.transform(x, transform_args={"a": 1, "b": 2}) == x
 
     def test_transformation_pipeline_with_steps(self):
-        t1 = TestTransformationBlock()
-        t2 = TestTransformationBlock()
+        t1 = ExampleTransformationBlock()
+        t2 = ExampleTransformationBlock()
         tp = CustomTransformationPipeline(steps=[t1, t2])
 
         assert tp.transform(None) is None
 
     def test_transformation_pipeline_with_cache(self):
-        t1 = TestTransformationBlock()
-        t2 = TestTransformationBlock()
+        t1 = ExampleTransformationBlock()
+        t2 = ExampleTransformationBlock()
 
         tp = CustomTransformationPipeline(steps=[t1, t2])
 
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
 
         assert tp.transform(np.array([1]), cache_args=cache_args) == np.array([4])
         assert tp.transform(np.array([1]), cache_args=cache_args) == np.array([4])
-        remove_cache_files()
 
     def test_transformation_pipeline_with_halfway_cache(self):
-        t1 = TestTransformationBlock()
-        t2 = TestTransformationBlock()
+        t1 = ExampleTransformationBlock()
+        t2 = ExampleTransformationBlock()
 
         tp1 = CustomTransformationPipeline(steps=[t1, t2])
         tp2 = CustomTransformationPipeline(steps=[t1, t2])
 
         transform_args = {
-            "TestTransformationBlock": {
+            "ExampleTransformationBlock": {
                 "cache_args": {
                     "output_data_type": "numpy_array",
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                 }
             }
         }
 
         assert tp1.transform(np.array([1]), **transform_args) == np.array([4])
         assert tp2.transform(np.array([1]), **transform_args) == np.array([4])
-        remove_cache_files()
 
     def test_transformation_pipeline_with_halfway_cache_no_step_cache_args(self):
-        t1 = TestTransformationBlock()
-        t2 = TestTransformationBlock()
+        t1 = ExampleTransformationBlock()
+        t2 = ExampleTransformationBlock()
 
         tp1 = CustomTransformationPipeline(steps=[t1, t2])
         tp2 = CustomTransformationPipeline(steps=[t1, t2])
 
         transform_args = {
-            "TestTransformationBlock": {
+            "ExampleTransformationBlock": {
                 "wrong_args": {
                     "output_data_type": "numpy_array",
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                 }
             }
         }
 
         assert tp1.transform(np.array([1]), **transform_args) == np.array([4])
         assert tp2.transform(np.array([1]), **transform_args) == np.array([4])
-        remove_cache_files()
 
     def test_transformation_pipeline_with_halfway_cache_not_instance_cacher(self):
         class ImplementedTransformer(Transformer):
             def transform(self, x, **transform_args):
                 return x * 2
 
-        t1 = TestTransformationBlock()
+        t1 = ExampleTransformationBlock()
         t2 = ImplementedTransformer()
 
         tp1 = CustomTransformationPipeline(steps=[t1, t2])
         tp2 = CustomTransformationPipeline(steps=[t1, t2])
 
         transform_args = {
-            "TestTransformationBlock": {
+            "ExampleTransformationBlock": {
                 "cache_args": {
                     "output_data_type": "numpy_array",
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                 }
             }
         }
 
         assert tp1.transform(np.array([1]), **transform_args) == np.array([4])
         assert tp2.transform(np.array([2]), **transform_args) == np.array([4])
-        remove_cache_files()
