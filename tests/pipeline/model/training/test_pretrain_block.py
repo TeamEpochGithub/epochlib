@@ -1,4 +1,5 @@
 import pytest
+
 from epochalyst.pipeline.model.training.pretrain_block import PretrainBlock
 
 

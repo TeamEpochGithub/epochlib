@@ -1,11 +1,15 @@
-from epochalyst.pipeline.model.training.training import TrainingPipeline
-from agogos.training import Trainer
+from pathlib import Path
+
 import numpy as np
+import pytest
+from agogos.training import Trainer
+
+from epochalyst.pipeline.model.training.training import TrainingPipeline
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
-from tests.util import remove_cache_files
+from tests.constants import TEMP_DIR
 
 
-class TestTrainingBlock(TrainingBlock):
+class ExampleTrainingBlock(TrainingBlock):
     def custom_train(self, x, y, **train_args):
         if x is None:
             return None, y
@@ -23,7 +27,7 @@ class TestTrainingBlock(TrainingBlock):
         pass
 
 
-class CustomTrainingPipeline(TrainingPipeline):
+class ExampleTrainingPipeline(TrainingPipeline):
     def log_to_debug(self, message: str) -> None:
         return None
 
@@ -32,6 +36,12 @@ class CustomTrainingPipeline(TrainingPipeline):
 
 
 class TestTrainingPipeline:
+    cache_path = TEMP_DIR
+
+    @pytest.fixture(autouse=True)
+    def run_always(self, setup_temp_dir):
+        pass
+
     def test_training_pipeline_init(self):
         tp = TrainingPipeline()
         assert tp is not None
@@ -47,22 +57,22 @@ class TestTrainingPipeline:
         assert tp.predict(None) is None
 
     def test_training_pipeline_with_steps(self):
-        t1 = TestTrainingBlock()
-        t2 = TestTrainingBlock()
-        tp = CustomTrainingPipeline(steps=[t1, t2])
+        t1 = ExampleTrainingBlock()
+        t2 = ExampleTrainingBlock()
+        tp = ExampleTrainingPipeline(steps=[t1, t2])
 
         assert tp.train(None, None) == (None, None)
 
     def test_training_pipeline_with_cache(self):
-        t1 = TestTrainingBlock()
-        t2 = TestTrainingBlock()
+        t1 = ExampleTrainingBlock()
+        t2 = ExampleTrainingBlock()
 
-        tp = CustomTrainingPipeline(steps=[t1, t2])
+        tp = ExampleTrainingPipeline(steps=[t1, t2])
 
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
 
         x, y = tp.train(1, 1, cache_args=cache_args)
@@ -73,21 +83,20 @@ class TestTrainingPipeline:
         pred = tp.predict(1, cache_args=cache_args)
         new_pred = tp.predict(1, cache_args=cache_args)
         assert pred == new_pred
-        remove_cache_files()
 
     def test_training_pipeline_with_halfway_cache(self):
-        t1 = TestTrainingBlock()
-        t2 = TestTrainingBlock()
+        t1 = ExampleTrainingBlock()
+        t2 = ExampleTrainingBlock()
 
-        tp1 = CustomTrainingPipeline(steps=[t1])
-        tp2 = CustomTrainingPipeline(steps=[t1, t2])
+        tp1 = ExampleTrainingPipeline(steps=[t1])
+        tp2 = ExampleTrainingPipeline(steps=[t1, t2])
 
         training_args = {
-            "TestTrainingBlock": {
+            "ExampleTrainingBlock": {
                 "cache_args": {
                     "output_data_type": "numpy_array",
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                 }
             }
         }
@@ -103,21 +112,20 @@ class TestTrainingPipeline:
 
         assert tp1.predict(np.array([1]), **training_args) == np.array([2])
         assert tp2.predict(np.array([3]), **training_args) == np.array([4])
-        remove_cache_files()
 
     def test_training_pipeline_with_halfway_cache_no_step_cache_args(self):
-        t1 = TestTrainingBlock()
-        t2 = TestTrainingBlock()
+        t1 = ExampleTrainingBlock()
+        t2 = ExampleTrainingBlock()
 
-        tp1 = CustomTrainingPipeline(steps=[t1])
-        tp2 = CustomTrainingPipeline(steps=[t1, t2])
+        tp1 = ExampleTrainingPipeline(steps=[t1])
+        tp2 = ExampleTrainingPipeline(steps=[t1, t2])
 
         training_args = {
-            "TestTrainingBlock": {
+            "ExampleTrainingBlock": {
                 "wrong_args": {
                     "output_data_type": "numpy_array",
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                 }
             }
         }
@@ -133,7 +141,6 @@ class TestTrainingPipeline:
 
         assert tp1.predict(np.array([1]), **training_args) == np.array([2])
         assert tp2.predict(np.array([3]), **training_args) != np.array([4])
-        remove_cache_files()
 
     def test_training_pipeline_with_halfway_cache_not_instance_cacher(self):
         class ImplementedTrainer(Trainer):
@@ -144,22 +151,22 @@ class TestTrainingPipeline:
                 return x * 2
 
         t1 = ImplementedTrainer()
-        t2 = TestTrainingBlock()
+        t2 = ExampleTrainingBlock()
 
-        tp1 = CustomTrainingPipeline(steps=[t1])
-        tp2 = CustomTrainingPipeline(steps=[t1, t2])
+        tp1 = ExampleTrainingPipeline(steps=[t1])
+        tp2 = ExampleTrainingPipeline(steps=[t1, t2])
 
         training_args = {
-            "TestTrainingBlock": {
+            "ExampleTrainingBlock": {
                 "cache_args": {
                     "output_data_type": "numpy_array",
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                 }
             }
         }
 
-        assert tp1.train(np.array([1]), np.array([1]), **training_args) == (
+        assert tp1.train(np.array([1]), np.array([1])) == (
             np.array([2]),
             np.array([1]),
         )
@@ -170,4 +177,3 @@ class TestTrainingPipeline:
 
         assert tp1.predict(np.array([1]), **training_args) == np.array([2])
         assert tp2.predict(np.array([2]), **training_args) == np.array([8])
-        remove_cache_files()

@@ -1,5 +1,6 @@
-from epochalyst.pipeline.model.training.augmentation import image_augmentations
 import torch
+
+from epochalyst.pipeline.model.training.augmentation import image_augmentations
 
 
 class TestImageAugmentations:

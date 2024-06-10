@@ -1,12 +1,18 @@
+import shutil
+from pathlib import Path
+
 import numpy as np
-from tests.util import remove_cache_files
 import pytest
-from epochalyst.pipeline.model.transformation.transformation_block import (
-    TransformationBlock,
-)
+
+from epochalyst.pipeline.model.transformation.transformation_block import \
+    TransformationBlock
+
+TEMP_DIR = Path("tests/temp")
 
 
 class TestTransformationBlock:
+    cache_path = TEMP_DIR
+
     def test_transformation_block_init(self):
         tb = TransformationBlock()
         assert tb is not None
@@ -55,7 +61,7 @@ class TestTransformationBlock:
         assert tb.transform(1) == 2
         assert tb.transform(1) == 2
 
-    def test_tb_custom_transform_implementation_with_cache(self):
+    def test_tb_custom_transform_implementation_with_cache(self, setup_temp_dir):
         class TestTransformationBlockImpl(TransformationBlock):
             def custom_transform(self, data: np.ndarray[int], **transform_args) -> int:
                 return data * 2
@@ -70,10 +76,8 @@ class TestTransformationBlock:
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
 
         assert tb.transform(np.array([1]), cache_args=cache_args) == np.array([2])
         assert tb.transform(np.array([1]), cache_args=cache_args) == np.array([2])
-
-        remove_cache_files()

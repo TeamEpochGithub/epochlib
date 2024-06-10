@@ -37,6 +37,8 @@ dependencies= [
     "agogos==0.4",
 ]
 
+[tool.setuptools]
+packages = ["epochalyst"]
 
 [tool.mypy]
 exclude = ["external/", "venv/", ".cache"]
