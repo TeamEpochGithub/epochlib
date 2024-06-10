@@ -826,7 +826,7 @@ class TorchTrainer(TrainingBlock):
         return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
 
 
-class TrainTestDataset(Dataset[T_co]):
+class TrainValidationDataset(Dataset[T_co]):
     """Dataset as a concatenation of multiple datasets.
 
     This class is useful to assemble different existing datasets.
