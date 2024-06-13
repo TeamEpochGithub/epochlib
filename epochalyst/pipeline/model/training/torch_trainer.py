@@ -163,7 +163,7 @@ class TorchTrainer(TrainingBlock):
 
     # Training parameters
     epochs: Annotated[int, Gt(0)] = 10
-    patience: Annotated[int, Gt(0)] = 5  # Early stopping
+    patience: Annotated[int, Gt(0)] = -1  # Early stopping
     batch_size: Annotated[int, Gt(0)] = 32
     collate_fn: Callable[[tuple[Tensor, ...]], tuple[Tensor, ...]] = field(default=custom_collate, init=True, repr=False, compare=False)
 
