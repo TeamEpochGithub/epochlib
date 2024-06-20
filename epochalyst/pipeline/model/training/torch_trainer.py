@@ -430,7 +430,7 @@ class TorchTrainer(TrainingBlock):
                 self.log_to_warning(f"Model for fold {self._fold} not found, skipping the rest of the folds...")
                 break
             self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
-            predictions.append(self.predict_on_loader(pred_dataloader))
+            predictions.append(self.predict_on_loader(pred_dataloader, pred_args.get("compile_method", None)))
 
         # Average the predictions using numpy
         validation_predictions = np.array(predictions)

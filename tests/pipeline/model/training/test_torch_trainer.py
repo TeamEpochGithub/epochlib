@@ -1,9 +1,13 @@
 import copy
 import functools
-import shutil
+
 import time
 from dataclasses import dataclass
-from pathlib import Path
+
+from epochalyst.pipeline.model.training.utils.get_openvino import get_openvino
+from epochalyst.pipeline.model.training.utils.get_onnxrt import get_onnxrt
+from types import ModuleType
+
 from typing import Any
 from unittest.mock import patch
 
@@ -531,6 +535,31 @@ class TestTorchTrainer:
         # Check if training time was signficicantly less the second time
         assert spent_time_second_run < (spent_time_first_run/2)
 
+    def test_get_onnxrt(self):
+        # Test if onnxruntime is imported successfully
+        onnxrt = get_onnxrt()
+        assert onnxrt is not None
+
+        # Test if the returned object is of the expected type
+        assert isinstance(onnxrt, ModuleType)
+
+        # Test if the returned object has the necessary attributes or methods
+        assert hasattr(onnxrt, "InferenceSession")
+        assert hasattr(onnxrt, "RunOptions")
+        assert hasattr(onnxrt, "SessionOptions")
+
+    def test_get_openvino(self):
+        # Test if openvino is imported successfully
+        openvino = get_openvino()
+        assert openvino is not None
+
+        # Test if the returned object is of the expected type
+        assert isinstance(openvino, ModuleType)
+
+        # Test if the returned object has the necessary attributes or methods
+        assert hasattr(openvino, "compile_model")
+        assert hasattr(openvino, "convert_model")
+
     def test_onnx(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
@@ -538,7 +567,8 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             patience=-1,
         )
-
+        tt.device = torch.device("cpu")
+        tt.model.to('cpu')
         x = np.random.rand(10, 1)
         y = np.random.rand(10)
         _ = tt.train(
@@ -548,9 +578,9 @@ class TestTorchTrainer:
             validation_indices=np.array([8, 9]),
             fold=0,
         )
-        onnx_preds = tt.predict(x, None, pred_args={'compile_method': 'ONNX'})
+        onnx_preds = tt.predict(x, None, **{'compile_method': 'ONNX'})
         preds = tt.predict(x)
-        assert np.allclose(onnx_preds, preds)
+        assert np.allclose(onnx_preds, preds[:, np.newaxis])
 
     def test_openvino(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -559,7 +589,8 @@ class TestTorchTrainer:
             optimizer=self.optimizer,
             patience=-1,
         )
-
+        tt.device = torch.device("cpu")
+        tt.model.to('cpu')
         x = np.random.rand(10, 1)
         y = np.random.rand(10)
         _ = tt.train(
@@ -569,6 +600,6 @@ class TestTorchTrainer:
             validation_indices=np.array([8, 9]),
             fold=0,
         )
-        onnx_preds = tt.predict(x, None, pred_args={'compile_method': 'openvino'})
+        openvino_preds = tt.predict(x, None, **{'compile_method': 'Openvino'})
         preds = tt.predict(x)
-        assert np.allclose(onnx_preds, preds)
+        assert np.allclose(openvino_preds, preds[:, np.newaxis])

@@ -44,4 +44,5 @@ urllib3==2.2.1
 zipp==3.17.0
 kornia==0.7.2
 onnxruntime==1.18.0
+onnx==1.16.1
 openvino==2024.2.0

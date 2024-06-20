@@ -52,5 +52,6 @@ repos:
           - timm
           - kornia
           - onnxruntime
+          - onnx
           - openvino
         args: [ --disallow-any-generics, --disallow-untyped-defs, --disable-error-code=import-untyped]
