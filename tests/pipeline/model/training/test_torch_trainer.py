@@ -610,3 +610,43 @@ class TestTorchTrainer:
         openvino_preds = tt.predict(x, None, **{'compile_method': 'Openvino'})
         preds = tt.predict(x)
         assert np.allclose(openvino_preds, preds[:, np.newaxis])
+
+    def test_onnx_raises_error(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        with pytest.raises(ValueError):
+            _ = tt.predict(x, None, **{'compile_method': 'ONNX'})
+
+    def test_openvino_raises_error(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        with pytest.raises(ValueError):
+            _ = tt.predict(x, None, **{'compile_method': 'Openvino'})
