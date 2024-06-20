@@ -9,7 +9,23 @@ Classes:
 from dataclasses import dataclass, field
 from typing import Any
 
+import numpy as np
+import numpy.typing as npt
 import torch
+
+
+def get_audiomentations() -> Any:  # noqa: ANN401
+    """Return audiomentations mix."""
+    try:
+        import audiomentations
+
+    except ImportError:
+        raise ImportError(
+            "If you want to use this augmentation you must install audiomentations",
+        ) from None
+
+    else:
+        return audiomentations
 
 
 @dataclass
@@ -113,4 +129,35 @@ class NoOp(torch.nn.Module):
         -------
             torch.Tensor: The augmented input signal tensor.
         """
+        return x
+
+
+@dataclass
+class AddBackgroundNoiseWrapper:
+    """Wrapper class to be used for audiomentations AddBackgroundNoise augmentation."""
+
+    p: float = 0.5
+    sounds_path: str = "data/raw/"
+    min_snr_db: float = -3.0
+    max_snr_db: float = 3.0
+    aug: Any = None
+
+    def __post_init__(self) -> None:
+        """Post initialization function of AddBackgroundNoiseWrapper."""
+        if torch.cuda.is_available():
+            self.aug = get_audiomentations().AddBackgroundNoise(
+                p=self.p,
+                sounds_path=self.sounds_path,
+                min_snr_db=self.max_snr_db,
+                max_snr_db=self.max_snr_db,
+                noise_transform=get_audiomentations().PolarityInversion(p=0.5),
+            )
+        else:
+            self.aug = None
+        self.__dict__ = {"Placeholder": "Remove Later"}
+
+    def __call__(self, x: npt.NDArray[np.float32], sr: int) -> npt.NDArray[np.float32]:
+        """Apply the augmentation to the input signal."""
+        if self.aug is not None:
+            return self.aug(x, sr)
         return x
