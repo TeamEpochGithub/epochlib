@@ -205,7 +205,8 @@ class TestTimeSeriesAugmentations:
         assert torch.all(augmented_x == x) & torch.all(augmented_y == y)
 
     def test_add_background_noise_wrapper(self):
-        add_background_noise_wrapper = time_series_augmentations.AddBackgroundNoiseWrapper(p=1.0, sounds_path='tests\\pipeline\\model\\training\\augmentation\\test_audio\\white_noise.wav')
+        add_background_noise_wrapper = time_series_augmentations.AddBackgroundNoiseWrapper(p=1.0,
+                                                                                           sounds_path='tests/pipeline/model/training/augmentation/test_audio/white_noise.wav')
         x = torch.rand(44100, dtype=torch.float32)
         sr = 44100
         augmented_x = add_background_noise_wrapper(x, sr)
