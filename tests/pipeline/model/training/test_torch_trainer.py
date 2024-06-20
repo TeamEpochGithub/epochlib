@@ -530,3 +530,45 @@ class TestTorchTrainer:
 
         # Check if training time was signficicantly less the second time
         assert spent_time_second_run < (spent_time_first_run/2)
+
+    def test_onnx(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        onnx_preds = tt.predict(x, None, pred_args={'compile_method': 'ONNX'})
+        preds = tt.predict(x)
+        assert np.allclose(onnx_preds, preds)
+
+    def test_openvino(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        onnx_preds = tt.predict(x, None, pred_args={'compile_method': 'openvino'})
+        preds = tt.predict(x)
+        assert np.allclose(onnx_preds, preds)
