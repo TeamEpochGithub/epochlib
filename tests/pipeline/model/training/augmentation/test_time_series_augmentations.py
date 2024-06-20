@@ -166,3 +166,19 @@ class TestTimeSeriesAugmentations:
         subtract_channels = time_series_augmentations.SubstractChannels(p=0)
         augmented_x = subtract_channels(x)
         assert torch.all(augmented_x == x)
+
+    def test_find_window(self):
+        # Create dummy donor and receiver signals
+        energy_cutmix = time_series_augmentations.EnergyCutmix(p=1.0)
+        donor = torch.tensor([[4, 1, 2, 6, 5]], dtype=torch.float32).unsqueeze(0)
+        receiver = torch.tensor([[2, 3, 5, 1, 1]], dtype=torch.float32).unsqueeze(0)
+
+        window_size = 2
+        stride = 1
+        donor_start, donor_end, receiver_start, receiver_end = energy_cutmix.find_window(donor, receiver, window_size, stride)
+
+        # Check correct indices for maximum energy in donor and minimum in receiver
+        assert donor_start == 3  
+        assert donor_end == 5
+        assert receiver_start == 3
+        assert receiver_end == 5       

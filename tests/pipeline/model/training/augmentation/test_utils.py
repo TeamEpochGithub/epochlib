@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 from epochalyst.pipeline.model.training.augmentation import utils
@@ -87,3 +88,19 @@ class TestUtils:
         # Assert that the x transform is applied roughly 2/3 of the time
         assert torch.all(6633 <= augmented_x) & torch.all(augmented_x <= 6700)
 
+
+    def test_audiomentations_compose(self):
+        compose = utils.get_audiomentations().Compose([])
+        transformer = utils.AudiomentationsCompose(compose=compose)
+        x = torch.ones(32, 1, 100)
+        augmented_x = transformer(x)
+
+        assert torch.all(augmented_x == x)
+
+
+    def test_audiomentations_compose_repr(self):
+        compose = utils.get_audiomentations().Compose([])
+        transformer = utils.AudiomentationsCompose(compose=compose)
+        repr_str = repr(transformer)
+
+        assert repr_str == ""
