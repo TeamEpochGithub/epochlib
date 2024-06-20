@@ -86,3 +86,4 @@ class TestUtils:
         assert torch.all(3300 <= augmented_y) & torch.all(augmented_y <= 3366)
         # Assert that the x transform is applied roughly 2/3 of the time
         assert torch.all(6633 <= augmented_x) & torch.all(augmented_x <= 6700)
+
