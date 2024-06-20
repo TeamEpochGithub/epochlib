@@ -1,3 +1,5 @@
+import os
+import numpy as np
 import pytest
 import torch
 
@@ -104,3 +106,16 @@ class TestUtils:
         repr_str = repr(transformer)
 
         assert repr_str == ""
+
+    def test_add_background_noise_wrapper(self):
+        add_background_noise_wrapper = utils.AddBackgroundNoiseWrapper(p=0, sounds_path=os.getcwd())
+        x = np.zeros(44100).astype(np.float32)
+        sr = 44100
+        augmented_x = add_background_noise_wrapper(x, sr)
+
+        # verify that not applying augmentation doesnt do anything
+        assert np.all(x == augmented_x)
+
+if __name__ == "__main__":
+    test = TestUtils()
+    test.test_add_background_noise_wrapper()
