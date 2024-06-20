@@ -182,3 +182,24 @@ class TestTimeSeriesAugmentations:
         assert donor_end == 5
         assert receiver_start == 3
         assert receiver_end == 5       
+
+    def test_energy_cutmix(self):
+        set_torch_seed(1)
+        energycutmix = time_series_augmentations.EnergyCutmix(p=1.0)
+        # Create dummy input and labels
+        x = torch.cat([torch.ones(1, 1, 1000), torch.zeros(1, 1, 1000)], dim=0)
+        # Multiclass labels
+        y = torch.cat([torch.ones(1, 2), torch.zeros(1, 2)], dim=0)
+        # Apply CutMix augmentation
+        augmented_x, augmented_y = energycutmix(x, y)
+
+        # Assert the output shapes are correct
+        assert augmented_x.shape == x.shape
+        assert augmented_y.shape == y.shape
+
+        # first samples mean must be bound by the lower and upper bounds in the class
+        assert energycutmix.low <= augmented_x[1].mean() <= energycutmix.high
+
+        energycutmix = time_series_augmentations.EnergyCutmix(p=0)
+        augmented_x, augmented_y = energycutmix(x, y)
+        assert torch.all(augmented_x == x) & torch.all(augmented_y == y)
