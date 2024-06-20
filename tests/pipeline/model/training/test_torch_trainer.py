@@ -8,6 +8,7 @@ from epochalyst.pipeline.model.training.utils.get_openvino import get_openvino
 from epochalyst.pipeline.model.training.utils.get_onnxrt import get_onnxrt
 from types import ModuleType
 
+from epochalyst.pipeline.model.training.torch_trainer import custom_collate
 from typing import Any
 from unittest.mock import patch
 
@@ -488,6 +489,12 @@ class TestTorchTrainer:
         assert tt.model.state_dict != {}
         # Assert model chnages after training
         assert tt.model.state_dict != orig_state_dict
+
+    def test_custom_collate(self):
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        collate_x, collate_y = custom_collate((x, y))
+        assert torch.all(collate_x == x) and torch.all(collate_y == y)
 
     def test_checkpointing(self):
         tt = self.FullyImplementedTorchTrainer(
