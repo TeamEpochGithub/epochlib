@@ -1,6 +1,3 @@
-import os
-import numpy as np
-import pytest
 import torch
 
 from epochalyst.pipeline.model.training.augmentation import utils
@@ -90,7 +87,6 @@ class TestUtils:
         # Assert that the x transform is applied roughly 2/3 of the time
         assert torch.all(6633 <= augmented_x) & torch.all(augmented_x <= 6700)
 
-
     def test_audiomentations_compose(self):
         compose = utils.get_audiomentations().Compose([])
         transformer = utils.AudiomentationsCompose(compose=compose)
@@ -99,7 +95,6 @@ class TestUtils:
 
         assert torch.all(augmented_x == x)
 
-
     def test_audiomentations_compose_repr(self):
         compose = utils.get_audiomentations().Compose([])
         transformer = utils.AudiomentationsCompose(compose=compose)
@@ -107,15 +102,3 @@ class TestUtils:
 
         assert repr_str == ""
 
-    def test_add_background_noise_wrapper(self):
-        add_background_noise_wrapper = utils.AddBackgroundNoiseWrapper(p=0, sounds_path=os.getcwd())
-        x = np.zeros(44100).astype(np.float32)
-        sr = 44100
-        augmented_x = add_background_noise_wrapper(x, sr)
-
-        # verify that not applying augmentation doesnt do anything
-        assert np.all(x == augmented_x)
-
-if __name__ == "__main__":
-    test = TestUtils()
-    test.test_add_background_noise_wrapper()

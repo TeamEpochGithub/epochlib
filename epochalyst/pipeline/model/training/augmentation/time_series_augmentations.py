@@ -1,9 +1,12 @@
 """Contains implementation of several custom time series augmentations using PyTorch."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 import torch
+
+from epochalyst.pipeline.model.training.augmentation.utils import get_audiomentations
 
 
 @dataclass
@@ -266,3 +269,34 @@ class EnergyCutmix(torch.nn.Module):
                 augmented_x[i, :, receiver_start:receiver_end] = donor[:, donor_start:donor_end]
                 augmented_y[i] = torch.clip(y[i] + y[shuffled_indices[i]], 0, 1)
         return augmented_x, augmented_y
+
+
+@dataclass
+class AddBackgroundNoiseWrapper:
+    """Wrapper class to be used for audiomentations AddBackgroundNoise augmentation.
+
+    IMPORTANT: This class should be used outside the custom audiomentations compose and only supports CPU tensors.
+    """
+
+    p: float = 0.5
+    sounds_path: str = field(default="data/raw/", repr=False)
+    dataset_name: str = ""
+    min_snr_db: float = -3.0
+    max_snr_db: float = 3.0
+    aug: Any = None
+
+    def __post_init__(self) -> None:
+        """Post initialization function of AddBackgroundNoiseWrapper."""
+        self.aug = get_audiomentations().AddBackgroundNoise(
+            p=self.p,
+            sounds_path=self.sounds_path,
+            min_snr_db=self.max_snr_db,
+            max_snr_db=self.max_snr_db,
+            noise_transform=get_audiomentations().PolarityInversion(p=0.5),
+        )
+
+    def __call__(self, x: torch.Tensor, sr: int) -> torch.Tensor:
+        """Apply the augmentation to the input signal."""
+        if self.aug is not None:
+            return torch.from_numpy(self.aug(x.numpy(), sr))
+        return x
