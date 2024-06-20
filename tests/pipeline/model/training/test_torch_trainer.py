@@ -628,8 +628,9 @@ class TestTorchTrainer:
             validation_indices=np.array([8, 9]),
             fold=0,
         )
-        with pytest.raises(ValueError):
-            _ = tt.predict(x, None, **{'compile_method': 'ONNX'})
+        if torch.cuda.is_available():
+            with pytest.raises(ValueError):
+                _ = tt.predict(x, None, **{'compile_method': 'ONNX'})
 
     def test_openvino_raises_error(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -648,5 +649,6 @@ class TestTorchTrainer:
             validation_indices=np.array([8, 9]),
             fold=0,
         )
-        with pytest.raises(ValueError):
-            _ = tt.predict(x, None, **{'compile_method': 'Openvino'})
+        if torch.cuda.is_available():
+            with pytest.raises(ValueError):
+                _ = tt.predict(x, None, **{'compile_method': 'Openvino'})
