@@ -43,3 +43,5 @@ typing_extensions==4.10.0
 urllib3==2.2.1
 zipp==3.17.0
 kornia==0.7.2
+onnxruntime==1.18.0
+openvino==2024.2.0

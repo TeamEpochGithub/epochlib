@@ -51,4 +51,6 @@ repos:
           - traitlets
           - timm
           - kornia
+          - onnxruntime
+          - openvino
         args: [ --disallow-any-generics, --disallow-untyped-defs, --disable-error-code=import-untyped]
