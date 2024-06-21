@@ -1,4 +1,5 @@
 """_Logger add abstract logging functionality to other classes."""
+
 from abc import abstractmethod
 from typing import Any
 

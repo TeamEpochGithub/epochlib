@@ -1,23 +1,44 @@
-exclude: ^(venv/|.venv/|tests/)
+exclude: ^(external/|venv/|.venv/|tests/|.cache)
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+  - repo: local  # Remove this when a new version of pre-commit-hooks (>4.6.0) is released
     hooks:
-      - id: check-ast
+      - id: check-illegal-windows-names
+        name: check illegal windows names
+        entry: Illegal Windows filenames detected
+        language: fail
+        files: '(?i)((^|/)(CON|PRN|AUX|NUL|COM[\d¹²³]|LPT[\d¹²³])(\.|/|$)|[<>:\"\\|?*\x00-\x1F]|/[^/]*[\.\s]/|[^/]*[\.\s]$)'
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-builtin-literals
+      - id: check-executables-have-shebangs
+      # - id: check-illegal-windows-names  # Uncomment this when a new version of pre-commit-hooks (>4.6.0) is released
       - id: check-json
       - id: pretty-format-json
-        args: [--autofix, --no-sort-keys]
+        args: [ "--autofix", "--no-sort-keys" ]
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
       - id: check-symlinks
       - id: check-toml
       - id: check-xml
       - id: check-yaml
+      - id: detect-private-key
+      - id: destroyed-symlinks
       - id: mixed-line-ending
       - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: name-tests-test
+        args: [ "--pytest-test-first" ]
       - id: trailing-whitespace
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.16
+    rev: v0.18
     hooks:
       - id: validate-pyproject
+  - repo: https://github.com/citation-file-format/cffconvert
+    rev: b6045d78aac9e02b039703b030588d54d53262ac
+    hooks:
+      - id: validate-cff
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
@@ -26,29 +47,45 @@ repos:
       - id: python-check-mock-methods
       - id: python-no-log-warn
       - id: python-use-type-annotations
+  - repo: https://github.com/jackdewinter/pymarkdown
+    rev: v0.9.20
+    hooks:
+      - id: pymarkdown
+        args:
+          - "-d"
+          - "md013, MD041"  # Line length, First line in file should be a top level heading
+          - "scan"
   - repo: https://github.com/sphinx-contrib/sphinx-lint
     rev: v0.9.1
     hooks:
       - id: sphinx-lint
         args: [ --enable=default-role ]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
+    rev: v0.4.10
     hooks:
-      - id: ruff
       - id: ruff-format
+      - id: ruff
+  # Pydoclint is useful, but gives too many false positives
+  #  - repo: https://github.com/jsh9/pydoclint
+  #    rev: 0.4.1
+  #    hooks:
+  #      - id: pydoclint
+  #        args: [ --quiet ]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.10.0
     hooks:
       - id: mypy
         additional_dependencies:
-          - agogos
-          - annotated-types
-          - dask
-          - matplotlib
-          - numpy
-          - polars
-          - torch
-          - traitlets
-          - timm
-          - kornia
-        args: [ --disallow-any-generics, --disallow-untyped-defs, --disable-error-code=import-untyped]
+          - numpy==1.26.4
+          - pandas-stubs>=2.2.2.240514
+          - matplotlib==3.8.4
+          - torch==2.3.1
+          - dask==2024.6.2
+          - typing_extensions==4.9.0
+          - annotated-types==0.7.0
+          - polars==0.20.31
+          - kornia==0.7.2
+          - timm==1.0.7
+        args:
+          - "--fast-module-lookup"
+          - "--disallow-any-generics"
