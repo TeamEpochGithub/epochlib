@@ -1,4 +1,5 @@
 """TorchTrainer is a module that allows for the training of Torch models."""
+
 import copy
 import functools
 import gc
