@@ -6,11 +6,11 @@ from typing import Any
 from agogos.transforming import TransformingSystem, TransformType
 
 from epochalyst._core._caching._cacher import CacheArgs, _Cacher
-from epochalyst._core._logging._logger import _Logger
+from epochalyst._core.logger.logger import Logger
 
 
 @dataclass
-class TransformationPipeline(TransformingSystem, _Cacher, _Logger):
+class TransformationPipeline(TransformingSystem, _Cacher, Logger):
     """TransformationPipeline is the class used to create the pipeline for the transformation of the data.
 
     ### Parameters:

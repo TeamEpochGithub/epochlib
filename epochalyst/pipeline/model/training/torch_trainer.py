@@ -20,7 +20,6 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 from tqdm import tqdm
 
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
-from epochalyst.logging.section_separator import print_section_separator
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
 from epochalyst.pipeline.model.training.utils.tensor_functions import batch_to_device
 
@@ -401,7 +400,7 @@ class TorchTrainer(TrainingBlock):
         :param x: The input to the system.
         :return: The output of the system.
         """
-        print_section_separator(f"Predicting model: {self.model.__class__.__name__}")
+        self.log_section_separator(f"Predicting model: {self.model.__class__.__name__}")
         self.log_to_debug(f"Predicting model: {self.model.__class__.__name__}")
 
         # Parse pred_args

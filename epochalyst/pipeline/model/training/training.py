@@ -5,10 +5,10 @@ from typing import Any
 from agogos.training import TrainingSystem, TrainType
 
 from epochalyst._core._caching._cacher import CacheArgs, _Cacher
-from epochalyst._core._logging._logger import _Logger
+from epochalyst._core.logger.logger import Logger
 
 
-class TrainingPipeline(TrainingSystem, _Cacher, _Logger):
+class TrainingPipeline(TrainingSystem, _Cacher, Logger):
     """The training pipeline. This is the class used to create the pipeline for the training of the model.
 
     :param steps: The steps to train the model.

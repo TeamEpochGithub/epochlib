@@ -6,10 +6,10 @@ from typing import Any
 from agogos.transforming import Transformer
 
 from epochalyst._core._caching._cacher import CacheArgs, _Cacher
-from epochalyst._core._logging._logger import _Logger
+from epochalyst._core.logger.logger import Logger
 
 
-class TransformationBlock(Transformer, _Cacher, _Logger):
+class TransformationBlock(Transformer, _Cacher, Logger):
     """The transformation block is a flexible block that allows for transformation of any data.
 
     Methods

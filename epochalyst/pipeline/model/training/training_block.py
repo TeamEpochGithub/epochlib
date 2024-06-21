@@ -6,10 +6,10 @@ from typing import Any
 from agogos.training import Trainer
 
 from epochalyst._core._caching._cacher import CacheArgs, _Cacher
-from epochalyst._core._logging._logger import _Logger
+from epochalyst._core.logger.logger import Logger
 
 
-class TrainingBlock(Trainer, _Cacher, _Logger):
+class TrainingBlock(Trainer, _Cacher, Logger):
     """The training block is a flexible block that allows for training of any model.
 
     Methods
