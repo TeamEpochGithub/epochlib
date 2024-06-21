@@ -37,7 +37,6 @@ dependencies= [
     "agogos==0.4",
 ]
 
-
 [tool.mypy]
 exclude = ["external/", "venv/", ".cache"]
 allow_untyped_calls = true

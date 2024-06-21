@@ -1,11 +1,15 @@
-from epochalyst._core._caching._cacher import _Cacher
-import numpy as np
+import shutil
+from pathlib import Path
+
+import dask.array as da
 import dask.dataframe as dd
+import numpy as np
 import pandas as pd
 import polars as pl
-import dask.array as da
-from tests.util import remove_cache_files
 import pytest
+
+from epochalyst._core._caching._cacher import _Cacher
+from tests.constants import TEMP_DIR
 
 
 class Implemented_Cacher(_Cacher):
@@ -14,6 +18,12 @@ class Implemented_Cacher(_Cacher):
 
 
 class Test_Cacher:
+    cache_path = TEMP_DIR
+
+    @pytest.fixture(autouse=True)
+    def run_always(self, setup_temp_dir):
+        pass
+
     def test_cacher_init(self):
         c = Implemented_Cacher()
         assert c is not None
@@ -32,112 +42,112 @@ class Test_Cacher:
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_npy_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.npy", "w") as f:
+        with open(self.cache_path / "test.npy", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__cache_exists_storage_type_parquet(self):
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is False
         )
 
     def test__cache_exists_storage_type_parquet_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.parquet", "w") as f:
+        with open(self.cache_path / "test.parquet", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__cache_exists_storage_type_csv(self):
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_csv_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.csv", "w") as f:
+        with open(self.cache_path / "test.csv", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__cache_exists_storage_type_npy_stack(self):
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".npy_stack", "storage_path": f"{self.cache_path}"},
             )
             is False
         )
 
     def test__cache_exists_storage_type_npy_stack_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test", "w") as f:
+        with open(self.cache_path / "test", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".npy_stack", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__cache_exists_storage_type_pkl(self):
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is False
         )
 
     def test__cache_exists_storage_type_pkl_exists(self):
         c = Implemented_Cacher()
-        with open("tests/cache/test.pkl", "w") as f:
+        with open(self.cache_path / "test.pkl", "w") as f:
             f.write("test")
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__cache_exists_storage_type_unsupported(self):
         c = Implemented_Cacher()
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".new_type", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".new_type", "storage_path": f"{self.cache_path}"},
             )
             is False
         )
@@ -162,7 +172,9 @@ class Test_Cacher:
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
             c._store_cache(
-                "test", "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test",
+                "test",
+                {"storage_type": ".npy", "storage_path": f"{self.cache_path}"},
             )
 
     # storage type .npy
@@ -173,17 +185,16 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_npy_output_data_type_dask_array(self):
         c = Implemented_Cacher()
@@ -194,17 +205,16 @@ class Test_Cacher:
             x,
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_npy_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -214,7 +224,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "pandas_dataframe",
                 },
             )
@@ -229,17 +239,17 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_parquet_output_data_type_dask_dataframe(self):
         c = Implemented_Cacher()
@@ -251,17 +261,17 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_parquet_output_data_type_numpy_array(self):
         c = Implemented_Cacher()
@@ -272,17 +282,17 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_parquet_output_data_type_dask_array(self):
         c = Implemented_Cacher()
@@ -293,17 +303,17 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_parquet_output_data_type_polars_dataframe(self):
         c = Implemented_Cacher()
@@ -314,17 +324,17 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".parquet", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".parquet", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_parquet_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -334,7 +344,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".parquet",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -349,17 +359,16 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_csv_output_data_type_dask_dataframe(self):
         c = Implemented_Cacher()
@@ -371,17 +380,16 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_csv_output_data_type_polars_dataframe(self):
         c = Implemented_Cacher()
@@ -392,17 +400,16 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".csv", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".csv", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_csv_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -412,7 +419,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".csv",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -427,13 +434,14 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".npy_stack",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".npy_stack", "storage_path": "tests/cache"}
+                "test",
+                {"storage_type": ".npy_stack", "storage_path": f"{self.cache_path}"},
             )
             is True
         )
@@ -446,7 +454,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy_stack",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -459,7 +467,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".new_type",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -474,17 +482,16 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     def test__store_cache_storage_type_pkl_output_data_type_dask_dataframe(self):
         c = Implemented_Cacher()
@@ -496,17 +503,16 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert (
             c.cache_exists(
-                "test", {"storage_type": ".pkl", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".pkl", "storage_path": f"{self.cache_path}"}
             )
             is True
         )
-        remove_cache_files()
 
     # _get_cache
     def test__get_cache_no_cache_args(self):
@@ -528,7 +534,7 @@ class Test_Cacher:
         c = Implemented_Cacher()
         with pytest.raises(ValueError):
             c._get_cache(
-                "test", {"storage_type": ".npy", "storage_path": "tests/cache"}
+                "test", {"storage_type": ".npy", "storage_path": f"{self.cache_path}"}
             )
 
     # storage type .npy
@@ -539,7 +545,7 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
@@ -548,13 +554,12 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
             == "test"
         )
-        remove_cache_files()
 
     def test__get_cache_storage_type_npy_output_data_type_dask_array(self):
         c = Implemented_Cacher()
@@ -565,7 +570,7 @@ class Test_Cacher:
             x,
             {
                 "storage_type": ".npy",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -575,7 +580,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "dask_array",
                 },
             )
@@ -583,7 +588,6 @@ class Test_Cacher:
             .all()
             == x.compute().all()
         )
-        remove_cache_files()
 
     def test__get_cache_storage_type_npy_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -592,7 +596,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "pandas_dataframe",
                 },
             )
@@ -607,7 +611,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -615,11 +619,10 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         ).equals(data)
-        remove_cache_files()
 
     def test__get_cache_storage_type_parquet_output_data_type_dask_dataframe(self):
         c = Implemented_Cacher()
@@ -631,7 +634,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -640,14 +643,13 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".parquet",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "dask_dataframe",
                 },
             )
             .compute()
             .equals(data.compute())
         )
-        remove_cache_files()
 
     def test__get_cache_storage_type_parquet_output_data_type_numpy_array(self):
         c = Implemented_Cacher()
@@ -658,7 +660,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
@@ -666,12 +668,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "numpy_array",
             },
         )
         assert get_cache.all() == data.all()
-        remove_cache_files()
 
     def test__get_cache_storage_type_parquet_output_data_type_dask_array(self):
         c = Implemented_Cacher()
@@ -682,7 +683,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -690,12 +691,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert get_cache.compute().all() == data.compute().all()
-        remove_cache_files()
 
     def test__get_cache_storage_type_parquet_output_data_type_polars_dataframe(self):
         c = Implemented_Cacher()
@@ -706,7 +706,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
@@ -714,12 +714,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".parquet",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
         assert data.equals(get_cache)
-        remove_cache_files()
 
     def test__get_cache_storage_type_parquet_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -728,7 +727,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".parquet",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -743,7 +742,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -751,12 +750,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert get_cache.equals(data)
-        remove_cache_files()
 
     def test__get_cache_storage_type_csv_output_data_type_dask_dataframe(self):
         c = Implemented_Cacher()
@@ -768,7 +766,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -776,12 +774,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert get_cache.compute().reset_index(drop=True).equals(data.compute())
-        remove_cache_files()
 
     def test__get_cache_storage_type_csv_output_data_type_polars_dataframe(self):
         c = Implemented_Cacher()
@@ -792,7 +789,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
@@ -800,12 +797,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".csv",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "polars_dataframe",
             },
         )
         assert data.equals(get_cache)
-        remove_cache_files()
 
     def test__get_cache_storage_type_csv_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -814,7 +810,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".csv",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "new_type",
                 },
             )
@@ -829,7 +825,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".npy_stack",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
@@ -837,12 +833,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".npy_stack",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_array",
             },
         )
         assert get_cache.compute().all() == data.compute().all()
-        remove_cache_files()
 
     def test__get_cache_storage_type_npy_stack_output_data_type_unsupported(self):
         c = Implemented_Cacher()
@@ -851,7 +846,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".npy_stack",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -863,7 +858,7 @@ class Test_Cacher:
                 "test",
                 {
                     "storage_type": ".new_type",
-                    "storage_path": "tests/cache",
+                    "storage_path": f"{self.cache_path}",
                     "output_data_type": "numpy_array",
                 },
             )
@@ -878,7 +873,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
@@ -886,12 +881,11 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "pandas_dataframe",
             },
         )
         assert get_cache.equals(data)
-        remove_cache_files()
 
     def test__get_cache_storage_type_pkl_output_data_type_dask_dataframe(self):
         c = Implemented_Cacher()
@@ -903,7 +897,7 @@ class Test_Cacher:
             data,
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
@@ -911,9 +905,8 @@ class Test_Cacher:
             "test",
             {
                 "storage_type": ".pkl",
-                "storage_path": "tests/cache",
+                "storage_path": f"{self.cache_path}",
                 "output_data_type": "dask_dataframe",
             },
         )
         assert get_cache.compute().reset_index(drop=True).equals(data.compute())
-        remove_cache_files()

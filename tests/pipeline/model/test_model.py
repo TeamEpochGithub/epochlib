@@ -1,16 +1,19 @@
-from epochalyst.pipeline.model.model import ModelPipeline
-import numpy as np
-from tests.util import remove_cache_files
+import shutil
+from pathlib import Path
 from typing import Any
-from epochalyst.pipeline.model.transformation.transformation import (
-    TransformationPipeline,
-)
-from epochalyst.pipeline.model.transformation.transformation_block import (
-    TransformationBlock,
-)
+
+import numpy as np
+import pytest
+
+from epochalyst.pipeline.model.model import ModelPipeline
+from epochalyst.pipeline.model.transformation.transformation import \
+    TransformationPipeline
+from epochalyst.pipeline.model.transformation.transformation_block import \
+    TransformationBlock
+from tests.constants import TEMP_DIR
 
 
-class TestTransformation(TransformationBlock):
+class ExampleTransformation(TransformationBlock):
     def log_to_debug(self, message: str) -> None:
         pass
 
@@ -18,7 +21,7 @@ class TestTransformation(TransformationBlock):
         return data * 2
 
 
-class TestTransformationPipeline(TransformationPipeline):
+class ExampleTransformationPipeline(TransformationPipeline):
     def log_to_debug(self, message: str) -> None:
         pass
 
@@ -27,6 +30,12 @@ class TestTransformationPipeline(TransformationPipeline):
 
 
 class TestModel:
+    cache_path = TEMP_DIR
+
+    @pytest.fixture(autouse=True)
+    def run_always(self, setup_temp_dir):
+        pass
+
     def test_model_pipeline_init(self):
         model = ModelPipeline()
         assert model is not None
@@ -42,19 +51,18 @@ class TestModel:
         assert model.predict(None) is None
 
     def test_model_get_x_y_cache_exists(self):
-        test_transformation = TestTransformation()
-        x_sys = TestTransformationPipeline([test_transformation])
+        test_transformation = ExampleTransformation()
+        x_sys = ExampleTransformationPipeline([test_transformation])
 
         model = ModelPipeline(x_sys=x_sys)
 
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
         assert model.get_x_cache_exists(cache_args) is False
         assert model.get_y_cache_exists(cache_args) is False
-        remove_cache_files()
 
     def test_model_get_x_y_cache_systems_none(self):
         model = ModelPipeline()
@@ -62,22 +70,21 @@ class TestModel:
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
         assert model.get_x_cache_exists(cache_args) is False
         assert model.get_y_cache_exists(cache_args) is False
-        remove_cache_files()
 
     def test_model_get_x_y_cache_exists_true(self):
-        test_transformation = TestTransformation()
-        x_sys = TestTransformationPipeline([test_transformation])
-        y_sys = TestTransformationPipeline([test_transformation])
+        test_transformation = ExampleTransformation()
+        x_sys = ExampleTransformationPipeline([test_transformation])
+        y_sys = ExampleTransformationPipeline([test_transformation])
         model = ModelPipeline(x_sys=x_sys, y_sys=y_sys)
 
         cache_args = {
             "output_data_type": "numpy_array",
             "storage_type": ".npy",
-            "storage_path": "tests/cache",
+            "storage_path": f"{self.cache_path}",
         }
 
         train_args = {
@@ -94,4 +101,3 @@ class TestModel:
 
         assert model.get_x_cache_exists(cache_args) is True
         assert model.get_y_cache_exists(cache_args) is True
-        remove_cache_files()

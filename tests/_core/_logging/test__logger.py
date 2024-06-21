@@ -1,4 +1,5 @@
 import pytest
+
 from epochalyst._core._logging._logger import _Logger
 
 
