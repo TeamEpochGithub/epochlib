@@ -222,12 +222,12 @@ class TestTorchTrainer:
             model=self.simple_model,
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
-            patience=-1,
+            patience=6,
         )
 
         x = np.random.rand(10, 1)
         y = np.random.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], validation_indices=[])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8,9])
 
     # Test predict
     def test_predict_no_args(self):
