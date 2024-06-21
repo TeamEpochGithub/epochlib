@@ -187,8 +187,8 @@ class TorchTrainer(TrainingBlock):
     y_tensor_type: str = "float"
 
     # Prefix and postfix for logging to external
-    logging_prefix: str = ""
-    logging_postfix: str = ""
+    logging_prefix: str = field(default="", init=True, repr=False, compare=False)
+    logging_postfix: str = field(default="", init=True, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -833,15 +833,14 @@ class TorchTrainer(TrainingBlock):
         """Add logging prefix and postfix to the message."""
         new_message = {}
 
-        # for normal messages, add prefix and postfix to every key
-        if message.get("type") != "wandb_plot":
-            for key, value in message.items():
-                new_message[f"{self.logging_prefix}{key}{self.logging_postfix}"] = value
-
-        # for wandb plots, add prefix and postfix to title only
-        else:
+        if message.get("type") == "wandb_plot":
+            # for wandb plots, add prefix and postfix to title only
             new_message = copy.deepcopy(message)
             new_message["data"]["title"] = f"{self.logging_prefix}{new_message['data']['title']}{self.logging_postfix}"
+        else:
+            # for normal messages, add prefix and postfix to every key
+            for key, value in message.items():
+                new_message[f"{self.logging_prefix}{key}{self.logging_postfix}"] = value
 
         return new_message
 
