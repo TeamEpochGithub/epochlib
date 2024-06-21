@@ -574,8 +574,8 @@ class TorchTrainer(TrainingBlock):
         if fold > -1:
             fold_no = f"_{fold}"
 
-        self.external_define_metric(f"Training/Train Loss{fold_no}", "epoch")
-        self.external_define_metric(f"Validation/Validation Loss{fold_no}", "epoch")
+        self.external_define_metric(self.wrap_log(f"Training/Train Loss{fold_no}"), self.wrap_log("epoch"))
+        self.external_define_metric(self.wrap_log(f"Validation/Validation Loss{fold_no}"), self.wrap_log("epoch"))
 
         # Set the scheduler to the correct epoch
         if self.initialized_scheduler is not None:
@@ -590,8 +590,8 @@ class TorchTrainer(TrainingBlock):
             # Log train loss
             self.log_to_external(
                 message={
-                    f"Training/Train Loss{fold_no}": train_losses[-1],
-                    "epoch": epoch,
+                    self.wrap_log(f"Training/Train Loss{fold_no}"): train_losses[-1],
+                    self.wrap_log("epoch"): epoch,
                 },
             )
 
@@ -620,8 +620,8 @@ class TorchTrainer(TrainingBlock):
                 # Log validation loss and plot train/val loss against each other
                 self.log_to_external(
                     message={
-                        f"Validation/Validation Loss{fold_no}": val_losses[-1],
-                        "epoch": epoch,
+                        self.wrap_log(f"Validation/Validation Loss{fold_no}"): val_losses[-1],
+                        self.wrap_log("epoch"): epoch,
                     },
                 )
 
@@ -635,7 +635,7 @@ class TorchTrainer(TrainingBlock):
                             ),  # Ensure it's a list, not a range object
                             "ys": [train_losses, val_losses],
                             "keys": [f"Train{fold_no}", f"Validation{fold_no}"],
-                            "title": f"Training/Loss{fold_no}",
+                            "title": self.wrap_log(f"Training/Loss{fold_no}"),
                             "xname": "Epoch",
                         },
                     },
@@ -643,13 +643,11 @@ class TorchTrainer(TrainingBlock):
 
                 # Early stopping
                 if self._early_stopping():
-                    self.log_to_external(
-                        message={f"Epochs{fold_no}": (epoch + 1) - self.patience},
-                    )
+                    self.log_to_external(message={self.wrap_log(f"Epochs{fold_no}"): (epoch + 1) - self.patience})
                     break
 
             # Log the trained epochs to wandb if we finished training
-            self.log_to_external(message={f"Epochs{fold_no}": epoch + 1})
+            self.log_to_external(message={self.wrap_log(f"Epochs{fold_no}"): epoch + 1})
 
     def _train_one_epoch(
         self,
@@ -829,29 +827,9 @@ class TorchTrainer(TrainingBlock):
         """
         return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
 
-    def _add_logging_prefix_postfix(self, message: dict[str, Any]) -> dict[str, Any]:
+    def wrap_log(self, text: str) -> str:
         """Add logging prefix and postfix to the message."""
-        new_message = {}
-
-        if message.get("type") == "wandb_plot":
-            # for wandb plots, add prefix and postfix to title only
-            new_message = copy.deepcopy(message)
-            new_message["data"]["title"] = f"{self.logging_prefix}{new_message['data']['title']}{self.logging_postfix}"
-        else:
-            # for normal messages, add prefix and postfix to every key
-            for key, value in message.items():
-                new_message[f"{self.logging_prefix}{key}{self.logging_postfix}"] = value
-
-        return new_message
-
-    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
-        """Log to external site. Adds prefix and postfix to the message.
-
-        :param message: The message to log.
-        :param kwargs: Additional keyword arguments.
-        """
-        new_message = self._add_logging_prefix_postfix(message)
-        super().log_to_external(new_message, **kwargs)
+        return f"{self.logging_prefix}{text}{self.logging_postfix}"
 
 
 class TrainValidationDataset(Dataset[T_co]):

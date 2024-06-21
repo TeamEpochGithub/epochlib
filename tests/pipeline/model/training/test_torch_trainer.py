@@ -52,8 +52,7 @@ class TestTorchTrainer:
             pass
 
         def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
-            new_message = self._add_logging_prefix_postfix(message)
-            self.external_logs.append((new_message, kwargs))
+            self.external_logs.append((message, kwargs))
 
         def log_to_warning(self, message: str) -> None:
             pass
