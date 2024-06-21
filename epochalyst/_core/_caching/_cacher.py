@@ -23,13 +23,13 @@ except ImportError:
 try:
     import polars as pl
 except ImportError:
-    """User doen't require these packages"""
+    """User doesn't require these packages"""
 
 from epochalyst._core._logging._logger import _Logger
 
-if sys.version_info < (3, 11):
+if sys.version_info < (3, 11):  # pragma: no cover (<py311)
     from typing_extensions import NotRequired
-else:
+else:  # pragma: no cover (py311+)
     from typing import NotRequired
 
 
