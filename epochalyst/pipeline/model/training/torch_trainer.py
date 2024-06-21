@@ -175,7 +175,7 @@ class TorchTrainer(TrainingBlock):
 
     # Misc
     model_name: str | None = None  # No spaces allowed
-    trained_models_directory: str | PathLike[str] = field(default=Path("tm/"), repr=False, compare=False)
+    trained_models_directory: PathLike[str] = field(default=Path("tm/"), repr=False, compare=False)
     to_predict: Literal["validation", "all", "none"] = field(default="validation", repr=False, compare=False)
 
     # Parameters relevant for Hashing
