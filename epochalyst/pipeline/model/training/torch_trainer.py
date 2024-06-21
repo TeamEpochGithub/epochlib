@@ -4,13 +4,14 @@ import functools
 import gc
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from os import PathLike
 from pathlib import Path
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, Literal, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 import torch
-from annotated_types import Gt, Interval
+from annotated_types import Ge, Gt, Interval
 from torch import Tensor, nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
@@ -174,11 +175,11 @@ class TorchTrainer(TrainingBlock):
 
     # Misc
     model_name: str | None = None  # No spaces allowed
-    trained_models_directory: Path = Path("tm")
-    to_predict: str = "validation"
+    trained_models_directory: str | PathLike[str] = field(default=Path("tm/"), repr=False, compare=False)
+    to_predict: Literal["validation", "all", "none"] = field(default="validation", repr=False, compare=False)
 
     # Parameters relevant for Hashing
-    n_folds: float = field(default=-1, init=True, repr=False, compare=False)
+    n_folds: Annotated[int, Ge(0)] = field(default=-1, init=True, repr=False, compare=False)
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
     validation_size: Annotated[float, Interval(ge=0, le=1)] = 0.2
 
@@ -815,7 +816,7 @@ class TorchTrainer(TrainingBlock):
 
         :return: The model path.
         """
-        return Path(f"{self.trained_models_directory}/{self.get_hash()}.pt")
+        return Path(self.trained_models_directory) / f"{self.get_hash()}.pt"
 
     def get_model_checkpoint_path(self, epoch: int) -> Path:
         """Get the checkpoint path.
@@ -823,7 +824,7 @@ class TorchTrainer(TrainingBlock):
         :param epoch: The epoch number.
         :return: The checkpoint path.
         """
-        return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
+        return Path(self.trained_models_directory) / f"{self.get_hash()}_checkpoint_{epoch}.pt"
 
 
 class TrainValidationDataset(Dataset[T_co]):
