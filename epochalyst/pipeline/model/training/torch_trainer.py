@@ -186,6 +186,10 @@ class TorchTrainer(TrainingBlock):
     x_tensor_type: str = "float"
     y_tensor_type: str = "float"
 
+    # Prefix and postfix for logging to external
+    logging_prefix: str = ""
+    logging_postfix: str = ""
+
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
         # Make sure to_predict is either "validation" or "all" or "none"
@@ -824,6 +828,31 @@ class TorchTrainer(TrainingBlock):
         :return: The checkpoint path.
         """
         return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
+
+    def _add_logging_prefix_postfix(self, message: dict[str, Any]) -> dict[str, Any]:
+        """Add logging prefix and postfix to the message."""
+        new_message = {}
+
+        # for normal messages, add prefix and postfix to every key
+        if message.get("type") != "wandb_plot":
+            for key, value in message.items():
+                new_message[f"{self.logging_prefix}{key}{self.logging_postfix}"] = value
+
+        # for wandb plots, add prefix and postfix to title only
+        else:
+            new_message = copy.deepcopy(message)
+            new_message["data"]["title"] = f"{self.logging_prefix}{new_message['data']['title']}{self.logging_postfix}"
+
+        return new_message
+
+    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
+        """Log to external site. Adds prefix and postfix to the message.
+
+        :param message: The message to log.
+        :param kwargs: Additional keyword arguments.
+        """
+        new_message = self._add_logging_prefix_postfix(message)
+        super().log_to_external(new_message, **kwargs)
 
 
 class TrainValidationDataset(Dataset[T_co]):
