@@ -225,12 +225,10 @@ class TestTorchTrainer:
             patience=5,
         )
 
-        # set lowest_val_loss to a value that will never be reached
-        tt.lowest_val_loss = -np.inf
-
-        x = np.random.rand(10, 1)
-        y = np.random.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8,9])
+        # make data on which it will overfit
+        x = np.zeros((10, 1))
+        y = np.array(5*[0]+5*[1])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4], validation_indices=[5, 6, 7, 8, 9])
 
         # Check if early stopping was triggered
         assert tt.early_stopping_counter == 5
