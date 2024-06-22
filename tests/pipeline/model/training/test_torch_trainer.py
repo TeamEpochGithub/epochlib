@@ -221,15 +221,25 @@ class TestTorchTrainer:
 
     def test_early_stopping(self):
         tt = self.FullyImplementedTorchTrainer(
-            model=self.simple_model,
+            model=torch.nn.Sequential(
+                torch.nn.Linear(1, 1),
+                torch.nn.Sigmoid()),
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
-            patience=-1,
+            patience=5,
         )
 
-        x = np.random.rand(10, 1)
-        y = np.random.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], validation_indices=[])
+        tt.save_model_to_disk = False
+
+        # make data on which it is guaranteed to overfit,
+        # since predictions with sigmoid will be between 0 and 1
+        # and train and test targets are opposite directions
+        x = np.zeros((10, 1))
+        y = np.array(5*[0]+5*[1])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4], validation_indices=[5, 6, 7, 8, 9])
+
+        # Check if early stopping was triggered
+        assert tt.early_stopping_counter == 5
 
     # Test predict
     def test_predict_no_args(self):
