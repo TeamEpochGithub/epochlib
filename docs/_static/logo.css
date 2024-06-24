@@ -1,5 +1,5 @@
 .epochalyst-logo {
-    content: url('https://raw.githubusercontent.com/TeamEpochGithub/epochalyst/main/Epochalyst_Logo_Dark.svg');
+    content: url('https://raw.githubusercontent.com/TeamEpochGithub/epochalyst/main/assets/Epochalyst_Logo_Dark.svg');
     max-width: 100%;
     height: auto;
     background-size: contain;
@@ -7,5 +7,5 @@
 }
 
 html.dark .epochalyst-logo {
-    content: url('https://raw.githubusercontent.com/TeamEpochGithub/epochalyst/main/Epochalyst_Logo_Light.svg');
+    content: url('https://raw.githubusercontent.com/TeamEpochGithub/epochalyst/main/assets/Epochalyst_Logo_Light.svg');
 }
