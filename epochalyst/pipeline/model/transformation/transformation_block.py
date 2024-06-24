@@ -1,4 +1,5 @@
 """TransformationBlock module than can be extended by implementing the custom_transform method."""
+
 from abc import abstractmethod
 from typing import Any
 

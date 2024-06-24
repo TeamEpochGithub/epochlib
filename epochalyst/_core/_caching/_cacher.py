@@ -23,13 +23,13 @@ except ImportError:
 try:
     import polars as pl
 except ImportError:
-    """User doen't require these packages"""
+    """User doesn't require these packages"""
 
 from epochalyst._core._logging._logger import _Logger
 
-if sys.version_info < (3, 11):
+if sys.version_info < (3, 11):  # pragma: no cover (<py311)
     from typing_extensions import NotRequired
-else:
+else:  # pragma: no cover (py311+)
     from typing import NotRequired
 
 
@@ -197,7 +197,7 @@ class _Cacher(_Logger):
             if output_data_type == "polars_dataframe":
                 return pl.read_parquet(storage_path + name + ".parquet", **read_args)
 
-            self.log_to_debug(
+            self.log_to_debug(  # type: ignore[unreachable]
                 f"Invalid output data type: {output_data_type}, for loading .parquet file.",
             )
             raise ValueError(
@@ -239,7 +239,7 @@ class _Cacher(_Logger):
             with open(storage_path + name + ".pkl", "rb") as file:
                 return pickle.load(file, **read_args)  # noqa: S301
 
-        self.log_to_debug(f"Invalid storage type: {storage_type}")
+        self.log_to_debug(f"Invalid storage type: {storage_type}")  # type: ignore[unreachable]
         raise ValueError(
             "storage_type must be .npy, .parquet, .csv, or .npy_stack, other types not supported yet",
         )
@@ -348,7 +348,7 @@ class _Cacher(_Logger):
                     **({"protocol": pickle.HIGHEST_PROTOCOL} | store_args),
                 )
         else:
-            self.log_to_debug(f"Invalid storage type: {storage_type}")
+            self.log_to_debug(f"Invalid storage type: {storage_type}")  # type: ignore[unreachable]
             raise ValueError(
                 "storage_type must be .npy, .parquet, .csv or .npy_stack, other types not supported yet",
             )

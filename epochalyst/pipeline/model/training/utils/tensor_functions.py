@@ -1,4 +1,5 @@
 """Module with tensor functions."""
+
 import torch
 from torch import Tensor
 
