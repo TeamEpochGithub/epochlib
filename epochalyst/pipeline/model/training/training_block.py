@@ -1,4 +1,5 @@
 """TrainingBlock that can be inherited from to make blocks for a training pipeline."""
+
 from abc import abstractmethod
 from typing import Any
 

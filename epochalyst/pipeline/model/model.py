@@ -1,4 +1,5 @@
 """ModelPipeline connects multiple transforming and training systems for extended training functionality."""
+
 from typing import Any
 
 from agogos.training import Pipeline

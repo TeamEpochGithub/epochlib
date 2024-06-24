@@ -40,6 +40,8 @@ class TestTorchTrainer:
             self.trained_models_directory = TEMP_DIR / "tm"
             super().__post_init__()
 
+            self.external_logs = []
+
         def log_to_terminal(self, message: str) -> None:
             print(message)
 
@@ -50,7 +52,7 @@ class TestTorchTrainer:
             pass
 
         def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
-            pass
+            self.external_logs.append((message, kwargs))
 
         def log_to_warning(self, message: str) -> None:
             pass
@@ -219,15 +221,25 @@ class TestTorchTrainer:
 
     def test_early_stopping(self):
         tt = self.FullyImplementedTorchTrainer(
-            model=self.simple_model,
+            model=torch.nn.Sequential(
+                torch.nn.Linear(1, 1),
+                torch.nn.Sigmoid()),
             criterion=torch.nn.MSELoss(),
             optimizer=self.optimizer,
-            patience=-1,
+            patience=5,
         )
 
-        x = np.random.rand(10, 1)
-        y = np.random.rand(10)
-        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], validation_indices=[])
+        tt.save_model_to_disk = False
+
+        # make data on which it is guaranteed to overfit,
+        # since predictions with sigmoid will be between 0 and 1
+        # and train and test targets are opposite directions
+        x = np.zeros((10, 1))
+        y = np.array(5*[0]+5*[1])
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4], validation_indices=[5, 6, 7, 8, 9])
+
+        # Check if early stopping was triggered
+        assert tt.early_stopping_counter == 5
 
     # Test predict
     def test_predict_no_args(self):
@@ -529,4 +541,71 @@ class TestTorchTrainer:
         assert len(saved_checkpoints) == tt.epochs - start_epoch
 
         # Check if training time was signficicantly less the second time
-        assert spent_time_second_run < (spent_time_first_run/2)
+        assert spent_time_second_run < (spent_time_first_run / 2)
+
+    def test_log_external_train(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            epochs=1,
+        )
+        # train for 1 epoch
+        tt.epochs = 1
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
+
+        # Check if logs are stored
+        assert len(tt.external_logs) == 4
+
+        # train loss
+        assert 'Training/Train Loss' in tt.external_logs[0][0]
+        assert tt.external_logs[0][0].get('epoch') == 0
+
+        # validation loss
+        assert 'Validation/Validation Loss' in tt.external_logs[1][0]
+        assert tt.external_logs[1][0].get('epoch') == 0
+
+        # loss table
+        table = tt.external_logs[2][0]
+        assert table.get('type') == 'wandb_plot'
+        assert table.get('data', dict()).get('keys') == ['Train', 'Validation']
+        assert table.get('data', dict()).get('title') == 'Training/Loss'
+
+        # early stopping epochs
+        assert tt.external_logs[3][0].get('Epochs') == 1
+
+    def test_log_external_prefix_postfix(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            epochs=1,
+            logging_prefix='prefix',
+            logging_postfix='postfix'
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        tt.train(x, y, train_indices=[0, 1, 2, 3, 4, 5, 6, 7], validation_indices=[8, 9])
+
+        # Check if logs are stored
+        assert len(tt.external_logs) == 4
+
+        # train loss
+        assert 'prefixTraining/Train Losspostfix' in tt.external_logs[0][0]
+        assert tt.external_logs[0][0].get('prefixepochpostfix') == 0
+
+        # validation loss
+        assert 'prefixValidation/Validation Losspostfix' in tt.external_logs[1][0]
+        assert tt.external_logs[1][0].get('prefixepochpostfix') == 0
+
+        # loss table
+        table = tt.external_logs[2][0]
+        assert table.get('type') == 'wandb_plot'
+        assert table.get('data', dict()).get('keys') == ['Train', 'Validation']
+        assert table.get('data', dict()).get('title') == 'prefixTraining/Losspostfix'
+
+        # early stopping epochs
+        assert tt.external_logs[3][0].get('prefixEpochspostfix') == 1

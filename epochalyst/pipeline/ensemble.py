@@ -1,4 +1,5 @@
 """EnsemblePipeline for ensebling multiple ModelPipelines."""
+
 from typing import Any
 
 from agogos.training import ParallelTrainingSystem
