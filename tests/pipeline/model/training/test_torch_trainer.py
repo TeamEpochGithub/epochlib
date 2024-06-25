@@ -5,8 +5,7 @@ import time
 from dataclasses import dataclass
 
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
-from epochalyst.pipeline.model.training.utils.get_openvino import get_openvino
-from epochalyst.pipeline.model.training.utils.get_onnxrt import get_onnxrt
+from epochalyst.pipeline.model.training.utils import _get_onnxrt, _get_openvino
 from types import ModuleType
 
 from epochalyst.pipeline.model.training.torch_trainer import custom_collate
@@ -555,31 +554,6 @@ class TestTorchTrainer:
         # Check if training time was signficicantly less the second time
         assert spent_time_second_run < (spent_time_first_run / 2)
 
-    def test_get_onnxrt(self):
-        # Test if onnxruntime is imported successfully
-        onnxrt = get_onnxrt()
-        assert onnxrt is not None
-
-        # Test if the returned object is of the expected type
-        assert isinstance(onnxrt, ModuleType)
-
-        # Test if the returned object has the necessary attributes or methods
-        assert hasattr(onnxrt, "InferenceSession")
-        assert hasattr(onnxrt, "RunOptions")
-        assert hasattr(onnxrt, "SessionOptions")
-
-    def test_get_openvino(self):
-        # Test if openvino is imported successfully
-        openvino = get_openvino()
-        assert openvino is not None
-
-        # Test if the returned object is of the expected type
-        assert isinstance(openvino, ModuleType)
-
-        # Test if the returned object has the necessary attributes or methods
-        assert hasattr(openvino, "compile_model")
-        assert hasattr(openvino, "convert_model")
-
     def test_onnx(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
@@ -712,9 +686,9 @@ class TestTorchTrainer:
             validation_indices=np.array([8, 9]),
             fold=0,
         )
-        if torch.cuda.is_available():
-            with pytest.raises(ValueError):
-                _ = tt.predict(x, None, **{'compile_method': 'ONNX'})
+        tt.device = 'gpu'
+        with pytest.raises(ValueError):
+            _ = tt.predict(x, None, **{'compile_method': 'ONNX'})
 
     def test_openvino_raises_error(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -733,6 +707,6 @@ class TestTorchTrainer:
             validation_indices=np.array([8, 9]),
             fold=0,
         )
-        if torch.cuda.is_available():
-            with pytest.raises(ValueError):
-                _ = tt.predict(x, None, **{'compile_method': 'Openvino'})
+        tt.device = 'gpu'
+        with pytest.raises(ValueError):
+            _ = tt.predict(x, None, **{'compile_method': 'Openvino'})

@@ -22,8 +22,7 @@ from tqdm import tqdm
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
-from epochalyst.pipeline.model.training.utils.get_onnxrt import get_onnxrt
-from epochalyst.pipeline.model.training.utils.get_openvino import get_openvino
+from epochalyst.pipeline.model.training.utils import _get_onnxrt, _get_openvino
 from epochalyst.pipeline.model.training.utils.tensor_functions import batch_to_device
 
 T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
@@ -482,7 +481,7 @@ class TorchTrainer(TrainingBlock):
             output_names = ["output"]
             self.log_to_terminal("Compiling model to ONNX")
             torch.onnx.export(self.model, input_tensor, f"{self.get_hash()}.onnx", verbose=False, input_names=input_names, output_names=output_names)
-            onnx_model = get_onnxrt().InferenceSession(f"{self.get_hash()}.onnx")
+            onnx_model = _get_onnxrt().InferenceSession(f"{self.get_hash()}.onnx")
             self.log_to_terminal("Done compiling model to ONNX")
             with torch.no_grad(), tqdm(loader, desc="Predicting", unit="batch", disable=False) as tepoch:
                 for data in tepoch:
@@ -498,7 +497,7 @@ class TorchTrainer(TrainingBlock):
                 raise ValueError("Openvino compilation only works on CPU. To disable CUDA use the environment variable CUDA_VISIBLE_DEVICES=-1")
             input_tensor = next(iter(loader))[0].to(self.device).float()
             self.log_to_terminal("Compiling model to Openvino")
-            ov = get_openvino()
+            ov = _get_openvino()
             openvino_model = ov.compile_model(ov.convert_model(self.model, example_input=input_tensor))
             self.log_to_terminal("Done compiling model to Openvino")
             with torch.no_grad(), tqdm(loader, desc="Predicting", unit="batch", disable=False) as tepoch:
