@@ -7,6 +7,7 @@ Classes:
 """
 
 from dataclasses import dataclass, field
+from types import ModuleType
 from typing import Any
 
 import torch
@@ -14,8 +15,12 @@ import torch
 from epochalyst.pipeline.model.training.utils.recursive_repr import recursive_repr
 
 
-def get_audiomentations() -> Any:  # noqa: ANN401
-    """Return audiomentations mix."""
+def get_audiomentations() -> ModuleType:
+    """Return audiomentations module.
+
+    :raises ImportError: If audiomentations is not installed.
+    :return: audiomentations module.
+    """
     try:
         import audiomentations
 
