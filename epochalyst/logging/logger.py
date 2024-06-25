@@ -1,33 +1,24 @@
-"""_Logger add abstract logging functionality to other classes."""
-
+"""Logger base class."""
 import logging
 import os
-from abc import abstractmethod
+from collections.abc import Mapping
 from typing import Any
 
 
 class Logger:
-    """Provides a wrapper around the `logging` module.
+    """Logger base class for logging methods.
 
-    Additional methods can be overridden to log to external services.
+    Make sure to override the log_to_external and external_define_metric methods in a subclass if you want to use those.
 
     Methods
     -------
     .. code-block:: python
-        def log_to_terminal(self, message: str) -> None: # Logs to terminal
-
-        def log_to_debug(self, message: str) -> None: # Logs to debugger
-
-        def log_to_warning(self, message: str) -> None: # Logs to warning
-
-        def log_section_separator(self, message: str, spacing: int = 2) -> None: # Logs a section separator
-
-        @abstractmethod
+        def log_to_terminal(self, message: str) -> None: # Logs to terminal by default
+        def log_to_debug(self, message: str) -> None: # Logs to debugger by default
+        def log_to_warning(self, message: str) -> None: # Logs to warning by default
+        def log_section_separator(self, message: str) -> None: # Logs a section separator
         def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None: # Logs to external site
-
-        @abstractmethod
         def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
-
     """
 
     def __init__(self) -> None:
@@ -40,21 +31,21 @@ class Logger:
 
         :param message: The message to log
         """
-        self.logger.info(message)
+        logging.getLogger(self.__class__.__name__).info(message)
 
     def log_to_debug(self, message: str) -> None:
-        """Log a message to the debug level.
+        """Log a message to the terminal on debug level.
 
         :param message: The message to log
         """
-        self.logger.debug(message)
+        logging.getLogger(self.__class__.__name__).debug(message)
 
     def log_to_warning(self, message: str) -> None:
-        """Log a message to the warning level.
+        """Log a message to the terminal on warning level.
 
         :param message: The message to log
         """
-        self.logger.warning(message)
+        logging.getLogger(self.__class__.__name__).warning(message)
 
     def log_section_separator(self, message: str, spacing: int = 2) -> None:
         """Print a section separator.
@@ -75,27 +66,30 @@ class Logger:
             if len(message) % 2 == 0
             else f"{title_char * title_padding}{message}{title_char * (title_padding + 1)}"
         )
-        self.logger.warning("\n" * spacing)
-        self.logger.info("%s\n%s\n%s", separator, centered_title, separator)
-        self.logger.info("\n" * spacing)
 
-    @abstractmethod
-    def log_to_external(self, message: dict[str, Any], **kwargs: Any) -> None:
+        logger = logging.getLogger(self.__class__.__name__)
+        logger.info("\n" * spacing)
+        logger.info("%s\n%s\n%s", separator, centered_title, separator)
+        logger.info("\n" * spacing)
+
+    def log_to_external(self, message: Mapping[str, Any], **log_args: Any) -> None:
         """Log external method, if no logging override with empty.
 
         :param message: The message to log.
+        :param log_args: Additional logging arguments.
+        :raises NotImplementedError: If the method is not implemented in a subclass.
         """
         raise NotImplementedError(
-            f"Log external method not implemented for {self.__class__}",
+            f"Log external method not implemented for {self.__class__.__name__}",
         )
 
-    @abstractmethod
     def external_define_metric(self, metric: str, metric_type: str) -> None:
         """Define metric for external. Example: (wandb.define_metric("Training/Train Loss", summary="min")).
 
         :param metric: The metric to define.
         :param metric_type: The type of the metric.
+        :raises NotImplementedError: If the method is not implemented in a subclass.
         """
         raise NotImplementedError(
-            f"External define metric method not implemented for {self.__class__}",
+            f"External define metric method not implemented for {self.__class__.__name__}",
         )

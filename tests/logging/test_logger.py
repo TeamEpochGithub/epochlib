@@ -1,9 +1,11 @@
+import logging
 from unittest import mock
 
 import pytest
 
-from epochalyst._core.logger.logger import Logger
+from epochalyst.logging.logger import Logger
 
+test_string = "Test"
 
 @mock.patch(target="logging.getLogger", new=mock.MagicMock())
 class TestLogger:
@@ -16,17 +18,17 @@ class TestLogger:
     def test__logger_log_to_terminal(self):
         _logger = Logger()
         _logger.log_to_terminal(self.test_string)
-        _logger.logger.info.assert_called_once_with(self.test_string)
+        logging.getLogger("Logger").info.assert_called_once_with(self.test_string)
 
     def test__logger_log_to_debug(self):
         _logger = Logger()
         _logger.log_to_debug(self.test_string)
-        _logger.logger.debug.assert_called_once_with(self.test_string)
+        logging.getLogger("Logger").debug.assert_called_once_with(self.test_string)
 
     def test__logger_log_to_warning(self):
         _logger = Logger()
         _logger.log_to_warning(self.test_string)
-        _logger.logger.warning.assert_called_once_with(self.test_string)
+        logging.getLogger("Logger").warning.assert_called_once_with(self.test_string)
 
     def test__logger_log_to_external(self):
         _logger = Logger()
@@ -42,4 +44,4 @@ class TestLogger:
         logger = Logger()
         # Test that method prints a section separator
         logger.log_section_separator(self.test_string)
-        logger.logger.info.assert_called()
+        logging.getLogger("Logger").info.assert_called()

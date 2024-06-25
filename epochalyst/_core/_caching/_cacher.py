@@ -4,6 +4,8 @@ import pickle
 import sys
 from typing import Any, Literal, TypedDict
 
+from epochalyst.logging.logger import Logger
+
 try:
     import dask.array as da
     import dask.dataframe as dd
@@ -25,7 +27,6 @@ try:
 except ImportError:
     """User doesn't require these packages"""
 
-from epochalyst._core.logger.logger import Logger
 
 if sys.version_info < (3, 11):  # pragma: no cover (<py311)
     from typing_extensions import NotRequired
