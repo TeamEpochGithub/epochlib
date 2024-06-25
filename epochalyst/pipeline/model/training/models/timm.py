@@ -1,4 +1,5 @@
 """Timm model for 2D image classification."""
+
 import torch
 from torch import nn
 
