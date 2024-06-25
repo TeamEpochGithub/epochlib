@@ -4,6 +4,7 @@ import functools
 import time
 from dataclasses import dataclass
 
+from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.pipeline.model.training.utils.get_openvino import get_openvino
 from epochalyst.pipeline.model.training.utils.get_onnxrt import get_onnxrt
 from types import ModuleType
@@ -587,6 +588,8 @@ class TestTorchTrainer:
             patience=-1,
         )
         tt.device = torch.device("cpu")
+        if isinstance(tt.model, _CustomDataParallel):
+            tt.model = tt.model.module
         tt.model.to('cpu')
         x = np.random.rand(10, 1)
         y = np.random.rand(10)
@@ -609,6 +612,8 @@ class TestTorchTrainer:
             patience=-1,
         )
         tt.device = torch.device("cpu")
+        if isinstance(tt.model, _CustomDataParallel):
+            tt.model = tt.model.module
         tt.model.to('cpu')
         x = np.random.rand(10, 1)
         y = np.random.rand(10)
