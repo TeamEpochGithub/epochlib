@@ -1,5 +1,4 @@
-![image](./docs/_static/images/logo/Epochalyst_Logo_Dark.png#gh-light-mode-only)
-![image](./docs/_static/images/logo/Epochalyst_Logo_Light.png#gh-dark-mode-only)
+![image](https://raw.githubusercontent.com/TeamEpochGithub/epochalyst/main/assets/Epochalyst_Logo_Auto.svg)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/epochalyst.svg)](https://pypi.org/project/epochalyst/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/epochalyst.svg?label=PyPI%20downloads)](https://pypi.org/project/epochalyst/)
