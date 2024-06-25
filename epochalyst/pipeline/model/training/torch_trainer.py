@@ -1,16 +1,18 @@
 """TorchTrainer is a module that allows for the training of Torch models."""
+
 import copy
 import functools
 import gc
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from os import PathLike
 from pathlib import Path
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, Literal, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 import torch
-from annotated_types import Gt, Interval
+from annotated_types import Ge, Gt, Interval
 from torch import Tensor, nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
@@ -163,7 +165,7 @@ class TorchTrainer(TrainingBlock):
 
     # Training parameters
     epochs: Annotated[int, Gt(0)] = 10
-    patience: Annotated[int, Gt(0)] = 5  # Early stopping
+    patience: Annotated[int, Gt(0)] = -1  # Early stopping
     batch_size: Annotated[int, Gt(0)] = 32
     collate_fn: Callable[[tuple[Tensor, ...]], tuple[Tensor, ...]] = field(default=custom_collate, init=True, repr=False, compare=False)
 
@@ -174,17 +176,21 @@ class TorchTrainer(TrainingBlock):
 
     # Misc
     model_name: str | None = None  # No spaces allowed
-    trained_models_directory: Path = Path("tm")
-    to_predict: str = "validation"
+    trained_models_directory: PathLike[str] = field(default=Path("tm/"), repr=False, compare=False)
+    to_predict: Literal["validation", "all", "none"] = field(default="validation", repr=False, compare=False)
 
     # Parameters relevant for Hashing
-    n_folds: float = field(default=-1, init=True, repr=False, compare=False)
+    n_folds: Annotated[int, Ge(0)] = field(default=-1, init=True, repr=False, compare=False)
     _fold: int = field(default=-1, init=False, repr=False, compare=False)
     validation_size: Annotated[float, Interval(ge=0, le=1)] = 0.2
 
     # Types for tensors
     x_tensor_type: str = "float"
     y_tensor_type: str = "float"
+
+    # Prefix and postfix for logging to external
+    logging_prefix: str = field(default="", init=True, repr=False, compare=False)
+    logging_postfix: str = field(default="", init=True, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         """Post init method for the TorchTrainer class."""
@@ -570,8 +576,8 @@ class TorchTrainer(TrainingBlock):
         if fold > -1:
             fold_no = f"_{fold}"
 
-        self.external_define_metric(f"Training/Train Loss{fold_no}", "epoch")
-        self.external_define_metric(f"Validation/Validation Loss{fold_no}", "epoch")
+        self.external_define_metric(self.wrap_log(f"Training/Train Loss{fold_no}"), self.wrap_log("epoch"))
+        self.external_define_metric(self.wrap_log(f"Validation/Validation Loss{fold_no}"), self.wrap_log("epoch"))
 
         # Set the scheduler to the correct epoch
         if self.initialized_scheduler is not None:
@@ -586,8 +592,8 @@ class TorchTrainer(TrainingBlock):
             # Log train loss
             self.log_to_external(
                 message={
-                    f"Training/Train Loss{fold_no}": train_losses[-1],
-                    "epoch": epoch,
+                    self.wrap_log(f"Training/Train Loss{fold_no}"): train_losses[-1],
+                    self.wrap_log("epoch"): epoch,
                 },
             )
 
@@ -616,8 +622,8 @@ class TorchTrainer(TrainingBlock):
                 # Log validation loss and plot train/val loss against each other
                 self.log_to_external(
                     message={
-                        f"Validation/Validation Loss{fold_no}": val_losses[-1],
-                        "epoch": epoch,
+                        self.wrap_log(f"Validation/Validation Loss{fold_no}"): val_losses[-1],
+                        self.wrap_log("epoch"): epoch,
                     },
                 )
 
@@ -631,7 +637,7 @@ class TorchTrainer(TrainingBlock):
                             ),  # Ensure it's a list, not a range object
                             "ys": [train_losses, val_losses],
                             "keys": [f"Train{fold_no}", f"Validation{fold_no}"],
-                            "title": f"Training/Loss{fold_no}",
+                            "title": self.wrap_log(f"Training/Loss{fold_no}"),
                             "xname": "Epoch",
                         },
                     },
@@ -639,13 +645,11 @@ class TorchTrainer(TrainingBlock):
 
                 # Early stopping
                 if self._early_stopping():
-                    self.log_to_external(
-                        message={f"Epochs{fold_no}": (epoch + 1) - self.patience},
-                    )
+                    self.log_to_external(message={self.wrap_log(f"Epochs{fold_no}"): (epoch + 1) - self.patience})
                     break
 
             # Log the trained epochs to wandb if we finished training
-            self.log_to_external(message={f"Epochs{fold_no}": epoch + 1})
+            self.log_to_external(message={self.wrap_log(f"Epochs{fold_no}"): epoch + 1})
 
     def _train_one_epoch(
         self,
@@ -815,7 +819,7 @@ class TorchTrainer(TrainingBlock):
 
         :return: The model path.
         """
-        return Path(f"{self.trained_models_directory}/{self.get_hash()}.pt")
+        return Path(self.trained_models_directory) / f"{self.get_hash()}.pt"
 
     def get_model_checkpoint_path(self, epoch: int) -> Path:
         """Get the checkpoint path.
@@ -823,7 +827,11 @@ class TorchTrainer(TrainingBlock):
         :param epoch: The epoch number.
         :return: The checkpoint path.
         """
-        return Path(f"{self.trained_models_directory}/{self.get_hash()}_checkpoint_{epoch}.pt")
+        return Path(self.trained_models_directory) / f"{self.get_hash()}_checkpoint_{epoch}.pt"
+
+    def wrap_log(self, text: str) -> str:
+        """Add logging prefix and postfix to the message."""
+        return f"{self.logging_prefix}{text}{self.logging_postfix}"
 
 
 class TrainValidationDataset(Dataset[T_co]):

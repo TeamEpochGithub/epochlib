@@ -1,4 +1,5 @@
 """TrainingPipeline for creating a sequential pipeline of TrainType classes."""
+
 from typing import Any
 
 from agogos.training import TrainingSystem, TrainType
