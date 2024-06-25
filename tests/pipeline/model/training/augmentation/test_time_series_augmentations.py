@@ -166,3 +166,50 @@ class TestTimeSeriesAugmentations:
         subtract_channels = time_series_augmentations.SubstractChannels(p=0)
         augmented_x = subtract_channels(x)
         assert torch.all(augmented_x == x)
+
+    def test_find_window(self):
+        # Create dummy donor and receiver signals
+        energy_cutmix = time_series_augmentations.EnergyCutmix(p=1.0)
+        donor = torch.tensor([[4, 1, 2, 6, 5]], dtype=torch.float32).unsqueeze(0)
+        receiver = torch.tensor([[2, 3, 5, 1, 1]], dtype=torch.float32).unsqueeze(0)
+
+        window_size = 2
+        stride = 1
+        donor_start, donor_end, receiver_start, receiver_end = energy_cutmix.find_window(donor, receiver, window_size, stride)
+
+        # Check correct indices for maximum energy in donor and minimum in receiver
+        assert donor_start == 3  
+        assert donor_end == 5
+        assert receiver_start == 3
+        assert receiver_end == 5       
+
+    def test_energy_cutmix(self):
+        set_torch_seed(1)
+        energycutmix = time_series_augmentations.EnergyCutmix(p=1.0)
+        # Create dummy input and labels
+        x = torch.cat([torch.ones(1, 1, 1000), torch.zeros(1, 1, 1000)], dim=0)
+        # Multiclass labels
+        y = torch.cat([torch.ones(1, 2), torch.zeros(1, 2)], dim=0)
+        # Apply CutMix augmentation
+        augmented_x, augmented_y = energycutmix(x, y)
+
+        # Assert the output shapes are correct
+        assert augmented_x.shape == x.shape
+        assert augmented_y.shape == y.shape
+
+        # first samples mean must be bound by the lower and upper bounds in the class
+        assert energycutmix.low <= augmented_x[1].mean() <= energycutmix.high
+
+        energycutmix = time_series_augmentations.EnergyCutmix(p=0)
+        augmented_x, augmented_y = energycutmix(x, y)
+        assert torch.all(augmented_x == x) & torch.all(augmented_y == y)
+
+    def test_add_background_noise_wrapper(self):
+        add_background_noise_wrapper = time_series_augmentations.AddBackgroundNoiseWrapper(p=1.0,
+                                                                                           sounds_path='tests/pipeline/model/training/augmentation/test_audio/white_noise.wav')
+        x = torch.rand(44100, dtype=torch.float32)
+        sr = 44100
+        augmented_x = add_background_noise_wrapper(x, sr)
+
+        # verify that not applying augmentation doesnt do anything
+        assert not torch.all(x == augmented_x)
