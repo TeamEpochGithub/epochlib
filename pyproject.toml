@@ -1,6 +1,6 @@
 [project]
 name = "epochalyst"
-version = "4.0.0"
+version = "4.0"
 authors = [
     { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
     { name = "Ariel Ebersberger", email = "arielebersberger@gmail.com" },
@@ -60,6 +60,9 @@ onnx = [
 ]
 openvino = [
     "openvino>=2024.2.0"
+]
+audio = [
+    "audiomentations>=0.36.0"
 ]
 
 [project.urls]

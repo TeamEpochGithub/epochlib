@@ -7,9 +7,30 @@ Classes:
 """
 
 from dataclasses import dataclass, field
+from types import ModuleType
 from typing import Any
 
 import torch
+
+from epochalyst.pipeline.model.training.utils.recursive_repr import recursive_repr
+
+
+def get_audiomentations() -> ModuleType:
+    """Return audiomentations module.
+
+    :raises ImportError: If audiomentations is not installed.
+    :return: audiomentations module.
+    """
+    try:
+        import audiomentations
+
+    except ImportError:
+        raise ImportError(
+            "If you want to use this augmentation you must install audiomentations",
+        ) from None
+
+    else:
+        return audiomentations
 
 
 @dataclass
@@ -114,3 +135,25 @@ class NoOp(torch.nn.Module):
             torch.Tensor: The augmented input signal tensor.
         """
         return x
+
+
+@dataclass
+class AudiomentationsCompose:
+    """Wrapper class to be used for audiomentations Compose augmentation. Needed for consistent repr."""
+
+    compose: get_audiomentations().Compose = None  # type: ignore[valid-type]
+    sr: int = 32000
+
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply the compose augmentation to the input signal."""
+        augmented_x = x.clone()
+        for i in range(x.shape[0]):
+            augmented_x[i] = torch.from_numpy(self.compose(x[i].squeeze().numpy(), self.sr))
+        return augmented_x
+
+    def __repr__(self) -> str:
+        """Create a repr for the AudiomentationsCompose class. Needed for consistent repr."""
+        out = ""
+        for _field in self.compose.__dict__["transforms"]:
+            out += recursive_repr(_field)
+        return out
