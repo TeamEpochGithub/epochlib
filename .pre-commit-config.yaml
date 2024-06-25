@@ -75,8 +75,8 @@ repos:
           - typing_extensions==4.9.0
           - annotated-types==0.7.0
           - polars==0.20.31
-#          - kornia==0.7.2
-#          - timm==1.0.7
+          - kornia==0.7.2
+          - timm==1.0.7
         args:
           - "--fast-module-lookup"
           - "--disallow-any-generics"
