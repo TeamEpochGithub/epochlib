@@ -1,4 +1,5 @@
 """Logger base class."""
+
 import logging
 import os
 from collections.abc import Mapping
