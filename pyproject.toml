@@ -54,6 +54,13 @@ dask = [
 polars = [
     "polars>=0.20.22",
 ]
+onnx = [
+    "onnx>=1.16.1",
+    "onnxruntime>=1.18.0"
+]
+openvino = [
+    "openvino>=2024.2.0"
+]
 audio = [
     "audiomentations>=0.36.0"
 ]

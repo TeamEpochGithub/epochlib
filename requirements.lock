@@ -31,6 +31,8 @@ click==8.1.7
     # via dask
 cloudpickle==3.0.0
     # via dask
+coloredlogs==15.0.1
+    # via onnxruntime
 dask==2024.6.2
     # via dask-expr
     # via epochalyst
@@ -39,19 +41,23 @@ dask-expr==1.1.6
     # via epochalyst
 decorator==5.1.1
     # via librosa
-filelock==3.15.3
+filelock==3.15.4
     # via huggingface-hub
     # via torch
     # via triton
+flatbuffers==24.3.25
+    # via onnxruntime
 fsspec==2024.6.0
     # via dask
     # via huggingface-hub
     # via torch
 huggingface-hub==0.23.4
     # via timm
+humanfriendly==10.0
+    # via coloredlogs
 idna==3.7
     # via requests
-importlib-metadata==7.2.0
+importlib-metadata==7.2.1
     # via dask
 jinja2==3.1.4
     # via torch
@@ -93,6 +99,9 @@ numpy==1.26.4
     # via librosa
     # via numba
     # via numexpr
+    # via onnx
+    # via onnxruntime
+    # via openvino
     # via pandas
     # via pyarrow
     # via scikit-learn
@@ -127,11 +136,21 @@ nvidia-nvjitlink-cu12==12.5.40
     # via nvidia-cusparse-cu12
 nvidia-nvtx-cu12==12.1.105
     # via torch
+onnx==1.16.1
+    # via epochalyst
+onnxruntime==1.18.0
+    # via epochalyst
+openvino==2024.2.0
+    # via epochalyst
+openvino-telemetry==2024.1.0
+    # via openvino
 packaging==24.1
     # via dask
     # via huggingface-hub
     # via kornia
     # via lazy-loader
+    # via onnxruntime
+    # via openvino
     # via pooch
 pandas==2.2.2
     # via dask
@@ -147,6 +166,9 @@ polars==0.20.31
     # via epochalyst
 pooch==1.8.2
     # via librosa
+protobuf==5.27.1
+    # via onnx
+    # via onnxruntime
 pyarrow==16.1.0
     # via dask-expr
     # via pandas
@@ -179,6 +201,7 @@ soxr==0.3.7
     # via audiomentations
     # via librosa
 sympy==1.12.1
+    # via onnxruntime
     # via torch
 threadpoolctl==3.5.0
     # via scikit-learn
@@ -198,7 +221,7 @@ tqdm==4.66.4
     # via huggingface-hub
 triton==2.3.1
     # via torch
-typing-extensions==4.9.0
+typing-extensions==4.12.2
     # via epochalyst
     # via huggingface-hub
     # via librosa

@@ -1,9 +1,14 @@
 import copy
 import functools
-import shutil
+
 import time
 from dataclasses import dataclass
-from pathlib import Path
+
+from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
+from epochalyst.pipeline.model.training.utils import _get_onnxrt, _get_openvino
+from types import ModuleType
+
+from epochalyst.pipeline.model.training.torch_trainer import custom_collate
 from typing import Any
 from unittest.mock import patch
 
@@ -235,7 +240,7 @@ class TestTorchTrainer:
         # since predictions with sigmoid will be between 0 and 1
         # and train and test targets are opposite directions
         x = np.zeros((10, 1))
-        y = np.array(5*[0]+5*[1])
+        y = np.array(5 * [0] + 5 * [1])
         tt.train(x, y, train_indices=[0, 1, 2, 3, 4], validation_indices=[5, 6, 7, 8, 9])
 
         # Check if early stopping was triggered
@@ -497,6 +502,12 @@ class TestTorchTrainer:
         # Assert model chnages after training
         assert tt.model.state_dict != orig_state_dict
 
+    def test_custom_collate(self):
+        x = torch.rand(10, 1)
+        y = torch.rand(10)
+        collate_x, collate_y = custom_collate((x, y))
+        assert torch.all(collate_x == x) and torch.all(collate_y == y)
+
     def test_checkpointing(self):
         tt = self.FullyImplementedTorchTrainer(
             model=self.simple_model,
@@ -542,6 +553,54 @@ class TestTorchTrainer:
 
         # Check if training time was signficicantly less the second time
         assert spent_time_second_run < (spent_time_first_run / 2)
+
+    def test_onnx(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+        tt.device = torch.device("cpu")
+        if isinstance(tt.model, _CustomDataParallel):
+            tt.model = tt.model.module
+        tt.model.to('cpu')
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        onnx_preds = tt.predict(x, None, **{'compile_method': 'ONNX'})
+        preds = tt.predict(x)
+        assert np.allclose(onnx_preds, preds[:, np.newaxis])
+
+    def test_openvino(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+        tt.device = torch.device("cpu")
+        if isinstance(tt.model, _CustomDataParallel):
+            tt.model = tt.model.module
+        tt.model.to('cpu')
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        openvino_preds = tt.predict(x, None, **{'compile_method': 'Openvino'})
+        preds = tt.predict(x)
+        assert np.allclose(openvino_preds, preds[:, np.newaxis])
 
     def test_log_external_train(self):
         tt = self.FullyImplementedTorchTrainer(
@@ -609,3 +668,45 @@ class TestTorchTrainer:
 
         # early stopping epochs
         assert tt.external_logs[3][0].get('prefixEpochspostfix') == 1
+
+    def test_onnx_raises_error(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        tt.device = 'gpu'
+        with pytest.raises(ValueError):
+            _ = tt.predict(x, None, **{'compile_method': 'ONNX'})
+
+    def test_openvino_raises_error(self):
+        tt = self.FullyImplementedTorchTrainer(
+            model=self.simple_model,
+            criterion=torch.nn.MSELoss(),
+            optimizer=self.optimizer,
+            patience=-1,
+        )
+
+        x = np.random.rand(10, 1)
+        y = np.random.rand(10)
+        _ = tt.train(
+            x,
+            y,
+            train_indices=np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+            validation_indices=np.array([8, 9]),
+            fold=0,
+        )
+        tt.device = 'gpu'
+        with pytest.raises(ValueError):
+            _ = tt.predict(x, None, **{'compile_method': 'Openvino'})

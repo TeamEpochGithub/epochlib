@@ -22,6 +22,7 @@ from tqdm import tqdm
 from epochalyst._core._pipeline._custom_data_parallel import _CustomDataParallel
 from epochalyst.logging.section_separator import print_section_separator
 from epochalyst.pipeline.model.training.training_block import TrainingBlock
+from epochalyst.pipeline.model.training.utils import _get_onnxrt, _get_openvino
 from epochalyst.pipeline.model.training.utils.tensor_functions import batch_to_device
 
 T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
@@ -419,7 +420,7 @@ class TorchTrainer(TrainingBlock):
         # Predict with a single model
         if self.n_folds < 1 or pred_args.get("use_single_model", False):
             self._load_model()
-            return self.predict_on_loader(pred_dataloader)
+            return self.predict_on_loader(pred_dataloader, pred_args.get("compile_method", None))
 
         predictions = []
         # Predict with multiple models
@@ -434,7 +435,7 @@ class TorchTrainer(TrainingBlock):
                 self.log_to_warning(f"Model for fold {self._fold} not found, skipping the rest of the folds...")
                 break
             self.log_to_terminal(f"Predicting with model fold {i + 1}/{self.n_folds}")
-            predictions.append(self.predict_on_loader(pred_dataloader))
+            predictions.append(self.predict_on_loader(pred_dataloader, pred_args.get("compile_method", None)))
 
         # Average the predictions using numpy
         validation_predictions = np.array(predictions)
@@ -444,6 +445,7 @@ class TorchTrainer(TrainingBlock):
     def predict_on_loader(
         self,
         loader: DataLoader[tuple[Tensor, ...]],
+        compile_method: str | None = None,
     ) -> npt.NDArray[np.float32]:
         """Predict on the loader.
 
@@ -463,14 +465,48 @@ class TorchTrainer(TrainingBlock):
             ),
             **self.dataloader_args,
         )
-        with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
-            for data in tepoch:
-                X_batch = batch_to_device(data[0], self.x_tensor_type, self.device)
+        if compile_method is None:
+            with torch.no_grad(), tqdm(loader, unit="batch", disable=False) as tepoch:
+                for data in tepoch:
+                    X_batch = batch_to_device(data[0], self.x_tensor_type, self.device)
 
-                y_pred = self.model(X_batch).squeeze(1).cpu().numpy()
-                predictions.extend(y_pred)
+                    y_pred = self.model(X_batch).squeeze(1).cpu().numpy()
+                    predictions.extend(y_pred)
 
-        self.log_to_terminal("Done predicting")
+        elif compile_method == "ONNX":
+            if self.device != torch.device("cpu"):
+                raise ValueError("ONNX compilation only works on CPU. To disable CUDA use the environment variable CUDA_VISIBLE_DEVICES=-1")
+            input_tensor = next(iter(loader))[0].to(self.device).float()
+            input_names = ["actual_input"]
+            output_names = ["output"]
+            self.log_to_terminal("Compiling model to ONNX")
+            torch.onnx.export(self.model, input_tensor, f"{self.get_hash()}.onnx", verbose=False, input_names=input_names, output_names=output_names)
+            onnx_model = _get_onnxrt().InferenceSession(f"{self.get_hash()}.onnx")
+            self.log_to_terminal("Done compiling model to ONNX")
+            with torch.no_grad(), tqdm(loader, desc="Predicting", unit="batch", disable=False) as tepoch:
+                for data in tepoch:
+                    X_batch = batch_to_device(data[0], self.x_tensor_type, self.device)
+                    y_pred = onnx_model.run(output_names, {input_names[0]: X_batch.numpy()})[0]
+                    predictions.extend(y_pred)
+
+            # Remove the onnx file
+            Path(f"{self.get_hash()}.onnx").unlink()
+
+        elif compile_method == "Openvino":
+            if self.device != torch.device("cpu"):
+                raise ValueError("Openvino compilation only works on CPU. To disable CUDA use the environment variable CUDA_VISIBLE_DEVICES=-1")
+            input_tensor = next(iter(loader))[0].to(self.device).float()
+            self.log_to_terminal("Compiling model to Openvino")
+            ov = _get_openvino()
+            openvino_model = ov.compile_model(ov.convert_model(self.model, example_input=input_tensor))
+            self.log_to_terminal("Done compiling model to Openvino")
+            with torch.no_grad(), tqdm(loader, desc="Predicting", unit="batch", disable=False) as tepoch:
+                for data in tepoch:
+                    X_batch = batch_to_device(data[0], self.x_tensor_type, self.device)
+                    y_pred = openvino_model(X_batch)[0]
+                    predictions.extend(y_pred)
+
+        self.log_to_terminal("Done predicting!")
         return np.array(predictions)
 
     def get_hash(self) -> str:
