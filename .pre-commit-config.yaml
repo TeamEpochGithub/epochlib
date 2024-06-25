@@ -68,15 +68,15 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          - numpy==1.26.4
-          - pandas-stubs>=2.2.2.240514
-#          - torch==2.3.1
-          - dask==2024.6.2
-          - typing_extensions==4.9.0
-          - annotated-types==0.7.0
-          - polars==0.20.31
-          - kornia==0.7.2
-          - timm==1.0.7
+#          - numpy==1.26.4
+#          - pandas-stubs>=2.2.2.240514
+          - torch==2.3.1
+#          - dask==2024.6.2
+#          - typing_extensions==4.9.0
+#          - annotated-types==0.7.0
+#          - polars==0.20.31
+#          - kornia==0.7.2
+#          - timm==1.0.7
         args:
           - "--fast-module-lookup"
           - "--disallow-any-generics"
