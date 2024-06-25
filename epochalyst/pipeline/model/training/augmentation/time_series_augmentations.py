@@ -1,9 +1,12 @@
 """Contains implementation of several custom time series augmentations using PyTorch."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 import torch
+
+from epochalyst.pipeline.model.training.augmentation.utils import get_audiomentations
 
 
 @dataclass
@@ -203,4 +206,97 @@ class SubstractChannels(torch.nn.Module):
             length = x.shape[1] - 1
             total = x.sum(dim=1) / length
             x = x - total.unsqueeze(1) + (x / length)
+        return x
+
+
+@dataclass
+class EnergyCutmix(torch.nn.Module):
+    """Instead of taking the rightmost side from the donor sample, take the highest energy sample.
+
+    Modified implementation of cutmix1d.
+    """
+
+    p: float = 0.5
+    low: float = 0.25
+    high: float = 0.75
+
+    def find_window(self, donor: torch.Tensor, receiver: torch.Tensor, window_size: int, stride: int) -> tuple[int, int, int, int]:
+        """Extract the strongest window from donor and the weakest from the receiver. Return the indices for both windows."""
+        donor_power = donor**2
+        receiver_power = receiver**2
+
+        # Extract the energies per window
+        donor_energies = torch.nn.functional.avg_pool1d(donor_power, window_size, stride=stride, padding=0)
+        receiver_energies = torch.nn.functional.avg_pool1d(receiver_power, window_size, stride=stride, padding=0)
+
+        # Get the indices for the max and min
+        max_donor, donor_index = torch.max(donor_energies, dim=-1)
+        min_receiver, receiver_index = torch.min(receiver_energies, dim=-1)
+        # Get windows
+        donor_start = donor_index.int().item() * stride
+        donor_end = donor_start + window_size
+        receiver_start = receiver_index.int().item() * stride
+        receiver_end = receiver_start + window_size
+
+        return int(donor_start), int(donor_end), int(receiver_start), int(receiver_end)
+
+    def __call__(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Appply CutMix to the batch of 1D signal.
+
+        :param x: Input features. (N,C,L)
+        :param y: Input labels. (N,C)
+        :return: The augmented features and labels
+        """
+        indices = torch.arange(x.shape[0], device=x.device, dtype=torch.int)
+        shuffled_indices = torch.randperm(indices.shape[0])
+
+        # Generate random floats between self.low and self.high for each sample in x
+        cutoff_rates = torch.rand(x.shape[0], device=x.device) * (self.high - self.low) + self.low
+        # Cutoff rates is how much of a donor sample will end up in the receiver sample
+
+        augmented_x = x.clone()
+        augmented_y = y.clone().float()
+
+        for i in range(x.shape[0]):
+            if torch.rand(1) < self.p:
+                donor = x[shuffled_indices[i]]
+                receiver = x[i]
+                donor_start, donor_end, receiver_start, receiver_end = self.find_window(donor, receiver, int((cutoff_rates[i] * x.shape[-1]).int().item()), stride=300)
+                augmented_x[i, :, receiver_start:receiver_end] = donor[:, donor_start:donor_end]
+                augmented_y[i] = torch.clip(y[i] + y[shuffled_indices[i]], 0, 1)
+        return augmented_x, augmented_y
+
+
+@dataclass
+class AddBackgroundNoiseWrapper:
+    """Wrapper class to be used for audiomentations AddBackgroundNoise augmentation.
+
+    IMPORTANT: This class should be used outside the custom audiomentations compose and only supports CPU tensors.
+    """
+
+    p: float = 0.5
+    sounds_path: str = field(default="data/raw/", repr=False)
+    dataset_name: str = ""
+    min_snr_db: float = -3.0
+    max_snr_db: float = 3.0
+    aug: Any = None
+
+    def __post_init__(self) -> None:
+        """Post initialization function of AddBackgroundNoiseWrapper."""
+        self.aug = get_audiomentations().AddBackgroundNoise(
+            p=self.p,
+            sounds_path=self.sounds_path,
+            min_snr_db=self.max_snr_db,
+            max_snr_db=self.max_snr_db,
+            noise_transform=get_audiomentations().PolarityInversion(p=0.5),
+        )
+
+    def __call__(self, x: torch.Tensor, sr: int) -> torch.Tensor:
+        """Apply the augmentation to the input signal."""
+        if self.aug is not None:
+            return torch.from_numpy(self.aug(x.numpy(), sr))
         return x
