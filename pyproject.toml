@@ -54,6 +54,9 @@ dask = [
 polars = [
     "polars>=0.20.22",
 ]
+audio = [
+    "audiomentations>=0.36.0"
+]
 
 [project.urls]
 Homepage = "https://teamepoch.ai/"
