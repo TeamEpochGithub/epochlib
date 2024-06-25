@@ -8,8 +8,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
+    - uses: actions/checkout@v4.1.6
+    - uses: actions/setup-python@v5.1.0
       with:
         python-version: 3.10.14
     - name: Install pre-commit
@@ -19,49 +19,28 @@ jobs:
 
   pytest:
     runs-on: ubuntu-latest
-    container:
-      image: python:3.10.14-slim
-      env:
-        NODE_VERSION: 20
-
 
     steps:
-    - name: Install Node.js
-      uses: actions/setup-node@v3
+    - name: Check out repository
+      uses: actions/checkout@v4.1.6
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        fetch-depth: 0
 
-    - uses: actions/checkout@v3
+    - name: Install the latest version of rye
+      uses: eifinger/setup-rye@v3.0.2
 
-    - name: Set up Python 3.10.14
-      uses: actions/setup-python@v3
-      with:
-        python-version: 3.10.14
-
-    - name: Create virtual environment
-      run: python -m venv venv
-
-    - name: Activate virtual environment
-      run: |
-        . venv/bin/activate
-
-    - name: Install dependencies
-      run: |
-        venv/bin/python -m pip install --upgrade pip
-        venv/bin/python -m pip install pytest
-        venv/bin/python -m pip install -r requirements-dev.lock
-        venv/bin/python -m pip install pytest-cov coverage
+    - name: Setup the environment
+      run: rye sync --all-features
 
     - name: Test with pytest
-      run: |
-        venv/bin/python -m pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
+      run: rye run pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
 
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.6
 
-    - uses: actions/setup-python@v3
+    - uses: actions/setup-python@v5.1.0
       with:
         python-version: 3.10.14
 
@@ -69,6 +48,6 @@ jobs:
         pip install build
         python -m build
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3.3.3
       with:
         path: ./dist
