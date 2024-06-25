@@ -1,8 +1,8 @@
 name: Version Branch CI/CD
 
 on:
-    pull_request:
-        branches: ["v*"]
+  pull_request:
+    branches: ["v*"]
 
 jobs:
   pre-commit:
@@ -34,8 +34,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4.1.6
+    - name: Check out repository
+      uses: actions/checkout@v4.1.6
     - name: Install the latest version of Rye
       uses: eifinger/setup-rye@v3.0.2
     - name: Build the package
       run: rye build
+    - uses: actions/upload-artifact@v4.3.3
+      with:
+        path: ./dist
