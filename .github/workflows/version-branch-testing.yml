@@ -5,6 +5,20 @@ on:
     branches: ["v*"]
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.1.6
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.10.14
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: 3.10.14
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
   pytest:
     runs-on: ubuntu-latest
     steps:
@@ -18,27 +32,6 @@ jobs:
       run: rye sync --all-features
     - name: Test with pytest
       run: rye run pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
-
-  mypy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4.1.6
-        with:
-          fetch-depth: 0
-      - name: Install the latest version of Rye
-        uses: eifinger/setup-rye@v3.0.2
-      - name: Setup the environment
-        run: rye sync --all-features
-      - name: Run MyPy
-        uses: tsuyoshicho/action-mypy@v4.1.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-          fail_on_error: true
-          setup_method: adaptive
-          setup_command: "rye add mypy"
-          execute_command: "rye run mypy"
 
   build:
     runs-on: ubuntu-latest
