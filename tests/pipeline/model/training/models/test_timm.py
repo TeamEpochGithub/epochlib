@@ -5,7 +5,7 @@ from epochalyst.pipeline.model.training.models.timm import Timm
 
 class TestTimm:
 
-    timm = Timm(3, 3, "resnet18")
+    timm = Timm(in_chans=3, num_classes=3, model_name="resnet18")
 
     def test_timm_init(self):
         assert self.timm is not None

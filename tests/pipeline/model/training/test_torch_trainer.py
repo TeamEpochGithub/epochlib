@@ -80,7 +80,7 @@ class TestTorchTrainer:
                 n_folds=1,
             )
 
-    def test_init_proper_args(self):
+    def test_init_not_implemented(self):
         with pytest.raises(NotImplementedError):
             TorchTrainer(
                 model=self.simple_model,
@@ -88,7 +88,7 @@ class TestTorchTrainer:
                 optimizer=self.optimizer,
                 n_folds=0,
                 model_name="Simple",
-            )
+            ).external_define_metric("metric", "type")
 
     def test_init_proper_args_with_implemented(self):
         tt = self.ImplementedTorchTrainer(

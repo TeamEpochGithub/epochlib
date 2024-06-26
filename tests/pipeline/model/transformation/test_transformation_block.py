@@ -1,5 +1,7 @@
+import logging
 import shutil
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -9,7 +11,7 @@ from epochalyst.pipeline.model.transformation.transformation_block import \
 
 TEMP_DIR = Path("tests/temp")
 
-
+@mock.patch(target="logging.getLogger", new=mock.MagicMock())
 class TestTransformationBlock:
     cache_path = TEMP_DIR
 
@@ -23,19 +25,19 @@ class TestTransformationBlock:
             tb.transform(1)
 
     def test_transformation_block_log_to_terminal(self):
-        with pytest.raises(NotImplementedError):
-            tb = TransformationBlock()
-            tb.log_to_terminal("test")
+        tb = TransformationBlock()
+        tb.log_to_terminal("test")
+        logging.getLogger("TransformationBlock").info.assert_called_once_with("test")
 
     def test_transformation_block_log_to_debug(self):
-        with pytest.raises(NotImplementedError):
-            tb = TransformationBlock()
-            tb.log_to_debug("test")
+        tb = TransformationBlock()
+        tb.log_to_debug("test")
+        logging.getLogger("TransformationBlock").debug.assert_called_once_with("test")
 
     def test_transformation_block_log_to_warning(self):
-        with pytest.raises(NotImplementedError):
-            tb = TransformationBlock()
-            tb.log_to_warning("test")
+        tb = TransformationBlock()
+        tb.log_to_warning("test")
+        logging.getLogger("TransformationBlock").warning.assert_called_once_with("test")
 
     def test_transformation_block_log_to_external(self):
         with pytest.raises(NotImplementedError):

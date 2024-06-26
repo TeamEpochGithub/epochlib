@@ -1,6 +1,3 @@
-import shutil
-from pathlib import Path
-
 import dask.array as da
 import dask.dataframe as dd
 import numpy as np
@@ -9,12 +6,12 @@ import polars as pl
 import pytest
 
 from epochalyst._core._caching._cacher import _Cacher
+from epochalyst.logging.logger import Logger
 from tests.constants import TEMP_DIR
 
 
-class Implemented_Cacher(_Cacher):
-    def log_to_debug(self, message: str) -> None:
-        return None
+class Implemented_Cacher(_Cacher, Logger):
+    pass
 
 
 class Test_Cacher:

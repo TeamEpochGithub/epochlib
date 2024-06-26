@@ -1,1 +1,1 @@
-"""Module for logging related functionality usable across projects."""
+"""Module for core logging functionality."""

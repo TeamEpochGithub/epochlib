@@ -4,6 +4,8 @@ import pickle
 import sys
 from typing import Any, Literal, TypedDict
 
+from epochalyst.logging.logger import Logger
+
 try:
     import dask.array as da
     import dask.dataframe as dd
@@ -25,7 +27,6 @@ try:
 except ImportError:
     """User doesn't require these packages"""
 
-from epochalyst._core._logging._logger import _Logger
 
 if sys.version_info < (3, 11):  # pragma: no cover (<py311)
     from typing_extensions import NotRequired
@@ -75,7 +76,7 @@ class CacheArgs(TypedDict):
     store_args: NotRequired[dict[str, Any]]
 
 
-class _Cacher(_Logger):
+class _Cacher(Logger):
     """The cacher is a flexible class that allows for caching of any data.
 
     The cacher uses cache_args to determine if the data is already cached and if so, return the cached data.
