@@ -1,17 +1,17 @@
 name: Version Branch CI/CD
 
 on:
-    pull_request:
-        branches: ["v*"]
+  pull_request:
+    branches: ["v*"]
 
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
+    - uses: actions/checkout@v4.1.6
+    - uses: actions/setup-python@v5.1.0
       with:
-        python-version: 3.11
+        python-version: 3.10.14
     - name: Install pre-commit
       run: pip install pre-commit
     - name: Run pre-commit
@@ -19,60 +19,27 @@ jobs:
 
   pytest:
     runs-on: ubuntu-latest
-    container:
-      image: python:3.11-slim
-      env:
-        NODE_VERSION: 20
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
     steps:
-    - name: Install Node.js
-      uses: actions/setup-node@v3
+    - name: Check out repository
+      uses: actions/checkout@v4.1.6
       with:
-        node-version: ${{ env.NODE_VERSION }}
-
-    - uses: actions/checkout@v3
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Create virtual environment
-      run: python -m venv venv
-
-    - name: Activate virtual environment
-      run: |
-        . venv/bin/activate
-
-    - name: Install dependencies
-      run: |
-        venv/bin/python -m pip install --upgrade pip
-        venv/bin/python -m pip install pytest
-        venv/bin/python -m pip install -r requirements-dev.lock
-        venv/bin/python -m pip install pytest-cov coverage
-
+        fetch-depth: 0
+    - name: Install the latest version of Rye
+      uses: eifinger/setup-rye@v3.0.2
+    - name: Setup the environment
+      run: rye sync --all-features
     - name: Test with pytest
-      run: |
-        venv/bin/python -m pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
+      run: rye run pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
 
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
-    - uses: actions/setup-python@v3
-      with:
-        python-version: 3.11
-
-    - run: |
-        pip install build
-        python -m build
-
-    - uses: actions/upload-artifact@v3
+    - name: Check out repository
+      uses: actions/checkout@v4.1.6
+    - name: Install the latest version of Rye
+      uses: eifinger/setup-rye@v3.0.2
+    - name: Build the package
+      run: rye build
+    - uses: actions/upload-artifact@v4.3.3
       with:
         path: ./dist
