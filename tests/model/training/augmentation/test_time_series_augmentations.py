@@ -1,8 +1,7 @@
 import numpy as np
 import torch
 
-from epochalyst.model.training.augmentation import \
-    time_series_augmentations
+from epochalyst.model import time_series_augmentations
 
 
 def set_torch_seed(seed: int = 42) -> None:

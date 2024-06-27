@@ -1,10 +1,11 @@
 """TransformationPipeline that extends from TransformingSystem, Cacher and _Logger."""
+
 from dataclasses import dataclass
 from typing import Any
 
 from agogos.transforming import TransformingSystem, TransformType
 
-from epochalyst.utils.cacher import Cacher, CacheArgs
+from epochalyst.utils.cacher import CacheArgs, Cacher
 
 
 @dataclass

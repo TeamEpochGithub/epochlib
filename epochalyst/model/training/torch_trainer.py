@@ -19,10 +19,9 @@ from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from tqdm import tqdm
 
-from epochalyst.model._custom_data_parallel import _CustomDataParallel
-from epochalyst.model.training.training_block import TrainingBlock
-from epochalyst.model.training.utils import _get_onnxrt, _get_openvino
-from epochalyst.model.training.utils.tensor_functions import batch_to_device
+from ._custom_data_parallel import _CustomDataParallel
+from .training_block import TrainingBlock
+from .utils import _get_onnxrt, _get_openvino, batch_to_device
 
 T = TypeVar("T", bound=Dataset)  # type: ignore[type-arg]
 T_co = TypeVar("T_co", covariant=True)
@@ -579,7 +578,7 @@ class TorchTrainer(TrainingBlock):
             validation_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            collate_fn=(self.collate_fn if hasattr(validation_dataset, "__getitems__") else None),  # type: ignore[arg-type]
+            collate_fn=(self.collate_fn if hasattr(validation_dataset, "__getitems__") else None),
             **self.dataloader_args,
         )
         return train_loader, validation_loader

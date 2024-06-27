@@ -1,6 +1,6 @@
 import torch
 
-from epochalyst.model.training.models.timm import Timm
+from epochalyst.model import Timm
 
 
 class TestTimm:

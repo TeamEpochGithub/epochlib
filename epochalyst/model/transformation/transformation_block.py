@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.transforming import Transformer
 
-from epochalyst.utils.cacher import Cacher, CacheArgs
+from epochalyst.utils.cacher import CacheArgs, Cacher
 
 
 class TransformationBlock(Transformer, Cacher):
@@ -63,8 +63,8 @@ class TransformationBlock(Transformer, Cacher):
         :return: The transformed data.
         """
         if cache_args and self.cache_exists(
-                name=self.get_hash(),
-                cache_args=cache_args,
+            name=self.get_hash(),
+            cache_args=cache_args,
         ):
             self.log_to_terminal(
                 f"Cache exists for {self.__class__} with hash: {self.get_hash()}. Using the cache.",

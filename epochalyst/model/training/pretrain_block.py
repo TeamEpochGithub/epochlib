@@ -6,7 +6,7 @@ from typing import Any
 
 from joblib import hash
 
-from epochalyst.model.training.training_block import TrainingBlock
+from .training_block import TrainingBlock
 
 
 @dataclass

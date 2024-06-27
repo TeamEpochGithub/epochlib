@@ -1,7 +1,10 @@
+"""Model module. Contains the ModelPipeline class."""
+
 from typing import Any
 
-from epochalyst.utils.cacher import CacheArgs
 from agogos.training import Pipeline
+
+from epochalyst.utils import CacheArgs
 
 
 class ModelPipeline(Pipeline):

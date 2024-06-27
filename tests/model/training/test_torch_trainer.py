@@ -4,7 +4,7 @@ import functools
 import time
 from dataclasses import dataclass
 
-from epochalyst.model._custom_data_parallel import _CustomDataParallel
+from epochalyst.model.training._custom_data_parallel import _CustomDataParallel
 
 from epochalyst.model.training.torch_trainer import custom_collate
 from typing import Any

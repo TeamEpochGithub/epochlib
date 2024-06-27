@@ -4,7 +4,7 @@ from typing import Any
 
 from agogos.training import TrainingSystem, TrainType
 
-from epochalyst.utils.cacher import CacheArgs, Cacher
+from epochalyst.utils import CacheArgs, Cacher
 
 
 class TrainingPipeline(TrainingSystem, Cacher):

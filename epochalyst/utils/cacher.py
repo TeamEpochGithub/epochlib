@@ -1,11 +1,14 @@
+"""The cacher module contains the Cacher class."""
+
 import glob
 import os
 import pickle
 import sys
-from typing import TypedDict, Literal, Any
+from typing import Any, Literal, TypedDict
+
 from typing_extensions import NotRequired
 
-from epochalyst.utils.logger import Logger
+from .logger import Logger
 
 try:
     import dask.array as da
@@ -125,8 +128,7 @@ class Cacher(Logger):
             path_exists = os.path.exists(storage_path + name + ".parquet")
         elif storage_type == ".csv":
             # Check if the file exists or if there are any parts inside the folder
-            path_exists = os.path.exists(storage_path + name + ".csv") or glob.glob(
-                storage_path + name + "/*.part") != []
+            path_exists = os.path.exists(storage_path + name + ".csv") or glob.glob(storage_path + name + "/*.part") != []
         elif storage_type == ".npy_stack":
             path_exists = os.path.exists(storage_path + name)
         elif storage_type == ".pkl":
@@ -246,8 +248,7 @@ class Cacher(Logger):
             "storage_type must be .npy, .parquet, .csv, or .npy_stack, other types not supported yet",
         )
 
-    def _store_cache(self, name: str, data: Any,
-                     cache_args: CacheArgs | None = None) -> None:  # noqa: ANN401 C901 PLR0915 PLR0912
+    def _store_cache(self, name: str, data: Any, cache_args: CacheArgs | None = None) -> None:  # noqa: ANN401 C901 PLR0915 PLR0912
         """Store one set of data.
 
         :param name: The name of the cache.

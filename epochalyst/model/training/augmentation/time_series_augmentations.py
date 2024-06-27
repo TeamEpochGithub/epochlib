@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import torch
 
-from epochalyst.model.training.augmentation.utils import get_audiomentations
+from .utils import get_audiomentations
 
 
 @dataclass
