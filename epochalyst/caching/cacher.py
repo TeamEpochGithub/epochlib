@@ -6,8 +6,6 @@ import pickle
 import sys
 from typing import Any, Literal, TypedDict
 
-from typing_extensions import NotRequired
-
 from epochalyst.logging import Logger
 
 try:
@@ -32,9 +30,9 @@ except ImportError:
     """User doesn't require these packages"""
 
 if sys.version_info < (3, 11):  # pragma: no cover (<py311)
-    pass
+    from typing_extensions import NotRequired
 else:  # pragma: no cover (py311+)
-    pass
+    from typing import NotRequired
 
 
 class CacheArgs(TypedDict):
