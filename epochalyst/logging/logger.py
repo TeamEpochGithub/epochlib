@@ -1,9 +1,8 @@
-"""Logger base class."""
+"""Logger base class for logging methods."""
 
 import logging
 import os
-from collections.abc import Mapping
-from typing import Any
+from typing import Any, Mapping
 
 
 class Logger:
