@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.training import Trainer
 
-from epochalyst.utils import CacheArgs, Cacher
+from epochalyst.caching import CacheArgs, Cacher
 
 
 class TrainingBlock(Trainer, Cacher):

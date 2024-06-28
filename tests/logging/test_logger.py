@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from epochalyst.utils.logger import Logger
+from epochalyst.logging.logger import Logger
 
 test_string = "Test"
 

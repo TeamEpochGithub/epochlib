@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.transforming import TransformingSystem, TransformType
 
-from epochalyst.utils.cacher import CacheArgs, Cacher
+from epochalyst.caching.cacher import CacheArgs, Cacher
 
 
 @dataclass

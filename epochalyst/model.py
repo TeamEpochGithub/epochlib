@@ -4,7 +4,7 @@ from typing import Any
 
 from agogos.training import Pipeline
 
-from epochalyst.utils import CacheArgs
+from epochalyst.caching import CacheArgs
 
 
 class ModelPipeline(Pipeline):

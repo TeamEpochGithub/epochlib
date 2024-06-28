@@ -8,7 +8,7 @@ from typing import Any, Literal, TypedDict
 
 from typing_extensions import NotRequired
 
-from .logger import Logger
+from epochalyst.logging import Logger
 
 try:
     import dask.array as da

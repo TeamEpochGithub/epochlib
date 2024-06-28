@@ -5,8 +5,8 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from epochalyst.utils.cacher import Cacher
-from epochalyst.utils.logger import Logger
+from epochalyst.caching.cacher import Cacher
+from epochalyst.logging.logger import Logger
 from tests.constants import TEMP_DIR
 
 
