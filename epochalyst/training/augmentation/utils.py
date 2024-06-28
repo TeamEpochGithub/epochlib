@@ -12,7 +12,7 @@ from typing import Any
 
 import torch
 
-from epochalyst.model.training.utils.recursive_repr import recursive_repr
+from epochalyst.training.utils.recursive_repr import recursive_repr
 
 
 def get_audiomentations() -> ModuleType:

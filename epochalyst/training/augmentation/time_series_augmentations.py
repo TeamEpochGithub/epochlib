@@ -187,7 +187,7 @@ class Reverse1D(torch.nn.Module):
 
 
 @dataclass
-class SubstractChannels(torch.nn.Module):
+class SubtractChannels(torch.nn.Module):
     """Randomly substract other channels from the current one."""
 
     p: float = 0.5

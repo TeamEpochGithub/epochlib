@@ -1,6 +1,6 @@
 import pytest
 
-from epochalyst.model.training.pretrain_block import PretrainBlock
+from epochalyst.training import PretrainBlock
 
 
 class TestPretrainBlock:

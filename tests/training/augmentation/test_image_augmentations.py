@@ -1,6 +1,6 @@
 import torch
 
-from epochalyst.model import image_augmentations
+from epochalyst.training.augmentation import image_augmentations
 
 
 class TestImageAugmentations:

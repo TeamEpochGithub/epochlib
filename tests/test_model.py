@@ -5,9 +5,9 @@ from typing import Any
 import numpy as np
 import pytest
 
-from epochalyst.model.model import ModelPipeline
-from epochalyst.model.transformation.transformation import TransformationPipeline
-from epochalyst.model.transformation.transformation_block import TransformationBlock
+from epochalyst import ModelPipeline
+from epochalyst.transformation import TransformationPipeline
+from epochalyst.transformation import TransformationBlock
 from tests.constants import TEMP_DIR
 
 

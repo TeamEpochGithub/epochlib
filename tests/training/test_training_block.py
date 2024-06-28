@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from epochalyst.model.training.training_block import TrainingBlock
+from epochalyst.training import TrainingBlock
 
 TEMP_DIR = Path("tests/temp")
 

@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from epochalyst.model import time_series_augmentations
+from epochalyst.training.augmentation import time_series_augmentations
 
 
 def set_torch_seed(seed: int = 42) -> None:
@@ -152,7 +152,7 @@ class TestTimeSeriesAugmentations:
 
     def test_subtract_channels(self):
         set_torch_seed(42)
-        subtract_channels = time_series_augmentations.SubstractChannels(p=1.0)
+        subtract_channels = time_series_augmentations.SubtractChannels(p=1.0)
         # Only works for multi-channel sequences
         x = torch.ones(32, 2, 100)
         augmented_x = subtract_channels(x)
@@ -162,7 +162,7 @@ class TestTimeSeriesAugmentations:
 
         assert torch.allclose(torch.zeros(*augmented_x.shape), augmented_x)
 
-        subtract_channels = time_series_augmentations.SubstractChannels(p=0)
+        subtract_channels = time_series_augmentations.SubtractChannels(p=0)
         augmented_x = subtract_channels(x)
         assert torch.all(augmented_x == x)
 
@@ -205,7 +205,7 @@ class TestTimeSeriesAugmentations:
 
     def test_add_background_noise_wrapper(self):
         add_background_noise_wrapper = time_series_augmentations.AddBackgroundNoiseWrapper(p=1.0,
-                                                                                           sounds_path='tests/pipeline/model/training/augmentation/test_audio/white_noise.wav')
+                                                                                           sounds_path='tests/training/augmentation/test_audio/white_noise.wav')
         x = torch.rand(44100, dtype=torch.float32)
         sr = 44100
         augmented_x = add_background_noise_wrapper(x, sr)

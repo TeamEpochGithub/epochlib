@@ -5,10 +5,10 @@ from typing import Any
 import numpy as np
 import pytest
 
-from epochalyst.model import EnsemblePipeline
-from epochalyst.model import ModelPipeline
-from epochalyst.model import TransformationPipeline
-from epochalyst.model import TransformationBlock
+from epochalyst import EnsemblePipeline
+from epochalyst import ModelPipeline
+from epochalyst.transformation import TransformationPipeline
+from epochalyst.transformation import TransformationBlock
 from tests.constants import TEMP_DIR
 
 
