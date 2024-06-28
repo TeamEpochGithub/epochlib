@@ -1,8 +1,4 @@
-"""The epochalyst package.
-
-It consists of the following modules:
-
-"""
+"""The epochalyst package."""
 
 from .ensemble import EnsemblePipeline
 from .model import ModelPipeline
