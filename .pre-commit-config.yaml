@@ -1,4 +1,6 @@
 exclude: ^(external/|venv/|.venv/|tests/|.cache)
+ci:
+  skip: [mypy]
 repos:
   - repo: local  # Remove this when a new version of pre-commit-hooks (>4.6.0) is released
     hooks:
@@ -68,10 +70,10 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
+          - "--extra-index-url=https://download.pytorch.org/whl/cpu"
           - numpy==1.26.4
           - pandas-stubs>=2.2.2.240514
-          - matplotlib==3.8.4
-          - torch==2.3.1
+          - torch==2.3.1+cpu
           - dask==2024.6.2
           - typing_extensions==4.9.0
           - annotated-types==0.7.0
