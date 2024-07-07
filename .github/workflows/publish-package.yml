@@ -30,6 +30,6 @@ jobs:
       - uses: actions/download-artifact@v4.1.7
 
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1.9.0
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: artifact/
