@@ -1,3 +1,6 @@
-*.yaml jmvanselm@gmail.com
-*.yml jmvanselm@gmail.com
-*.toml jmvanselm@gmail.com
+*.py @TeamEpochGithub/packages
+*.md @TeamEpochGithub/packages
+*.yaml @TeamEpochGithub/packages
+*.yml @TeamEpochGithub/packages
+*.toml @TeamEpochGithub/packages
+*.txt @TeamEpochGithub/packages
