@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4.1.6
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Install the latest version of Rye
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4.1.6
+      uses: actions/checkout@v4
     - name: Install the latest version of Rye
       uses: eifinger/setup-rye@v4.2.1
     - name: Build the package
