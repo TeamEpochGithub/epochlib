@@ -281,7 +281,7 @@ class TorchTrainer(TrainingBlock):
             self._load_model()
 
             # Return the predictions
-            return self._predict_after_train(
+            return self.predict_after_train(
                 x,
                 y,
                 train_dataset,
@@ -337,7 +337,7 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self._predict_after_train(
+        return self.predict_after_train(
             x,
             y,
             train_dataset,
@@ -346,7 +346,7 @@ class TorchTrainer(TrainingBlock):
             validation_indices,
         )
 
-    def _predict_after_train(
+    def predict_after_train(
         self,
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
@@ -615,7 +615,7 @@ class TorchTrainer(TrainingBlock):
 
         for epoch in range(start_epoch, self.epochs):
             # Train using train_loader
-            train_loss = self._train_one_epoch(train_loader, epoch)
+            train_loss = self.train_one_epoch(train_loader, epoch)
             self.log_to_debug(f"Epoch {epoch} Train Loss: {train_loss}")
             train_losses.append(train_loss)
 
@@ -642,7 +642,7 @@ class TorchTrainer(TrainingBlock):
 
             # Compute validation loss
             if len(validation_loader) > 0:
-                self.last_val_loss = self._val_one_epoch(
+                self.last_val_loss = self.val_one_epoch(
                     validation_loader,
                     desc=f"Epoch {epoch} Valid",
                 )
@@ -681,7 +681,7 @@ class TorchTrainer(TrainingBlock):
             # Log the trained epochs to wandb if we finished training
             self.log_to_external(message={self.wrap_log(f"Epochs{fold_no}"): epoch + 1})
 
-    def _train_one_epoch(
+    def train_one_epoch(
         self,
         dataloader: DataLoader[tuple[Tensor, ...]],
         epoch: int,
@@ -724,7 +724,7 @@ class TorchTrainer(TrainingBlock):
 
         return sum(losses) / len(losses)
 
-    def _val_one_epoch(
+    def val_one_epoch(
         self,
         dataloader: DataLoader[tuple[Tensor, ...]],
         desc: str,
