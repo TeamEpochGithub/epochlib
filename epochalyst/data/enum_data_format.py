@@ -1,11 +1,16 @@
 """Module containing classes to allow for the creation of enum based retrieval data formats."""
+
+from dataclasses import dataclass
+from enum import IntFlag
 from typing import Any
+
+import numpy as np
+import numpy.typing as npt
 
 
 class DataRetrieval(IntFlag):
     """Class to select which data to retrieve in Data."""
 
-    BASE = 2**0;
 
 @dataclass
 class Data:
@@ -33,5 +38,6 @@ class Data:
     def __len__(self) -> int:
         """Return length of the data.
 
-        :return: Length of data"""
+        :return: Length of data
+        """
         raise NotImplementedError("__len__ should be implemented when inheriting from Data.")
