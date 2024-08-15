@@ -7,6 +7,7 @@
 #   all-features: true
 #   with-sources: true
 #   generate-hashes: false
+#   universal: false
 
 --index-url https://pypi.org/simple/
 
@@ -220,7 +221,7 @@ pycparser==2.22
 pygit2==1.15.0
 pygments==2.18.0
     # via sphinx
-pytest==8.2.2
+pytest==8.3.2
     # via pytest-cov
 pytest-cov==5.0.0
 python-dateutil==2.9.0.post0

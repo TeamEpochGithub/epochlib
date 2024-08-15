@@ -19,6 +19,8 @@ class Data:
     :param retrieval: What data to retrieve
     """
 
+    retrieval: DataRetrieval = DataRetrieval
+
     def __getitem__(self, idx: int | npt.NDArray[np.int_] | list[int] | slice) -> npt.NDArray[Any] | list[Any]:
         """Get item from the data.
 
