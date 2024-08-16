@@ -2,9 +2,11 @@
 
 import logging
 import os
+from dataclasses import dataclass
 from typing import Any, Mapping
 
 
+@dataclass
 class Logger:
     """Logger base class for logging methods.
 
@@ -21,7 +23,7 @@ class Logger:
         def external_define_metric(self, metric: str, metric_type: str) -> None: # Defines an external metric
     """
 
-    def __init__(self) -> None:
+    def __post_init__(self) -> None:
         """Initialize the logger."""
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.DEBUG)
