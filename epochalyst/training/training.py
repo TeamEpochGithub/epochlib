@@ -1,5 +1,6 @@
 """TrainingPipeline for creating a sequential pipeline of TrainType classes."""
 
+from dataclasses import dataclass
 from typing import Any
 
 from agogos.training import TrainingSystem, TrainType
@@ -7,6 +8,7 @@ from agogos.training import TrainingSystem, TrainType
 from epochalyst.caching import CacheArgs, Cacher
 
 
+@dataclass
 class TrainingPipeline(TrainingSystem, Cacher):
     """The training pipeline. This is the class used to create the pipeline for the training of the model.
 
