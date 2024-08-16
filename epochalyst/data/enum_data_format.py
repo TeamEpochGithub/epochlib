@@ -1,6 +1,6 @@
 """Module containing classes to allow for the creation of enum based retrieval data formats."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntFlag
 from typing import Any
 
@@ -19,7 +19,7 @@ class Data:
     :param retrieval: What data to retrieve
     """
 
-    retrieval: DataRetrieval = DataRetrieval
+    retrieval: DataRetrieval = field(init=False)
 
     def __getitem__(self, idx: int | npt.NDArray[np.int_] | list[int] | slice) -> npt.NDArray[Any] | list[Any]:
         """Get item from the data.
