@@ -1,5 +1,6 @@
 """TorchTrainer is a module that allows for the training of Torch models."""
 
+import contextlib
 import copy
 import functools
 import gc
@@ -60,6 +61,10 @@ class TorchTrainer(TrainingBlock):
     - `checkpointing_enabled` (bool): Whether to save checkpoints after each epoch
     - `checkpointing_keep_every` (int): Keep every i'th checkpoint (1 to keep all, 0 to keep only the last one)
     - `checkpointing_resume_if_exists` (bool): Resume training if a checkpoint exists
+
+    Parameters Precision
+    ----------
+    - `use_mixed_precision` (bool): Whether to use mixed precision for the model training
 
     Parameters Misc
     ----------
@@ -173,6 +178,9 @@ class TorchTrainer(TrainingBlock):
     checkpointing_keep_every: Annotated[int, Gt(0)] = field(default=0, init=True, repr=False, compare=False)
     checkpointing_resume_if_exists: bool = field(default=True, init=True, repr=False, compare=False)
 
+    # Precision
+    use_mixed_precision: bool = field(default=False)
+
     # Misc
     model_name: str | None = None  # No spaces allowed
     trained_models_directory: PathLike[str] = field(default=Path("tm/"), repr=False, compare=False)
@@ -232,6 +240,12 @@ class TorchTrainer(TrainingBlock):
         # Early stopping
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
+
+        # Mixed precision
+        if self.use_mixed_precision:
+            self.log_to_terminal("Using mixed precision training.")
+            self.scaler = torch.GradScaler(device=self.device.type)
+            torch.set_float32_matmul_precision("high")
 
         # Check validity of model_name
         if " " in self.model_name:
@@ -706,13 +720,19 @@ class TorchTrainer(TrainingBlock):
             y_batch = batch_to_device(y_batch, self.y_tensor_type, self.device)
 
             # Forward pass
-            y_pred = self.model(X_batch).squeeze(1)
-            loss = self.criterion(y_pred, y_batch)
+            with torch.autocast(self.device.type) if self.use_mixed_precision else contextlib.nullcontext():  # type: ignore[attr-defined]
+                y_pred = self.model(X_batch).squeeze(1)
+                loss = self.criterion(y_pred, y_batch)
 
             # Backward pass
             self.initialized_optimizer.zero_grad()
-            loss.backward()
-            self.initialized_optimizer.step()
+            if self.use_mixed_precision:
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.initialized_optimizer)
+                self.scaler.update()
+            else:
+                loss.backward()
+                self.initialized_optimizer.step()
 
             # Print tqdm
             losses.append(loss.item())

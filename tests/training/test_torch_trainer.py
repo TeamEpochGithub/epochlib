@@ -78,6 +78,26 @@ class TestTorchTrainer:
                 n_folds=1,
             )
 
+    def test_model_name_none(self):
+        with pytest.raises(ValueError):
+            TorchTrainer(
+                model=self.simple_model,
+                criterion=torch.nn.MSELoss(),
+                optimizer=self.optimizer,
+                n_folds=0,
+                model_name=None,
+            )
+
+    def test_model_name_invalid(self):
+        with pytest.raises(ValueError):
+            TorchTrainer(
+                model=self.simple_model,
+                criterion=torch.nn.MSELoss(),
+                optimizer=self.optimizer,
+                n_folds=0,
+                model_name=" ",
+            )
+
     def test_init_not_implemented(self):
         with pytest.raises(NotImplementedError):
             TorchTrainer(
