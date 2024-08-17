@@ -6,6 +6,8 @@ import pickle
 import sys
 from typing import Any, Literal, TypedDict
 
+import numpy as np
+
 from epochalyst.logging import Logger
 
 try:
@@ -14,10 +16,6 @@ try:
 except ImportError:
     """User doesn't require these packages"""
 
-try:
-    import numpy as np
-except ImportError:
-    """User doesn't require these packages"""
 
 try:
     import pandas as pd
