@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from os import PathLike
 from pathlib import Path
-from typing import Annotated, Any, Literal, TypeVar
+from typing import Annotated, Any, Literal, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -19,6 +19,8 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from tqdm import tqdm
+
+from epochalyst.data import Data
 
 from ._custom_data_parallel import _CustomDataParallel
 from .training_block import TrainingBlock
@@ -166,6 +168,7 @@ class TorchTrainer(TrainingBlock):
     criterion: nn.Module
     scheduler: Callable[[Optimizer], LRScheduler] | None = None
     dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
+    dataset: functools.partial[Dataset[Tuple[Tensor, Tensor]]] | None = None
 
     # Training parameters
     epochs: Annotated[int, Gt(0)] = 10
@@ -531,8 +534,8 @@ class TorchTrainer(TrainingBlock):
 
     def create_datasets(
         self,
-        x: npt.NDArray[np.float32],
-        y: npt.NDArray[np.float32],
+        x: npt.NDArray[np.float32] | Data,
+        y: npt.NDArray[np.float32] | Data,
         train_indices: list[int],
         validation_indices: list[int],
     ) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
@@ -544,27 +547,31 @@ class TorchTrainer(TrainingBlock):
         :param validation_indices: The indices to validate on.
         :return: The training and validation datasets.
         """
-        train_dataset = TensorDataset(
-            torch.from_numpy(x[train_indices]),
-            torch.from_numpy(y[train_indices]),
-        )
-        validation_dataset = TensorDataset(
-            torch.from_numpy(x[validation_indices]),
-            torch.from_numpy(y[validation_indices]),
-        )
+        if self.dataset is None:
+            train_dataset = TensorDataset(
+                torch.from_numpy(x[train_indices]),
+                torch.from_numpy(y[train_indices]),
+            )
+            validation_dataset = TensorDataset(
+                torch.from_numpy(x[validation_indices]),
+                torch.from_numpy(y[validation_indices]),
+            )
+            return train_dataset, validation_dataset
 
-        return train_dataset, validation_dataset
+        return self.dataset(x[train_indices], y[train_indices]), self.dataset(x[validation_indices], y[validation_indices])
 
     def create_prediction_dataset(
         self,
-        x: npt.NDArray[np.float32],
+        x: npt.NDArray[np.float32] | Data,
     ) -> Dataset[tuple[Tensor, ...]]:
         """Create the prediction dataset.
 
         :param x: The input data.
         :return: The prediction dataset.
         """
-        return TensorDataset(torch.from_numpy(x))
+        if self.dataset is None:
+            return TensorDataset(torch.from_numpy(x))
+        return self.dataset(x)
 
     def create_dataloaders(
         self,

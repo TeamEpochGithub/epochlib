@@ -1,7 +1,7 @@
 from unittest import TestCase
 from dataclasses import dataclass
 
-from epochalyst.data.enum_data_format import DataRetrieval, Data
+from epochalyst.data import DataRetrieval, Data
 import numpy as np
 import numpy.typing as npt
 from typing import Any

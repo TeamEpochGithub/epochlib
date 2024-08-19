@@ -1,9 +1,8 @@
 from unittest import TestCase
 from dataclasses import dataclass
 
-from epochalyst.data.enum_data_format import Data, DataRetrieval
-from epochalyst.data.pipeline_dataset import PipelineDataset
-from epochalyst.training.training_block import TrainingBlock
+from epochalyst.data import Data, DataRetrieval, PipelineDataset
+from epochalyst.training import TrainingBlock
 import numpy as np
 import numpy.typing as npt
 from typing import Any

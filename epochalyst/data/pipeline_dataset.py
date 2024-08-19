@@ -8,7 +8,8 @@ import numpy as np
 import numpy.typing as npt
 
 from epochalyst.data.enum_data_format import Data, DataRetrieval
-from epochalyst.training import TrainingBlock, TrainingPipeline
+from epochalyst.training.training import TrainingPipeline
+from epochalyst.training.training_block import TrainingBlock
 
 try:
     from torch.utils.data import Dataset
@@ -36,14 +37,14 @@ class PipelineDataset(Dataset[Tuple[T, T]]):
 
     """
 
+    x: Data | None = None
+    y: Data | None = None
+    indices: npt.NDArray[np.int_] | None = None
+
     retrieval: list[str] | None = None
     retrieval_type: DataRetrieval | None = None
     steps: list[TrainingBlock] | None = None
     result_formatter: Callable[[Any], Any] = lambda a: a
-
-    x: Data | None = None
-    y: Data | None = None
-    indices: npt.NDArray[np.int_] | None = None
 
     def __post_init__(self) -> None:
         """Set up the dataset."""
