@@ -75,16 +75,6 @@ Documentation is generated using [Sphinx](https://www.sphinx-doc.org/en/master/)
 To make the documentation yourself, run `make html` with `docs` as the working directory.
 The documentation can then be found in `docs/_build/html/index.html`.
 
-## Contributors
+## Maintainers
 
-Epochalyst was created by [Team Epoch IV](https://teamepoch.ai/team#iv), based in the [Dream Hall](https://www.tudelft.nl/ddream) of the [Delft University of Technology](https://www.tudelft.nl/).
-
-[![Github Badge](https://img.shields.io/badge/-Jasper_van_Selm-24292e?style=flat&logo=Github)](https://github.com/schobbejak)
-[![Github Badge](https://img.shields.io/badge/-Emiel_Witting-24292e?style=flat&logo=Github)](https://github.com/EWitting)
-[![Github Badge](https://img.shields.io/badge/-Jeffrey_Lim-24292e?style=flat&logo=Github)](https://github.com/Jeffrey-Lim)
-[![Github Badge](https://img.shields.io/badge/-Hugo_de_Heer-24292e?style=flat&logo=Github)](https://github.com/hjdeheer)
-[![Github Badge](https://img.shields.io/badge/-Tolga_Kopar-24292e?style=flat&logo=Github)](https://github.com/tolgakopar)
-[![Github Badge](https://img.shields.io/badge/-Ariel_Ebersberger-24292e?style=flat&logo=Github)](https://github.com/justanotherariel)
-[![Github Badge](https://img.shields.io/badge/-Gregoire_Dumont-24292e?style=flat&logo=Github)](https://github.com/Gregoire-Andre-Dumont)
-[![Github Badge](https://img.shields.io/badge/-Kristóf_Sándor-24292e?style=flat&logo=Github)](https://github.com/emherk)
-[![Github Badge](https://img.shields.io/badge/-Daniel_De_Dios_Allegue-24292e?style=flat&logo=Github)](https://github.com/daniallegue)
+Epochalyst is maintained by [Team Epoch](https://teamepoch.ai), based in the [Dream Hall](https://www.tudelft.nl/ddream) of the [Delft University of Technology](https://www.tudelft.nl/).
