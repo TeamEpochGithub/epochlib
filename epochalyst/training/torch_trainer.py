@@ -465,7 +465,7 @@ class TorchTrainer(TrainingBlock):
         :param loader: The loader to predict on.
         :return: The predictions.
         """
-        self.log_to_terminal("Predicting on the validation data")
+        self.log_to_terminal("Running inference on the given dataloader")
         self.model.eval()
         predictions = []
         # Create a new dataloader from the dataset of the input dataloader with collate_fn
