@@ -4,7 +4,8 @@ import glob
 import os
 import pickle
 import sys
-from typing import Any, Literal, TypedDict
+from pathlib import Path
+from typing import Any, Callable, Dict, Literal, TypedDict
 
 import numpy as np
 
@@ -75,6 +76,9 @@ class CacheArgs(TypedDict):
     store_args: NotRequired[dict[str, Any]]
 
 
+LoaderFunction = Callable[[str, Path, str, Any], Any]
+
+
 class Cacher(Logger):
     """The cacher is a flexible class that allows for caching of any data.
 
@@ -136,7 +140,7 @@ class Cacher(Logger):
 
         return path_exists
 
-    def _get_cache(self, name: str, cache_args: CacheArgs | None = None) -> Any:  # noqa: ANN401 C901 PLR0911 PLR0912
+    def _get_cache(self, name: str, cache_args: CacheArgs | None = None) -> Any:  # noqa: ANN401
         """Load the cache.
 
         :param name: The name of the cache.
@@ -148,101 +152,116 @@ class Cacher(Logger):
             raise ValueError("cache_args is empty")
 
         # Check if storage type, storage_path and output_data_type are in cache_args
+        required_keys = ["storage_type", "storage_path", "output_data_type"]
+        for key in required_keys:
+            if key not in cache_args:
+                raise ValueError(f"cache_args must contain {', '.join(required_keys)}")
+
         if "storage_type" not in cache_args or "storage_path" not in cache_args or "output_data_type" not in cache_args:
             raise ValueError(
                 "cache_args must contain storage_type, storage_path and output_data_type",
             )
 
         storage_type = cache_args["storage_type"]
-        storage_path = cache_args["storage_path"]
+        storage_path = Path(cache_args["storage_path"])
         output_data_type = cache_args["output_data_type"]
         read_args = cache_args.get("read_args", {})
 
-        # If storage path does not end a slash, add it
-        if storage_path[-1] != "/":
-            storage_path += "/"
+        load_functions: Dict[str, LoaderFunction] = {
+            ".npy": self._load_npy,
+            ".parquet": self._load_parquet,
+            ".csv": self._load_csv,
+            ".npy_stack": self._load_npy_stack,
+            ".pkl": self._load_pkl,
+        }
 
-        # Load the cache
-        if storage_type == ".npy":
-            # Check if output_data_type is supported and load cache to output_data_type
-            self.log_to_debug(f"Loading .npy file from {storage_path + name}")
-            if output_data_type == "numpy_array":
-                return np.load(storage_path + name + ".npy", **read_args)
-            if output_data_type == "dask_array":
-                return da.from_array(np.load(storage_path + name + ".npy"), **read_args)
+        if storage_type in load_functions:
+            return load_functions[storage_type](name, storage_path, output_data_type, read_args)
 
-            self.log_to_debug(
-                f"Invalid output data type: {output_data_type}, for loading .npy file.",
-            )
-            raise ValueError(
-                "output_data_type must be numpy_array or dask_array, other types not supported yet",
-            )
-        if storage_type == ".parquet":
-            # Check if output_data_type is supported and load cache to output_data_type
-            self.log_to_debug(f"Loading .parquet file from {storage_path + name}")
-            if output_data_type == "pandas_dataframe":
-                return pd.read_parquet(storage_path + name + ".parquet", **read_args)
-            if output_data_type == "dask_dataframe":
-                return dd.read_parquet(storage_path + name + ".parquet", **read_args)
-            if output_data_type == "numpy_array":
-                return pd.read_parquet(
-                    storage_path + name + ".parquet",
-                    **read_args,
-                ).to_numpy()
-            if output_data_type == "dask_array":
-                return dd.read_parquet(
-                    storage_path + name + ".parquet",
-                    **read_args,
-                ).to_dask_array()
-            if output_data_type == "polars_dataframe":
-                return pl.read_parquet(storage_path + name + ".parquet", **read_args)
-
-            self.log_to_debug(  # type: ignore[unreachable]
-                f"Invalid output data type: {output_data_type}, for loading .parquet file.",
-            )
-            raise ValueError(
-                "output_data_type must be pandas_dataframe, dask_dataframe, numpy_array, dask_array, or polars_dataframe, other types not supported yet",
-            )
-        if storage_type == ".csv":
-            # Check if output_data_type is supported and load cache to output_data_type
-            self.log_to_debug(f"Loading .csv file from {storage_path + name}")
-            if output_data_type == "pandas_dataframe":
-                return pd.read_csv(storage_path + name + ".csv", **read_args)
-            if output_data_type == "dask_dataframe":
-                return dd.read_csv(storage_path + name + "/*.part", **read_args)
-            if output_data_type == "polars_dataframe":
-                return pl.read_csv(storage_path + name + ".csv", **read_args)
-
-            self.log_to_debug(
-                f"Invalid output data type: {output_data_type}, for loading .csv file.",
-            )
-            raise ValueError(
-                "output_data_type must be pandas_dataframe, dask_dataframe, or polars_dataframe, other types not supported yet",
-            )
-        if storage_type == ".npy_stack":
-            # Check if output_data_type is supported and load cache to output_data_type
-            self.log_to_debug(f"Loading .npy_stack file from {storage_path + name}")
-            if output_data_type == "dask_array":
-                return da.from_npy_stack(storage_path + name, **read_args)
-
-            self.log_to_debug(
-                f"Invalid output data type: {output_data_type}, for loading .npy_stack file.",
-            )
-            raise ValueError(
-                "output_data_type must be dask_array, other types not supported yet",
-            )
-        if storage_type == ".pkl":
-            # Load the pickle file
-            self.log_to_debug(
-                f"Loading pickle file from {storage_path + name + '.pkl'}",
-            )
-            with open(storage_path + name + ".pkl", "rb") as file:
-                return pickle.load(file, **read_args)  # noqa: S301
-
-        self.log_to_debug(f"Invalid storage type: {storage_type}")  # type: ignore[unreachable]
+        self.log_to_debug(f"Invalid storage type: {storage_type}")
         raise ValueError(
             "storage_type must be .npy, .parquet, .csv, or .npy_stack, other types not supported yet",
         )
+
+    def _load_npy(self, name: str, storage_path: Path, output_data_type: str, read_args: Any) -> Any:  # noqa: ANN401
+        # Check if output_data_type is supported and load cache to output_data_type
+        self.log_to_debug(f"Loading .npy file from {storage_path / name}")
+        if output_data_type == "numpy_array":
+            return np.load(storage_path / f"{name}.npy", **read_args)
+        if output_data_type == "dask_array":
+            return da.from_array(np.load(storage_path / f"{name}.npy"), **read_args)
+
+        self.log_to_debug(
+            f"Invalid output data type: {output_data_type}, for loading .npy file.",
+        )
+        raise ValueError(
+            "output_data_type must be numpy_array or dask_array, other types not supported yet",
+        )
+
+    def _load_parquet(self, name: str, storage_path: Path, output_data_type: str, read_args: Any) -> Any:  # noqa: ANN401
+        # Check if output_data_type is supported and load cache to output_data_type
+        self.log_to_debug(f"Loading .parquet file from {storage_path}/{name}")
+        if output_data_type == "pandas_dataframe":
+            return pd.read_parquet(storage_path / f"{name}.parquet", **read_args)
+        if output_data_type == "dask_dataframe":
+            return dd.read_parquet(storage_path / f"{name}.parquet", **read_args)
+        if output_data_type == "numpy_array":
+            return pd.read_parquet(
+                storage_path / f"{name}.parquet",
+                **read_args,
+            ).to_numpy()
+        if output_data_type == "dask_array":
+            return dd.read_parquet(
+                storage_path / f"{name}.parquet",
+                **read_args,
+            ).to_dask_array()
+        if output_data_type == "polars_dataframe":
+            return pl.read_parquet(storage_path / f"{name}.parquet", **read_args)
+
+        self.log_to_debug(
+            f"Invalid output data type: {output_data_type}, for loading .parquet file.",
+        )
+        raise ValueError(
+            "output_data_type must be pandas_dataframe, dask_dataframe, numpy_array, dask_array, or polars_dataframe, other types not supported yet",
+        )
+
+    def _load_csv(self, name: str, storage_path: Path, output_data_type: str, read_args: Any) -> Any:  # noqa: ANN401
+        # Check if output_data_type is supported and load cache to output_data_type
+        self.log_to_debug(f"Loading .csv file from {storage_path / name}")
+        if output_data_type == "pandas_dataframe":
+            return pd.read_csv(storage_path / f"{name}.csv", **read_args)
+        if output_data_type == "dask_dataframe":
+            return dd.read_csv(storage_path / f"{name}/*.part", **read_args)
+        if output_data_type == "polars_dataframe":
+            return pl.read_csv(storage_path / f"{name}.csv", **read_args)
+
+        self.log_to_debug(
+            f"Invalid output data type: {output_data_type}, for loading .csv file.",
+        )
+        raise ValueError(
+            "output_data_type must be pandas_dataframe, dask_dataframe, or polars_dataframe, other types not supported yet",
+        )
+
+    def _load_npy_stack(self, name: str, storage_path: Path, output_data_type: str, read_args: Any) -> Any:  # noqa: ANN401
+        # Check if output_data_type is supported and load cache to output_data_type
+        self.log_to_debug(f"Loading .npy_stack file from {storage_path / name}")
+        if output_data_type == "dask_array":
+            return da.from_npy_stack(storage_path / name, **read_args)
+
+        self.log_to_debug(
+            f"Invalid output data type: {output_data_type}, for loading .npy_stack file.",
+        )
+        raise ValueError(
+            "output_data_type must be dask_array, other types not supported yet",
+        )
+
+    def _load_pkl(self, name: str, storage_path: Path, _output_data_type: str, read_args: Any) -> Any:  # noqa: ANN401
+        # Load the pickle file
+        self.log_to_debug(
+            f"Loading pickle file from {storage_path}/{name}.pkl",
+        )
+        with open(storage_path / f"{name}.pkl", "rb") as file:
+            return pickle.load(file, **read_args)  # noqa: S301
 
     def _store_cache(self, name: str, data: Any, cache_args: CacheArgs | None = None) -> None:  # noqa: ANN401 C901 PLR0915 PLR0912
         """Store one set of data.
