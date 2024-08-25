@@ -283,20 +283,19 @@ class Cacher(Logger):
         output_data_type = cache_args["output_data_type"]
         store_args = cache_args.get("store_args", {})
 
-        # Store the cache based on storage_type
-        if storage_type == ".npy":
-            self._store_npy(name, storage_path, data, output_data_type, store_args)
-        elif storage_type == ".parquet":
-            self._store_parquet(name, storage_path, data, output_data_type, store_args)
-        elif storage_type == ".csv":
-            self._store_csv(name, storage_path, data, output_data_type, store_args)
-        elif storage_type == ".npy_stack":
-            self._store_npy_stack(name, storage_path, data, output_data_type, store_args)
-        elif storage_type == ".pkl":
-            self._store_pkl(name, storage_path, data, store_args)
+        store_functions: Dict[str, LoaderFunction] = {
+            ".npy": self._store_npy,
+            ".parquet": self._store_parquet,
+            ".csv": self._store_csv,
+            ".npy_stack": self._store_npy_stack,
+            ".pkl": self._store_pkl,
+        }
+
+        if storage_type in store_functions:
+            return store_functions[storage_type](name, storage_path, data, output_data_type, store_args)
 
         self.log_to_debug(f"Invalid storage type: {storage_type}")
-        raise ValueError("storage_type must be .npy, .parquet, .csv, .npy_stack, or .pkl, other types not supported yet")
+        raise ValueError(f"storage_type is {storage_type} must be .npy, .parquet, .csv, .npy_stack, or .pkl, other types not supported yet")
 
     def _store_npy(self, name: str, storage_path: Path, data: Any, output_data_type: str, store_args: Any) -> None:  # noqa: ANN401
         file_path = storage_path / f"{name}.npy"
@@ -356,7 +355,7 @@ class Cacher(Logger):
         else:
             raise ValueError("output_data_type must be dask_array")
 
-    def _store_pkl(self, name: str, storage_path: Path, data: Any, store_args: Any) -> None:  # noqa: ANN401
+    def _store_pkl(self, name: str, storage_path: Path, data: Any, output_data_type: str, store_args: Any) -> None:  # noqa: ANN401
         file_path = storage_path / f"{name}.pkl"
         self.log_to_debug(f"Storing pickle file to {file_path}")
         with open(file_path, "wb") as f:
