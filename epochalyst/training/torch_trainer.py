@@ -1,5 +1,6 @@
 """TorchTrainer is a module that allows for the training of Torch models."""
 
+import contextlib
 import copy
 import functools
 import gc
@@ -7,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from os import PathLike
 from pathlib import Path
-from typing import Annotated, Any, Literal, TypeVar
+from typing import Annotated, Any, Literal, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -18,6 +19,8 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from tqdm import tqdm
+
+from epochalyst.data import Data
 
 from ._custom_data_parallel import _CustomDataParallel
 from .training_block import TrainingBlock
@@ -60,6 +63,10 @@ class TorchTrainer(TrainingBlock):
     - `checkpointing_enabled` (bool): Whether to save checkpoints after each epoch
     - `checkpointing_keep_every` (int): Keep every i'th checkpoint (1 to keep all, 0 to keep only the last one)
     - `checkpointing_resume_if_exists` (bool): Resume training if a checkpoint exists
+
+    Parameters Precision
+    ----------
+    - `use_mixed_precision` (bool): Whether to use mixed precision for the model training
 
     Parameters Misc
     ----------
@@ -161,6 +168,7 @@ class TorchTrainer(TrainingBlock):
     criterion: nn.Module
     scheduler: Callable[[Optimizer], LRScheduler] | None = None
     dataloader_args: dict[str, Any] = field(default_factory=dict, repr=False)
+    dataset: functools.partial[Dataset[Tuple[Tensor, Tensor]]] | None = None
 
     # Training parameters
     epochs: Annotated[int, Gt(0)] = 10
@@ -172,6 +180,9 @@ class TorchTrainer(TrainingBlock):
     checkpointing_enabled: bool = field(default=True, init=True, repr=False, compare=False)
     checkpointing_keep_every: Annotated[int, Gt(0)] = field(default=0, init=True, repr=False, compare=False)
     checkpointing_resume_if_exists: bool = field(default=True, init=True, repr=False, compare=False)
+
+    # Precision
+    use_mixed_precision: bool = field(default=False)
 
     # Misc
     model_name: str | None = None  # No spaces allowed
@@ -233,6 +244,12 @@ class TorchTrainer(TrainingBlock):
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
 
+        # Mixed precision
+        if self.use_mixed_precision:
+            self.log_to_terminal("Using mixed precision training.")
+            self.scaler = torch.GradScaler(device=self.device.type)
+            torch.set_float32_matmul_precision("high")
+
         # Check validity of model_name
         if " " in self.model_name:
             raise ValueError("Spaces in model_name not allowed")
@@ -281,7 +298,7 @@ class TorchTrainer(TrainingBlock):
             self._load_model()
 
             # Return the predictions
-            return self._predict_after_train(
+            return self.predict_after_train(
                 x,
                 y,
                 train_dataset,
@@ -337,7 +354,7 @@ class TorchTrainer(TrainingBlock):
         if save_model:
             self._save_model()
 
-        return self._predict_after_train(
+        return self.predict_after_train(
             x,
             y,
             train_dataset,
@@ -346,7 +363,7 @@ class TorchTrainer(TrainingBlock):
             validation_indices,
         )
 
-    def _predict_after_train(
+    def predict_after_train(
         self,
         x: npt.NDArray[np.float32],
         y: npt.NDArray[np.float32],
@@ -448,7 +465,7 @@ class TorchTrainer(TrainingBlock):
         :param loader: The loader to predict on.
         :return: The predictions.
         """
-        self.log_to_terminal("Predicting on the validation data")
+        self.log_to_terminal("Running inference on the given dataloader")
         self.model.eval()
         predictions = []
         # Create a new dataloader from the dataset of the input dataloader with collate_fn
@@ -517,8 +534,8 @@ class TorchTrainer(TrainingBlock):
 
     def create_datasets(
         self,
-        x: npt.NDArray[np.float32],
-        y: npt.NDArray[np.float32],
+        x: npt.NDArray[np.float32] | Data,
+        y: npt.NDArray[np.float32] | Data,
         train_indices: list[int],
         validation_indices: list[int],
     ) -> tuple[Dataset[tuple[Tensor, ...]], Dataset[tuple[Tensor, ...]]]:
@@ -530,27 +547,31 @@ class TorchTrainer(TrainingBlock):
         :param validation_indices: The indices to validate on.
         :return: The training and validation datasets.
         """
-        train_dataset = TensorDataset(
-            torch.from_numpy(x[train_indices]),
-            torch.from_numpy(y[train_indices]),
-        )
-        validation_dataset = TensorDataset(
-            torch.from_numpy(x[validation_indices]),
-            torch.from_numpy(y[validation_indices]),
-        )
+        if self.dataset is None:
+            train_dataset = TensorDataset(
+                torch.from_numpy(x[train_indices]),
+                torch.from_numpy(y[train_indices]),
+            )
+            validation_dataset = TensorDataset(
+                torch.from_numpy(x[validation_indices]),
+                torch.from_numpy(y[validation_indices]),
+            )
+            return train_dataset, validation_dataset
 
-        return train_dataset, validation_dataset
+        return self.dataset(x[train_indices], y[train_indices]), self.dataset(x[validation_indices], y[validation_indices])
 
     def create_prediction_dataset(
         self,
-        x: npt.NDArray[np.float32],
+        x: npt.NDArray[np.float32] | Data,
     ) -> Dataset[tuple[Tensor, ...]]:
         """Create the prediction dataset.
 
         :param x: The input data.
         :return: The prediction dataset.
         """
-        return TensorDataset(torch.from_numpy(x))
+        if self.dataset is None:
+            return TensorDataset(torch.from_numpy(x))
+        return self.dataset(x)
 
     def create_dataloaders(
         self,
@@ -615,7 +636,7 @@ class TorchTrainer(TrainingBlock):
 
         for epoch in range(start_epoch, self.epochs):
             # Train using train_loader
-            train_loss = self._train_one_epoch(train_loader, epoch)
+            train_loss = self.train_one_epoch(train_loader, epoch)
             self.log_to_debug(f"Epoch {epoch} Train Loss: {train_loss}")
             train_losses.append(train_loss)
 
@@ -642,7 +663,7 @@ class TorchTrainer(TrainingBlock):
 
             # Compute validation loss
             if len(validation_loader) > 0:
-                self.last_val_loss = self._val_one_epoch(
+                self.last_val_loss = self.val_one_epoch(
                     validation_loader,
                     desc=f"Epoch {epoch} Valid",
                 )
@@ -681,7 +702,7 @@ class TorchTrainer(TrainingBlock):
             # Log the trained epochs to wandb if we finished training
             self.log_to_external(message={self.wrap_log(f"Epochs{fold_no}"): epoch + 1})
 
-    def _train_one_epoch(
+    def train_one_epoch(
         self,
         dataloader: DataLoader[tuple[Tensor, ...]],
         epoch: int,
@@ -706,13 +727,19 @@ class TorchTrainer(TrainingBlock):
             y_batch = batch_to_device(y_batch, self.y_tensor_type, self.device)
 
             # Forward pass
-            y_pred = self.model(X_batch).squeeze(1)
-            loss = self.criterion(y_pred, y_batch)
+            with torch.autocast(self.device.type) if self.use_mixed_precision else contextlib.nullcontext():  # type: ignore[attr-defined]
+                y_pred = self.model(X_batch).squeeze(1)
+                loss = self.criterion(y_pred, y_batch)
 
             # Backward pass
             self.initialized_optimizer.zero_grad()
-            loss.backward()
-            self.initialized_optimizer.step()
+            if self.use_mixed_precision:
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.initialized_optimizer)
+                self.scaler.update()
+            else:
+                loss.backward()
+                self.initialized_optimizer.step()
 
             # Print tqdm
             losses.append(loss.item())
@@ -724,7 +751,7 @@ class TorchTrainer(TrainingBlock):
 
         return sum(losses) / len(losses)
 
-    def _val_one_epoch(
+    def val_one_epoch(
         self,
         dataloader: DataLoader[tuple[Tensor, ...]],
         desc: str,

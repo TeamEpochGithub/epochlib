@@ -1,6 +1,11 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
+- family-names: "Selm"
+  name-particle: "van"
+  given-names: "Jasper"
+  affiliation: "TU Delft Dream Team Epoch"
+  email: "jmvanselm@gmail.com"
 - family-names: "Lim"
   given-names: "Jeffrey"
   affiliation: "TU Delft Dream Team Epoch"
@@ -18,11 +23,6 @@ authors:
   given-names: "Cahit Tolga"
   affiliation: "TU Delft Dream Team Epoch"
   email: "cahittolgakopar@gmail.com"
-- family-names: "Selm"
-  name-particle: "van"
-  given-names: "Jasper"
-  affiliation: "TU Delft Dream Team Epoch"
-  email: "jmvanselm@gmail.com"
 - family-names: "Ebersberger"
   given-names: "Ariel"
   affiliation: "TU Delft Dream Team Epoch"
