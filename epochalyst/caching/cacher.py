@@ -77,6 +77,7 @@ class CacheArgs(TypedDict):
 
 
 LoaderFunction = Callable[[str, Path, str, Any], Any]
+StoreFunction = Callable[[str, Path, Any, str, Any], Any]
 
 
 class Cacher(Logger):
@@ -283,7 +284,7 @@ class Cacher(Logger):
         output_data_type = cache_args["output_data_type"]
         store_args = cache_args.get("store_args", {})
 
-        store_functions: Dict[str, LoaderFunction] = {
+        store_functions: Dict[str, StoreFunction] = {
             ".npy": self._store_npy,
             ".parquet": self._store_parquet,
             ".csv": self._store_csv,
@@ -355,7 +356,7 @@ class Cacher(Logger):
         else:
             raise ValueError("output_data_type must be dask_array")
 
-    def _store_pkl(self, name: str, storage_path: Path, data: Any, output_data_type: str, store_args: Any) -> None:  # noqa: ANN401
+    def _store_pkl(self, name: str, storage_path: Path, data: Any, _output_data_type: str, store_args: Any) -> None:  # noqa: ANN401
         file_path = storage_path / f"{name}.pkl"
         self.log_to_debug(f"Storing pickle file to {file_path}")
         with open(file_path, "wb") as f:
