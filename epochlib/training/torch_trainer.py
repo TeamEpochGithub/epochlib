@@ -20,7 +20,7 @@ from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from tqdm import tqdm
 
-from epochalyst.data import Data
+from epochlib.data import Data
 
 from ._custom_data_parallel import _CustomDataParallel
 from .training_block import TrainingBlock
@@ -134,7 +134,7 @@ class TorchTrainer(TrainingBlock):
 
     Usage:
     .. code-block:: python
-        from epochalyst.pipeline.model.training.torch_trainer import TorchTrainer
+        from epochlib.pipeline.model.training.torch_trainer import TorchTrainer
         from torch import nn
         from torch.optim import Adam
         from torch.optim.lr_scheduler import StepLR

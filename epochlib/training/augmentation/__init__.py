@@ -1,7 +1,7 @@
 """Module containing implementation for augmentations."""
 
-from epochalyst.training.augmentation.image_augmentations import CutMix, MixUp
-from epochalyst.training.augmentation.time_series_augmentations import (
+from epochlib.training.augmentation.image_augmentations import CutMix, MixUp
+from epochlib.training.augmentation.time_series_augmentations import (
     AddBackgroundNoiseWrapper,
     CutMix1D,
     EnergyCutmix,

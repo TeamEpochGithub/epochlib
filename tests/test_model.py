@@ -3,9 +3,9 @@ from typing import Any
 import numpy as np
 import pytest
 
-from epochalyst import ModelPipeline
-from epochalyst.transformation import TransformationPipeline
-from epochalyst.transformation import TransformationBlock
+from epochlib import ModelPipeline
+from epochlib.transformation import TransformationPipeline
+from epochlib.transformation import TransformationBlock
 from tests.constants import TEMP_DIR
 
 

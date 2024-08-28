@@ -4,9 +4,9 @@ import functools
 import time
 from dataclasses import dataclass
 
-from epochalyst.training._custom_data_parallel import _CustomDataParallel
+from epochlib.training._custom_data_parallel import _CustomDataParallel
 
-from epochalyst.training.torch_trainer import custom_collate
+from epochlib.training.torch_trainer import custom_collate
 from typing import Any
 from unittest.mock import patch
 
@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 import torch
 
-from epochalyst.training.torch_trainer import TorchTrainer
+from epochlib.training.torch_trainer import TorchTrainer
 from tests.constants import TEMP_DIR
 
 

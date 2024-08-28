@@ -7,9 +7,9 @@ from typing import Any, Callable, Tuple, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from epochalyst.data.enum_data_format import Data, DataRetrieval
-from epochalyst.training.training import TrainingPipeline
-from epochalyst.training.training_block import TrainingBlock
+from epochlib.data.enum_data_format import Data, DataRetrieval
+from epochlib.training.training import TrainingPipeline
+from epochlib.training.training_block import TrainingBlock
 
 try:
     from torch.utils.data import Dataset

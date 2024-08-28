@@ -1,4 +1,4 @@
-"""Caching module for epochalyst."""
+"""Caching module for epochlib."""
 
 from .cacher import CacheArgs, Cacher
 

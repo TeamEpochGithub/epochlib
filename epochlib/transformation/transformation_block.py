@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.transforming import Transformer
 
-from epochalyst.caching.cacher import CacheArgs, Cacher
+from epochlib.caching.cacher import CacheArgs, Cacher
 
 
 class TransformationBlock(Transformer, Cacher):
@@ -36,7 +36,7 @@ class TransformationBlock(Transformer, Cacher):
 
     Usage:
     .. code-block:: python
-        from epochalyst.pipeline.model.transformation.transformation_block import TransformationBlock
+        from epochlib.pipeline.model.transformation.transformation_block import TransformationBlock
 
         class CustomTransformationBlock(TransformationBlock):
             def custom_transform(self, data: Any) -> Any:
