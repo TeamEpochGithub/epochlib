@@ -3,9 +3,8 @@
 from abc import abstractmethod
 from typing import Any
 
-from agogos.training import Trainer
-
 from epochlib.caching import CacheArgs, Cacher
+from epochlib.pipeline import Trainer
 
 
 class TrainingBlock(Trainer, Cacher):

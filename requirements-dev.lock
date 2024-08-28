@@ -12,8 +12,6 @@
 --index-url https://pypi.org/simple/
 
 -e file:.
-agogos==0.4
-    # via epochlib
 alabaster==0.7.16
     # via sphinx
 annotated-types==0.7.0
@@ -90,7 +88,6 @@ jinja2==3.1.4
     # via sphinx
     # via torch
 joblib==1.4.2
-    # via agogos
     # via epochlib
     # via librosa
     # via scikit-learn

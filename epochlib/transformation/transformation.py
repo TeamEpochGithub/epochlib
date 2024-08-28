@@ -3,9 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from agogos.transforming import TransformingSystem, TransformType
-
 from epochlib.caching.cacher import CacheArgs, Cacher
+from epochlib.pipeline import TransformingSystem, TransformType
 
 
 @dataclass

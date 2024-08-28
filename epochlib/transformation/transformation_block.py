@@ -3,9 +3,8 @@
 from abc import abstractmethod
 from typing import Any
 
-from agogos.transforming import Transformer
-
 from epochlib.caching.cacher import CacheArgs, Cacher
+from epochlib.pipeline import Transformer
 
 
 class TransformationBlock(Transformer, Cacher):

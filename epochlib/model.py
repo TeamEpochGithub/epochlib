@@ -2,13 +2,12 @@
 
 from typing import Any
 
-from agogos.training import Pipeline
-
 from epochlib.caching import CacheArgs
+from epochlib.pipeline import Pipeline
 
 
 class ModelPipeline(Pipeline):
-    """ModelPipeline is the class used to create the pipeline for the model. (Currently same implementation as agogos pipeline).
+    """ModelPipeline is the class used to create the pipeline for the model.
 
     :param x_sys: The system to transform the input data.
     :param y_sys: The system to transform the label data.

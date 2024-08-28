@@ -3,9 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from agogos.training import TrainingSystem, TrainType
-
 from epochlib.caching import CacheArgs, Cacher
+from epochlib.pipeline import TrainingSystem, TrainType
 
 
 @dataclass

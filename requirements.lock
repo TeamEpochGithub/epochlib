@@ -12,8 +12,6 @@
 --index-url https://pypi.org/simple/
 
 -e file:.
-agogos==0.4
-    # via epochlib
 annotated-types==0.7.0
     # via epochlib
 audiomentations==0.36.0
@@ -63,7 +61,6 @@ importlib-metadata==7.2.1
 jinja2==3.1.4
     # via torch
 joblib==1.4.2
-    # via agogos
     # via epochlib
     # via librosa
     # via scikit-learn

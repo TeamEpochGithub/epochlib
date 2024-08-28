@@ -2,13 +2,12 @@
 
 from typing import Any
 
-from agogos.training import ParallelTrainingSystem
-
 from epochlib.caching import CacheArgs
+from epochlib.pipeline import ParallelTrainingSystem
 
 
 class EnsemblePipeline(ParallelTrainingSystem):
-    """EnsemblePipeline is the class used to create the pipeline for the model. (Currently same implementation as agogos pipeline).
+    """EnsemblePipeline is the class used to create the pipeline for the model.
 
     :param steps: Trainers to ensemble
     """
