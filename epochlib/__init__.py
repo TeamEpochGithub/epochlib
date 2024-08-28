@@ -1,4 +1,4 @@
-"""The epochalyst package."""
+"""The epochlib package."""
 
 from .ensemble import EnsemblePipeline
 from .model import ModelPipeline

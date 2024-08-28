@@ -1,6 +1,6 @@
 import torch
 
-from epochalyst.training.models import Timm
+from epochlib.training.models import Timm
 from torch import nn
 
 

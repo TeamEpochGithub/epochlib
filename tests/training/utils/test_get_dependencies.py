@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from epochalyst.training.utils import _get_openvino, _get_onnxrt
+from epochlib.training.utils import _get_openvino, _get_onnxrt
 
 
 class TestGetDependencies:

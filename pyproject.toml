@@ -1,5 +1,5 @@
 [project]
-name = "epochalyst"
+name = "epochlib"
 version = "4.1.0"
 authors = [
     { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
@@ -12,7 +12,7 @@ authors = [
     { name = "Kristóf Sandor", email = "emherk512@gmail.com"},
     { name = "Daniel De Dios Allegue", email = "danieldediosallegue@gmail.com"}
 ]
-description = "Epochalyst is the base for Team Epoch competitions."
+description = "Epoch Libraries is the base for Team Epoch competitions."
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
@@ -65,11 +65,11 @@ audio = [
 
 [project.urls]
 Homepage = "https://teamepoch.ai/"
-Documentation = "https://TeamEpochGithub.github.io/epochalyst/"
-Repository = "https://github.com/TeamEpochGithub/epochalyst"
-Download = "https://pypi.org/project/epochalyst/#files"
-Issues = "https://github.com/TeamEpochGithub/epochalyst/issues"
-"Release notes" = "https://github.com/TeamEpochGithub/epochalyst/releases"
+Documentation = "https://TeamEpochGithub.github.io/epochlib/"
+Repository = "https://github.com/TeamEpochGithub/epochlib"
+Download = "https://pypi.org/project/epochlib/#files"
+Issues = "https://github.com/TeamEpochGithub/epochlib/issues"
+"Release notes" = "https://github.com/TeamEpochGithub/epochlib/releases"
 
 [tool.rye]
 managed = true
@@ -93,7 +93,7 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["epochalyst"]
+packages = ["epochlib"]
 
 [tool.pydoclint]
 style = "sphinx"

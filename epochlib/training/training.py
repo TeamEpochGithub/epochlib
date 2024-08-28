@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.training import TrainingSystem, TrainType
 
-from epochalyst.caching import CacheArgs, Cacher
+from epochlib.caching import CacheArgs, Cacher
 
 
 @dataclass

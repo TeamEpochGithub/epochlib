@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.training import Trainer
 
-from epochalyst.caching import CacheArgs, Cacher
+from epochlib.caching import CacheArgs, Cacher
 
 
 class TrainingBlock(Trainer, Cacher):
@@ -41,7 +41,7 @@ class TrainingBlock(Trainer, Cacher):
 
     Usage:
     .. code-block:: python
-        from epochalyst.pipeline.model.training.training_block import TrainingBlock
+        from epochlib.pipeline.model.training.training_block import TrainingBlock
 
         class CustomTrainingBlock(TrainingBlock):
             def custom_train(self, x: Any, y: Any) -> tuple[Any, Any]:

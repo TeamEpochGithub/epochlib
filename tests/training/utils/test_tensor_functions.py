@@ -1,5 +1,5 @@
 from unittest import TestCase
-from epochalyst.training.utils import batch_to_device
+from epochlib.training.utils import batch_to_device
 from torch import Tensor
 
 

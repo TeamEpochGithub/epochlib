@@ -9,11 +9,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Final
 
-REPO_URL: Final[str] = "https://github.com/TeamEpochGithub/epochalyst"
+REPO_URL: Final[str] = "https://github.com/TeamEpochGithub/epochlib"
 
 sys.path.insert(0, Path("../..").resolve().as_posix())
 
-project: Final[str] = "Epochalyst"
+project: Final[str] = "EpochLib"
 copyright: Final[str] = "2024, Team Epoch."  # noqa: A001
 author: Final[str] = "Team Epoch"
 

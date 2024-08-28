@@ -4,7 +4,7 @@ from typing import Any
 
 from agogos.training import ParallelTrainingSystem
 
-from epochalyst.caching import CacheArgs
+from epochlib.caching import CacheArgs
 
 
 class EnsemblePipeline(ParallelTrainingSystem):

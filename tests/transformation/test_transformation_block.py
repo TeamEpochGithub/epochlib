@@ -6,7 +6,7 @@ from unittest import mock
 import numpy as np
 import pytest
 
-from epochalyst.transformation import TransformationBlock
+from epochlib.transformation import TransformationBlock
 
 TEMP_DIR = Path("tests/temp")
 

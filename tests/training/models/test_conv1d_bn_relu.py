@@ -1,7 +1,7 @@
 import torch
 from unittest import TestCase
 
-from epochalyst.training.models import Conv1dBnRelu
+from epochlib.training.models import Conv1dBnRelu
 
 
 class TestConv1dBnRelu(TestCase):
