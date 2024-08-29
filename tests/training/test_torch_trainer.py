@@ -4,9 +4,9 @@ import functools
 import time
 from dataclasses import dataclass
 
-from epochalyst.training._custom_data_parallel import _CustomDataParallel
+from epochlib.training._custom_data_parallel import _CustomDataParallel
 
-from epochalyst.training.torch_trainer import custom_collate
+from epochlib.training.torch_trainer import custom_collate
 from typing import Any
 from unittest.mock import patch
 
@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 import torch
 
-from epochalyst.training.torch_trainer import TorchTrainer
+from epochlib.training.torch_trainer import TorchTrainer
 from tests.constants import TEMP_DIR
 
 
@@ -76,6 +76,26 @@ class TestTorchTrainer:
                 optimizer=None,
                 device=None,
                 n_folds=1,
+            )
+
+    def test_model_name_none(self):
+        with pytest.raises(ValueError):
+            TorchTrainer(
+                model=self.simple_model,
+                criterion=torch.nn.MSELoss(),
+                optimizer=self.optimizer,
+                n_folds=0,
+                model_name=None,
+            )
+
+    def test_model_name_invalid(self):
+        with pytest.raises(ValueError):
+            TorchTrainer(
+                model=self.simple_model,
+                criterion=torch.nn.MSELoss(),
+                optimizer=self.optimizer,
+                n_folds=0,
+                model_name=" ",
             )
 
     def test_init_not_implemented(self):
