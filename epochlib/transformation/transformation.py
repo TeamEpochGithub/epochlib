@@ -5,7 +5,7 @@ from typing import Any
 
 from agogos.transforming import TransformingSystem, TransformType
 
-from epochalyst.caching.cacher import CacheArgs, Cacher
+from epochlib.caching.cacher import CacheArgs, Cacher
 
 
 @dataclass
@@ -43,7 +43,7 @@ class TransformationPipeline(TransformingSystem, Cacher):
 
     Usage:
     .. code-block:: python
-        from epochalyst.pipeline.model.transformation import TransformationPipeline
+        from epochlib.pipeline.model.transformation import TransformationPipeline
 
         class MyTransformationPipeline(TransformationPipeline):
             def log_to_terminal(self, message: str) -> None:

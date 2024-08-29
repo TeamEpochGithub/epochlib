@@ -1,4 +1,4 @@
-"""Module containing training functionality for the epochalyst package."""
+"""Module containing training functionality for the epochlib package."""
 
 from .pretrain_block import PretrainBlock
 from .torch_trainer import TorchTrainer, TrainValidationDataset

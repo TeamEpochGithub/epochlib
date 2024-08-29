@@ -34,7 +34,7 @@ class PretrainBlock(TrainingBlock):
 
     Usage:
     .. code-block:: python
-        from epochalyst.pipeline.model.training.pretrain_block import PretrainBlock
+        from epochlib.pipeline.model.training.pretrain_block import PretrainBlock
 
 
         class CustomPretrainBlock(PretrainBlock):

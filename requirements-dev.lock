@@ -13,13 +13,13 @@
 
 -e file:.
 agogos==0.4
-    # via epochalyst
+    # via epochlib
 alabaster==0.7.16
     # via sphinx
 annotated-types==0.7.0
-    # via epochalyst
+    # via epochlib
 audiomentations==0.36.0
-    # via epochalyst
+    # via epochlib
 audioread==3.0.1
     # via librosa
 babel==2.15.0
@@ -47,10 +47,10 @@ coverage==7.5.4
     # via pytest-cov
 dask==2024.6.2
     # via dask-expr
-    # via epochalyst
+    # via epochlib
 dask-expr==1.1.6
     # via dask
-    # via epochalyst
+    # via epochlib
 decorator==5.1.1
     # via librosa
 distlib==0.3.8
@@ -91,11 +91,11 @@ jinja2==3.1.4
     # via torch
 joblib==1.4.2
     # via agogos
-    # via epochalyst
+    # via epochlib
     # via librosa
     # via scikit-learn
 kornia==0.7.2
-    # via epochalyst
+    # via epochlib
 kornia-rs==0.1.3
     # via kornia
 lazy-loader==0.4
@@ -133,7 +133,7 @@ numpy==1.26.4
     # via audiomentations
     # via bottleneck
     # via dask
-    # via epochalyst
+    # via epochlib
     # via librosa
     # via numba
     # via numexpr
@@ -175,11 +175,11 @@ nvidia-nvjitlink-cu12==12.5.40
 nvidia-nvtx-cu12==12.1.105
     # via torch
 onnx==1.16.1
-    # via epochalyst
+    # via epochlib
 onnxruntime==1.18.0
-    # via epochalyst
+    # via epochlib
 openvino==2024.2.0
-    # via epochalyst
+    # via epochlib
 openvino-telemetry==2024.1.0
     # via openvino
 packaging==24.1
@@ -195,7 +195,7 @@ packaging==24.1
 pandas==2.2.2
     # via dask
     # via dask-expr
-    # via epochalyst
+    # via epochlib
 partd==1.4.2
     # via dask
 pillow==10.3.0
@@ -206,7 +206,7 @@ platformdirs==4.2.2
 pluggy==1.5.0
     # via pytest
 polars==0.20.31
-    # via epochalyst
+    # via epochlib
 pooch==1.8.2
     # via librosa
 pre-commit==3.7.1
@@ -281,7 +281,7 @@ sympy==1.12.1
 threadpoolctl==3.5.0
     # via scikit-learn
 timm==1.0.7
-    # via epochalyst
+    # via epochlib
 tomli==2.0.1
     # via coverage
     # via pytest
@@ -290,7 +290,7 @@ toolz==0.12.1
     # via dask
     # via partd
 torch==2.3.1
-    # via epochalyst
+    # via epochlib
     # via kornia
     # via timm
     # via torchvision
@@ -301,7 +301,7 @@ tqdm==4.66.4
 triton==2.3.1
     # via torch
 typing-extensions==4.12.2
-    # via epochalyst
+    # via epochlib
     # via huggingface-hub
     # via librosa
     # via torch

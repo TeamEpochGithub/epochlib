@@ -1,6 +1,6 @@
 import torch
 
-from epochalyst.training.augmentation import utils
+from epochlib.training.augmentation import utils
 
 
 def set_torch_seed(seed: int = 42) -> None:

@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from agogos.training import Trainer
 
-from epochalyst.training import TrainingPipeline
-from epochalyst.training import TrainingBlock
+from epochlib.training import TrainingPipeline
+from epochlib.training import TrainingBlock
 from tests.constants import TEMP_DIR
 
 

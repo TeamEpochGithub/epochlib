@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Literal, TypedDict
 
 import numpy as np
 
-from epochalyst.logging import Logger
+from epochlib.logging import Logger
 
 try:
     import dask.array as da
