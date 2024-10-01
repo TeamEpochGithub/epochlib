@@ -1,7 +1,7 @@
 sphinx==8.0.2
-sphinx-autodoc-typehints==2.2.3
+sphinx-autodoc-typehints==2.4.4
 sphinxawesome-theme==5.2.0
-myst-parser==3.0.1
+myst-parser==4.0.0
 pygit2==1.15.1
 agogos==0.4.0
-torch==2.4.0
+torch==2.4.1
