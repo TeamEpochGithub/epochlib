@@ -1,6 +1,6 @@
 [project]
-name = "epochalyst"
-version = "4.0"
+name = "epochlib"
+version = "4.1.0"
 authors = [
     { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
     { name = "Ariel Ebersberger", email = "arielebersberger@gmail.com" },
@@ -12,7 +12,7 @@ authors = [
     { name = "Kristóf Sandor", email = "emherk512@gmail.com"},
     { name = "Daniel De Dios Allegue", email = "danieldediosallegue@gmail.com"}
 ]
-description = "Epochalyst is the base for Team Epoch competitions."
+description = "Epoch Libraries is the base for Team Epoch competitions."
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
@@ -34,15 +34,13 @@ dependencies = [
     "joblib>=1.4.0",
     "annotated-types>=0.6.0",
     "typing-extensions>=4.9.0; python_version<'3.12'",
+    "numpy>= 1.22.4, < 3",
 ]
 
 [project.optional-dependencies]
 image = [
     "kornia>=0.7.2",
     "timm>=0.9.16",
-]
-numpy = [
-    "numpy>=1.22.4, < 2",
 ]
 pandas = [
     "pandas[performance, parquet]>=2.0.0",
@@ -67,18 +65,18 @@ audio = [
 
 [project.urls]
 Homepage = "https://teamepoch.ai/"
-Documentation = "https://TeamEpochGithub.github.io/epochalyst/"
-Repository = "https://github.com/TeamEpochGithub/epochalyst"
-Download = "https://pypi.org/project/epochalyst/#files"
-Issues = "https://github.com/TeamEpochGithub/epochalyst/issues"
-"Release notes" = "https://github.com/TeamEpochGithub/epochalyst/releases"
+Documentation = "https://TeamEpochGithub.github.io/epochlib/"
+Repository = "https://github.com/TeamEpochGithub/epochlib"
+Download = "https://pypi.org/project/epochlib/#files"
+Issues = "https://github.com/TeamEpochGithub/epochlib/issues"
+"Release notes" = "https://github.com/TeamEpochGithub/epochlib/releases"
 
 [tool.rye]
 managed = true
 lock-with-sources = true
 dev-dependencies = [
     "pre-commit>=3.7.1",
-    "pytest>=8.1.1",
+    "pytest>=8.3.2",
     "pytest-cov>=5.0.0",
     "sphinx>=7.2.6",
     "sphinx-autodoc-typehints>=2.0.0",
@@ -95,7 +93,7 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["epochalyst"]
+packages = ["epochlib"]
 
 [tool.pydoclint]
 style = "sphinx"
