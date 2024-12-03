@@ -1,0 +1,35 @@
+name: Retarget Dependabot PR
+
+on:
+  pull_request:
+    branches:
+      - dependabot-updates
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  retarget:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get all branches
+        run: |
+          git fetch --all
+          git branch -r > branches.txt
+          cat branches.txt
+
+      - name: Find the lowest version branch
+        id: find_branch
+        run: |
+          lowest_branch=$(grep -o 'origin/v[0-9]*\.[0-9]*' branches.txt | sort -V | head -n 1 | sed 's/origin\///')
+          echo "lowest_branch=$lowest_branch" >> $GITHUB_ENV
+
+      - name: Retarget PR to lowest version branch
+        if: success()
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --base ${{ env.lowest_branch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

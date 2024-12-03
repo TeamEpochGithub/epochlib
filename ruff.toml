@@ -72,6 +72,19 @@ external = [
     # Pylint (PL), Refactor (R)
     "PLR2004", # Magic values in comparison allowed in tests
 ]
+"test_*.py" = [
+    # flake8-bandit (S)
+    "S101", # Asserts allowed in tests
+    # flake8-pytest-style (PT)
+    "PT009",  # Use a regular assert instead of unittest-style {assertion}
+    # Pylint (PL), Refactor (R)
+    "PLR2004", # Magic values in comparison allowed in tests
+    #
+    # "ANN201", # Missing return value allowed in tests
+    "D100", # Docstring methods
+    "D101",
+    "D102",
+]
 
 [lint.flake8-annotations]
 allow-star-arg-any = true
