@@ -142,11 +142,7 @@ class TrainingSystem(TrainType, SequentialSystem):
 
         if set_of_steps != set(train_args.keys()):
             # Raise a warning and print all the keys that do not match
-            warnings.warn(
-                f"The following steps do not exist but were given in the kwargs: {set(train_args.keys()) - set_of_steps}",
-                UserWarning,
-                stacklevel=2
-            )
+            warnings.warn(f"The following steps do not exist but were given in the kwargs: {set(train_args.keys()) - set_of_steps}", UserWarning, stacklevel=2)
 
         # Loop through each step and call the train method
         for step in self.steps:
@@ -173,11 +169,7 @@ class TrainingSystem(TrainType, SequentialSystem):
 
         if set_of_steps != set(pred_args.keys()):
             # Raise a warning and print all the keys that do not match
-            warnings.warn(
-                f"The following steps do not exist but were given in the kwargs: {set(pred_args.keys()) - set_of_steps}",
-                UserWarning,
-                stacklevel=2
-            )
+            warnings.warn(f"The following steps do not exist but were given in the kwargs: {set(pred_args.keys()) - set_of_steps}", UserWarning, stacklevel=2)
 
         # Loop through each step and call the predict method
         for step in self.steps:
