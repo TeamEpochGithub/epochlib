@@ -182,8 +182,6 @@ class ParallelSystem(Base):
 
         :return: List of steps
         """
-        if self.steps is None:
-            return []
         return self.steps
 
     def get_weights(self) -> list[float]:
@@ -272,8 +270,6 @@ class SequentialSystem(Base):
 
         :return: List of steps
         """
-        if self.steps is None:
-            return []
         return self.steps
 
     def set_hash(self, prev_hash: str) -> None:
