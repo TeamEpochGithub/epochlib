@@ -34,7 +34,7 @@ class EnsemblePipeline(ParallelTrainingSystem):
 
         return all(step.get_y_cache_exists(cache_args) for step in self.steps)
 
-    def concat(self, original_data: Any, data_to_concat: Any, weight: float = 1.0) -> Any:  # noqa: ANN401
+    def concat(self, original_data: Any, data_to_concat: Any, weight: float = 1.0) -> Any:
         """Concatenate the trained data.
 
         :param original_data: First input data

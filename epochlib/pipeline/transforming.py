@@ -116,7 +116,7 @@ class TransformingSystem(TransformType, SequentialSystem):
             set_of_steps.add(step_name)
         if set_of_steps != set(transform_args.keys()):
             # Raise a warning and print all the keys that do not match
-            warnings.warn(f"The following steps do not exist but were given in the kwargs: {set(transform_args.keys()) - set_of_steps}")
+            warnings.warn(f"The following steps do not exist but were given in the kwargs: {set(transform_args.keys()) - set_of_steps}", stacklevel=2)
 
         # Loop through each step and call the transform method
         for step in self.steps:

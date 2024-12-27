@@ -145,6 +145,7 @@ class TrainingSystem(TrainType, SequentialSystem):
             warnings.warn(
                 f"The following steps do not exist but were given in the kwargs: {set(train_args.keys()) - set_of_steps}",
                 UserWarning,
+                stacklevel=2
             )
 
         # Loop through each step and call the train method
@@ -175,6 +176,7 @@ class TrainingSystem(TrainType, SequentialSystem):
             warnings.warn(
                 f"The following steps do not exist but were given in the kwargs: {set(pred_args.keys()) - set_of_steps}",
                 UserWarning,
+                stacklevel=2
             )
 
         # Loop through each step and call the predict method
