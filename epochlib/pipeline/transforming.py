@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 from typing import Any
 
-from epochlib.pipeline import Base, Block, ParallelSystem, SequentialSystem
+from .core import Base, Block, ParallelSystem, SequentialSystem
 
 
 class TransformType(Base):

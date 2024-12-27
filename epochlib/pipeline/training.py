@@ -8,7 +8,8 @@ from typing import Any
 
 from joblib import hash
 
-from epochlib.pipeline import Base, Block, ParallelSystem, SequentialSystem, TransformingSystem
+from .core import Base, Block, ParallelSystem, SequentialSystem
+from .transforming import TransformingSystem
 
 
 class TrainType(Base):
