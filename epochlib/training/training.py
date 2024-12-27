@@ -14,7 +14,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
     :param steps: The steps to train the model.
     """
 
-    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
+    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:
         """Train the system.
 
         :param x: The input to the system.
@@ -73,7 +73,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
 
         return x, y
 
-    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:  # noqa: ANN401
+    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:
         """Predict the output of the system.
 
         :param x: The input to the system.

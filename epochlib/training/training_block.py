@@ -57,7 +57,7 @@ class TrainingBlock(Trainer, Cacher):
         x = custom_training_block.predict(x)
     """
 
-    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
+    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:
         """Train the model.
 
         :param x: The input data.
@@ -91,7 +91,7 @@ class TrainingBlock(Trainer, Cacher):
         return x, y
 
     @abstractmethod
-    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
+    def custom_train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
         """Train the model.
 
         :param x: The input data.
@@ -102,7 +102,7 @@ class TrainingBlock(Trainer, Cacher):
             f"Custom transform method not implemented for {self.__class__}",
         )
 
-    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:  # noqa: ANN401
+    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:
         """Predict using the model.
 
         :param x: The input data.
@@ -128,7 +128,7 @@ class TrainingBlock(Trainer, Cacher):
         return x
 
     @abstractmethod
-    def custom_predict(self, x: Any, **pred_args: Any) -> Any:  # noqa: ANN401
+    def custom_predict(self, x: Any, **pred_args: Any) -> Any:
         """Predict using the model.
 
         :param x: The input data.
