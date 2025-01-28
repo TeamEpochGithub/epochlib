@@ -1,6 +1,6 @@
 .. raw:: html
 
-   <div class="epochalyst-logo"></div>
+   <div class="epochlib-logo"></div>
 
 -------------------
 
@@ -22,7 +22,7 @@ API
    :toctree: _autosummary
    :recursive:
 
-   epochalyst.epochalyst
+   epochlib.epochlib
 
 Indices and tables
 ==================

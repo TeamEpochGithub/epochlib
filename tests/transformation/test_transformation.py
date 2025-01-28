@@ -2,10 +2,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from agogos.transforming import Transformer
+from epochlib.pipeline import Transformer
 
-from epochalyst.transformation import TransformationPipeline
-from epochalyst.transformation import TransformationBlock
+from epochlib.transformation import TransformationPipeline
+from epochlib.transformation import TransformationBlock
 from tests.constants import TEMP_DIR
 
 

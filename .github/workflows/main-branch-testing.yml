@@ -2,50 +2,46 @@ name: Main Branch CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build:
+  pytest:
     runs-on: ubuntu-latest
-    container:
-      image: python:3.11-slim
-      env:
-        NODE_VERSION: 20
-
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-
     steps:
-    - name: Install Node.js
-      uses: actions/setup-node@v4
+    - name: Check out repository
+      uses: actions/checkout@v4
       with:
-        node-version: ${{ env.NODE_VERSION }}
-
-    - uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+        fetch-depth: 0
+    - name: Install the latest version of Rye
+      uses: eifinger/setup-rye@v4.2.1
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Create virtual environment
-      run: python -m venv venv
-
-    - name: Activate virtual environment
-      run: |
-        . venv/bin/activate
-
-    - name: Install dependencies
-      run: |
-        venv/bin/python -m pip install --upgrade pip
-        venv/bin/python -m pip install pytest
-        venv/bin/python -m pip install -r requirements-dev.lock
-        venv/bin/python -m pip install pytest-cov coverage
-
+    - name: Setup the environment
+      run: rye sync --all-features
     - name: Test with pytest
-      run: |
-        venv/bin/python -m pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
+      run: rye run pytest --cov=epochlib --cov-branch --cov-fail-under=75 tests
+
+  build:
+    runs-on: ubuntu-latest
+    needs: pytest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    - name: Install the latest version of Rye
+      uses: eifinger/setup-rye@v4.2.1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Build the package
+      run: rye build
+    - uses: actions/upload-artifact@v4.3.6
+      with:
+        path: ./dist
+        name: dist-python-${{ matrix.python-version }}

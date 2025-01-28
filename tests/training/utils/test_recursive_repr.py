@@ -1,4 +1,4 @@
-from epochalyst.training.utils.recursive_repr import recursive_repr
+from epochlib.training.utils.recursive_repr import recursive_repr
 
 
 class TestRecursiveRepr:

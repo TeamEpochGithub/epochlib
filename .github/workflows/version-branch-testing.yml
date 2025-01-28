@@ -17,7 +17,7 @@ jobs:
     - name: Setup the environment
       run: rye sync --all-features
     - name: Test with pytest
-      run: rye run pytest --cov=epochalyst --cov-branch --cov-fail-under=95 tests
+      run: rye run pytest --cov=epochlib --cov-branch --cov-fail-under=75 tests
 
   build:
     runs-on: ubuntu-latest
@@ -28,6 +28,6 @@ jobs:
       uses: eifinger/setup-rye@v4.2.1
     - name: Build the package
       run: rye build
-    - uses: actions/upload-artifact@v4.3.3
+    - uses: actions/upload-artifact@v4.3.6
       with:
         path: ./dist

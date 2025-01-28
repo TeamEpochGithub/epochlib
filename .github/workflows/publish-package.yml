@@ -13,7 +13,7 @@ jobs:
         uses: eifinger/setup-rye@v4.2.1
       - name: Build the package
         run: rye build
-      - uses: actions/upload-artifact@v4.3.3
+      - uses: actions/upload-artifact@v4.3.6
         with:
           path: ./dist
 
@@ -22,12 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     environment:
         name: pypi
-        url: https://pypi.org/p/epochalyst
+        url: https://pypi.org/p/epochlib
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4.1.8
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
