@@ -2,13 +2,13 @@
 
 from typing import Any
 
-from agogos.training import ParallelTrainingSystem
-
 from epochlib.caching import CacheArgs
+from epochlib.model import ModelPipeline
+from epochlib.pipeline import ParallelTrainingSystem
 
 
 class EnsemblePipeline(ParallelTrainingSystem):
-    """EnsemblePipeline is the class used to create the pipeline for the model. (Currently same implementation as agogos pipeline).
+    """EnsemblePipeline is the class used to create the pipeline for the model.
 
     :param steps: Trainers to ensemble
     """
@@ -22,7 +22,7 @@ class EnsemblePipeline(ParallelTrainingSystem):
         if len(self.steps) == 0:
             return False
 
-        return all(step.get_x_cache_exists(cache_args) for step in self.steps)
+        return all(isinstance(step, ModelPipeline) and step.get_x_cache_exists(cache_args) for step in self.steps)
 
     def get_y_cache_exists(self, cache_args: CacheArgs) -> bool:
         """Get status of y cache.
@@ -33,9 +33,9 @@ class EnsemblePipeline(ParallelTrainingSystem):
         if len(self.steps) == 0:
             return False
 
-        return all(step.get_y_cache_exists(cache_args) for step in self.steps)
+        return all(isinstance(step, ModelPipeline) and step.get_y_cache_exists(cache_args) for step in self.steps)
 
-    def concat(self, original_data: Any, data_to_concat: Any, weight: float = 1.0) -> Any:  # noqa: ANN401
+    def concat(self, original_data: Any, data_to_concat: Any, weight: float = 1.0) -> Any:
         """Concatenate the trained data.
 
         :param original_data: First input data

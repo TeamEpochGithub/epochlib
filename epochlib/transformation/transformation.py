@@ -3,9 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from agogos.transforming import TransformingSystem, TransformType
-
 from epochlib.caching.cacher import CacheArgs, Cacher
+from epochlib.pipeline import TransformingSystem, TransformType
 
 
 @dataclass
@@ -60,7 +59,7 @@ class TransformationPipeline(TransformingSystem, Cacher):
 
     title: str = "Transformation Pipeline"  # The title of the pipeline since transformation pipeline can be used for multiple purposes. (Feature, Label, etc.)
 
-    def transform(self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any) -> Any:  # noqa: ANN401
+    def transform(self, data: Any, cache_args: CacheArgs | None = None, **transform_args: Any) -> Any:
         """Transform the input data.
 
         :param data: The input data.
@@ -81,7 +80,7 @@ class TransformationPipeline(TransformingSystem, Cacher):
         # Furthest step
         for i, step in enumerate(self.get_steps()):
             # Check if step is instance of Cacher and if cache_args exists
-            if not isinstance(step, Cacher) or not isinstance(step, TransformType):
+            if not isinstance(step, TransformType) or not isinstance(step, Cacher):
                 self.log_to_debug(f"{step} is not instance of Cacher or TransformType")
                 continue
 

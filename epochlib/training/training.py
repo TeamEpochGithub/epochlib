@@ -3,9 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from agogos.training import TrainingSystem, TrainType
-
 from epochlib.caching import CacheArgs, Cacher
+from epochlib.pipeline import TrainingSystem, TrainType
 
 
 @dataclass
@@ -15,7 +14,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
     :param steps: The steps to train the model.
     """
 
-    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:  # noqa: ANN401
+    def train(self, x: Any, y: Any, cache_args: CacheArgs | None = None, **train_args: Any) -> tuple[Any, Any]:
         """Train the system.
 
         :param x: The input to the system.
@@ -38,7 +37,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
         # Furthest step
         for i, step in enumerate(self.get_steps()):
             # Check if step is instance of Cacher and if cache_args exists
-            if not isinstance(step, Cacher) or not isinstance(step, TrainType):
+            if not isinstance(step, TrainType) or not isinstance(step, Cacher):
                 self.log_to_debug(f"{step} is not instance of Cacher or TrainType")
                 continue
 
@@ -74,7 +73,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
 
         return x, y
 
-    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:  # noqa: ANN401
+    def predict(self, x: Any, cache_args: CacheArgs | None = None, **pred_args: Any) -> Any:
         """Predict the output of the system.
 
         :param x: The input to the system.
@@ -92,7 +91,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
         # Retrieve furthest step calculated
         for i, step in enumerate(self.get_steps()):
             # Check if step is instance of Cacher and if cache_args exists
-            if not isinstance(step, Cacher) or not isinstance(step, TrainType):
+            if not isinstance(step, TrainType) or not isinstance(step, Cacher):
                 self.log_to_debug(f"{step} is not instance of Cacher or TrainType")
                 continue
 
