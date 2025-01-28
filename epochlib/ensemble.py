@@ -3,6 +3,7 @@
 from typing import Any
 
 from epochlib.caching import CacheArgs
+from epochlib.model import ModelPipeline
 from epochlib.pipeline import ParallelTrainingSystem
 
 
@@ -21,7 +22,7 @@ class EnsemblePipeline(ParallelTrainingSystem):
         if len(self.steps) == 0:
             return False
 
-        return all(step.get_x_cache_exists(cache_args) for step in self.steps)
+        return all(isinstance(step, ModelPipeline) and step.get_x_cache_exists(cache_args) for step in self.steps)
 
     def get_y_cache_exists(self, cache_args: CacheArgs) -> bool:
         """Get status of y cache.
@@ -32,7 +33,7 @@ class EnsemblePipeline(ParallelTrainingSystem):
         if len(self.steps) == 0:
             return False
 
-        return all(step.get_y_cache_exists(cache_args) for step in self.steps)
+        return all(isinstance(step, ModelPipeline) and step.get_y_cache_exists(cache_args) for step in self.steps)
 
     def concat(self, original_data: Any, data_to_concat: Any, weight: float = 1.0) -> Any:
         """Concatenate the trained data.

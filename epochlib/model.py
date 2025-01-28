@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from epochlib.caching import CacheArgs
+from epochlib.caching import CacheArgs, Cacher
 from epochlib.pipeline import Pipeline
 
 
@@ -46,7 +46,7 @@ class ModelPipeline(Pipeline):
         :param cache_args: Cache arguments
         :return: Whether cache exists
         """
-        if self.x_sys is None:
+        if self.x_sys is None or not isinstance(self.x_sys, Cacher):
             return False
         return self.x_sys.cache_exists(self.x_sys.get_hash(), cache_args)
 
@@ -56,7 +56,7 @@ class ModelPipeline(Pipeline):
         :param cache_args: Cache arguments
         :return: Whether cache exists
         """
-        if self.y_sys is None:
+        if self.y_sys is None or not isinstance(self.y_sys, Cacher):
             return False
 
         return self.y_sys.cache_exists(self.y_sys.get_hash(), cache_args)

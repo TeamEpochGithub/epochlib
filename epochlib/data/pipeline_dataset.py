@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Callable, Tuple, TypeVar
+from typing import Any, Callable, Sequence, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -43,7 +43,7 @@ class PipelineDataset(Dataset[Tuple[T, T]]):
 
     retrieval: list[str] | None = None
     retrieval_type: DataRetrieval | None = None
-    steps: list[TrainingBlock] | None = None
+    steps: Sequence[TrainingBlock] | None = None
     result_formatter: Callable[[Any], Any] = lambda a: a
 
     def __post_init__(self) -> None:
@@ -77,10 +77,12 @@ class PipelineDataset(Dataset[Tuple[T, T]]):
 
         :param use_augmentations: Whether to use augmentations while passing data through pipeline
         """
-        self._enabled_steps: list[TrainingBlock] = []
+        self._enabled_steps: Sequence[TrainingBlock] = []
 
         if self.steps is not None:
             for step in self.steps:
+                if not hasattr(step, "is_augmentation"):
+                    continue
                 if (step.is_augmentation and use_augmentations) or not step.is_augmentation:
                     self._enabled_steps.append(step)
 

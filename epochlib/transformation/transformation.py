@@ -80,7 +80,7 @@ class TransformationPipeline(TransformingSystem, Cacher):
         # Furthest step
         for i, step in enumerate(self.get_steps()):
             # Check if step is instance of Cacher and if cache_args exists
-            if not isinstance(step, Cacher) or not isinstance(step, TransformType):
+            if not isinstance(step, TransformType) or not isinstance(step, Cacher):
                 self.log_to_debug(f"{step} is not instance of Cacher or TransformType")
                 continue
 

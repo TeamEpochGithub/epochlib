@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from joblib import hash
 
@@ -54,7 +54,7 @@ class Base:
         """
         return self._parent
 
-    def get_children(self) -> list[Any]:
+    def get_children(self) -> Sequence[Any]:
         """Get the children of the block.
 
         :return: Children of the block
@@ -77,7 +77,7 @@ class Base:
         """
         self._parent = parent
 
-    def set_children(self, children: list[Any]) -> None:
+    def set_children(self, children: Sequence[Any]) -> None:
         """Set the children of the block.
 
         :param children: Children of the block
@@ -253,7 +253,7 @@ class SequentialSystem(Base):
             # Save html format to file_path
     """
 
-    steps: list[Base] = field(default_factory=list)
+    steps: Sequence[Base] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Post init function of _System class."""
@@ -265,7 +265,7 @@ class SequentialSystem(Base):
 
         self.set_children(self.steps)
 
-    def get_steps(self) -> list[Base]:
+    def get_steps(self) -> Sequence[Base]:
         """Return list of steps of _ParallelSystem.
 
         :return: List of steps

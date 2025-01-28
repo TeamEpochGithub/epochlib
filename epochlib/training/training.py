@@ -37,7 +37,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
         # Furthest step
         for i, step in enumerate(self.get_steps()):
             # Check if step is instance of Cacher and if cache_args exists
-            if not isinstance(step, Cacher) or not isinstance(step, TrainType):
+            if not isinstance(step, TrainType) or not isinstance(step, Cacher):
                 self.log_to_debug(f"{step} is not instance of Cacher or TrainType")
                 continue
 
@@ -91,7 +91,7 @@ class TrainingPipeline(TrainingSystem, Cacher):
         # Retrieve furthest step calculated
         for i, step in enumerate(self.get_steps()):
             # Check if step is instance of Cacher and if cache_args exists
-            if not isinstance(step, Cacher) or not isinstance(step, TrainType):
+            if not isinstance(step, TrainType) or not isinstance(step, Cacher):
                 self.log_to_debug(f"{step} is not instance of Cacher or TrainType")
                 continue
 
