@@ -1,6 +1,6 @@
 [project]
 name = "epochlib"
-version = "4.1.0"
+version = "5.0.0"
 authors = [
     { name = "Jasper van Selm", email = "jmvanselm@gmail.com" },
     { name = "Ariel Ebersberger", email = "arielebersberger@gmail.com" },
