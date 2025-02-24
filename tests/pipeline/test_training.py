@@ -551,10 +551,6 @@ class TestPipeline:
             pred_sys=predicting_system,
         )
         assert x_system.get_hash() == ""
-        # assert y_system.get_hash() == ""
-        # assert training_system.get_hash() == ""
-        # assert predicting_system.get_hash() == ""
-        # assert pipeline.get_hash() == ""
 
     def test_pipeline_get_hash_with_change(self):
         class TransformingBlock(Transformer):
@@ -604,11 +600,18 @@ class TestPipeline:
         y_system = TransformingSystem()
         training_system = TrainingSystem()
         prediction_system = TransformingSystem(steps=[transform1])
-        pipeline = Pipeline(
+        assert x_system.get_hash() == prediction_system.get_hash()
+        pipeline1 = Pipeline(
             x_sys=x_system,
             y_sys=y_system,
             train_sys=training_system,
             pred_sys=prediction_system,
         )
-        assert x_system.get_hash() == prediction_system.get_hash()
-        assert pipeline.get_hash() != ""
+        pipeline1_train_sys_hash = pipeline1.train_sys.get_hash()
+        pipeline2 = Pipeline(
+            x_sys=TransformingSystem(),
+            y_sys=y_system,
+            train_sys=training_system,
+            pred_sys=prediction_system,
+        )
+        assert pipeline1_train_sys_hash != pipeline2.train_sys.get_hash()

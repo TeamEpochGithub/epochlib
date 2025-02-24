@@ -400,7 +400,7 @@ class Pipeline(TrainType):
 
         return x
 
-    def _set_hash(self, prev_hash: str) -> None:
+    def set_hash(self, prev_hash: str) -> None:
         """Set the hash of the pipeline.
 
         :param prev_hash: The hash of the previous block.
