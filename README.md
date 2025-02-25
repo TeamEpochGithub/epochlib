@@ -75,6 +75,11 @@ Documentation is generated using [Sphinx](https://www.sphinx-doc.org/en/master/)
 To make the documentation yourself, run `make html` with `docs` as the working directory.
 The documentation can then be found in `docs/_build/html/index.html`.
 
+# Architectural guidelines
+
+1. Generally 'one class = one file' unless they are very tightly coupled.
+2. Use __init__.py to change import paths so they are shorter for the end user
+
 ## Maintainers
 
 EpochLib is maintained by [Team Epoch](https://teamepoch.ai), based in the [Dream Hall](https://www.tudelft.nl/ddream) of the [Delft University of Technology](https://www.tudelft.nl/).
