@@ -41,7 +41,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build the package
       run: rye build
-    - uses: actions/upload-artifact@v4.6.0
+    - uses: actions/upload-artifact@v4.6.1
       with:
         path: ./dist
         name: dist-python-${{ matrix.python-version }}
