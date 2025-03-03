@@ -2,27 +2,12 @@
 
 import copy
 import warnings
-from abc import abstractmethod
 from typing import Any
 
-from .base import Base
 from .block import Block
 from .parallel_system import ParallelSystem
 from .sequential_system import SequentialSystem
-
-
-class TransformType(Base):
-    """Abstract transform type describing a class that implements the transform function."""
-
-    @abstractmethod
-    def transform(self, data: Any, **transform_args: Any) -> Any:
-        """Transform the input data.
-
-        :param data: The input data.
-        :param transform_args: Keyword arguments.
-        :return: The transformed data.
-        """
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement transform method.")
+from .types import TransformType
 
 
 class Transformer(TransformType, Block):

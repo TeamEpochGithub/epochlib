@@ -2,39 +2,16 @@
 
 import copy
 import warnings
-from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
 from joblib import hash
 
-from .base import Base
 from .block import Block
 from .parallel_system import ParallelSystem
 from .sequential_system import SequentialSystem
 from .transforming import TransformingSystem
-
-
-class TrainType(Base):
-    """Abstract train type describing a class that implements two functions train and predict."""
-
-    @abstractmethod
-    def train(self, x: Any, y: Any, **train_args: Any) -> tuple[Any, Any]:
-        """Train the block.
-
-        :param x: The input data.
-        :param y: The target variable.
-        """
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement train method.")
-
-    @abstractmethod
-    def predict(self, x: Any, **pred_args: Any) -> Any:
-        """Predict the target variable.
-
-        :param x: The input data.
-        :return: The predictions.
-        """
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement predict method.")
+from .types import TrainType
 
 
 class Trainer(TrainType, Block):
