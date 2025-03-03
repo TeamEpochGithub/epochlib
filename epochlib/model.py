@@ -3,7 +3,7 @@
 from typing import Any
 
 from epochlib.caching import CacheArgs, Cacher
-from epochlib.pipeline import Pipeline
+from epochlib.core import Pipeline
 
 
 class ModelPipeline(Pipeline):
