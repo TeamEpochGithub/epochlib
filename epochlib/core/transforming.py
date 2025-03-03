@@ -5,7 +5,10 @@ import warnings
 from abc import abstractmethod
 from typing import Any
 
-from .core import Base, Block, ParallelSystem, SequentialSystem
+from .base import Base
+from .block import Block
+from .parallel_system import ParallelSystem
+from .sequential_system import SequentialSystem
 
 
 class TransformType(Base):

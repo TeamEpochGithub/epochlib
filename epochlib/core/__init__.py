@@ -1,6 +1,9 @@
 """Core pipeline functionality for training and transforming data."""
 
-from .core import Base, Block, ParallelSystem, SequentialSystem
+from .base import Base
+from .block import Block
+from .parallel_system import ParallelSystem
+from .sequential_system import SequentialSystem
 from .training import ParallelTrainingSystem, Pipeline, Trainer, TrainingSystem, TrainType
 from .transforming import ParallelTransformingSystem, Transformer, TransformingSystem, TransformType
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from epochlib.caching.cacher import CacheArgs, Cacher
-from epochlib.pipeline import TransformingSystem, TransformType
+from epochlib.core import TransformingSystem, TransformType
 
 
 @dataclass

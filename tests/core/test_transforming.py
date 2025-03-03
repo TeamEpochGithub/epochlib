@@ -2,8 +2,8 @@ import warnings
 import numpy as np
 import pytest
 
-from epochlib.pipeline import Trainer
-from epochlib.pipeline import (
+from epochlib.core import Trainer
+from epochlib.core import (
     Transformer,
     TransformingSystem,
     ParallelTransformingSystem,

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from epochlib.caching import CacheArgs, Cacher
-from epochlib.pipeline import TrainingSystem, TrainType
+from epochlib.core import TrainingSystem, TrainType
 
 
 @dataclass
