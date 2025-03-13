@@ -5,11 +5,11 @@ from typing import Any
 
 from joblib import hash
 
-from .transforming_system import TransformingSystem
-from .types import TrainType
+from .parallel_training_system import ParallelTrainingSystem
 from .trainer import Trainer
 from .training_system import TrainingSystem
-from .parallel_training_system import ParallelTrainingSystem
+from .transforming_system import TransformingSystem
+from .types import TrainType
 
 
 @dataclass

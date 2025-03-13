@@ -1,4 +1,5 @@
 """Module containing the Trainer class."""
+
 from .block import Block
 from .types import TrainType
 

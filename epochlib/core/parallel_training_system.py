@@ -110,4 +110,3 @@ class ParallelTrainingSystem(TrainType, ParallelSystem):
         :return: The concatenated data.
         """
         return self.concat(original_data, data_to_concat, weight)
-

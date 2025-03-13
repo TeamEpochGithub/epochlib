@@ -3,7 +3,6 @@
 import warnings
 from typing import Any
 
-
 from .sequential_system import SequentialSystem
 from .types import TrainType
 
