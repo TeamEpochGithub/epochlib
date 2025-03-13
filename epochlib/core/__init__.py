@@ -4,8 +4,11 @@ from .base import Base
 from .block import Block
 from .parallel_system import ParallelSystem
 from .sequential_system import SequentialSystem
-from .training import ParallelTrainingSystem, Pipeline, Trainer, TrainingSystem
+from .trainer import Trainer
+from .training_system import TrainingSystem
 from .transforming import ParallelTransformingSystem, Transformer, TransformingSystem
+from .parallel_training_system import ParallelTrainingSystem
+from .pipeline import Pipeline
 
 __all__ = [
     "TrainType",

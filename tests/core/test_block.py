@@ -1,6 +1,4 @@
 from epochlib.core import Block
-from tests.core.util import remove_cache_files
-from pathlib import Path
 
 
 class TestBlock:

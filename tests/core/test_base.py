@@ -2,6 +2,7 @@ from epochlib.core import Base
 from tests.core.util import remove_cache_files
 from pathlib import Path
 
+
 class Test_Base:
     def test_init(self):
         base = Base()
