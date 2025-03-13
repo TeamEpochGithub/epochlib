@@ -4,7 +4,7 @@ from abc import abstractmethod
 from typing import Any
 
 from epochlib.caching import CacheArgs, Cacher
-from epochlib.pipeline import Trainer
+from epochlib.core import Trainer
 
 
 class TrainingBlock(Trainer, Cacher):
