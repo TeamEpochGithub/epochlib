@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from epochlib.pipeline import Transformer
+from epochlib.core import Transformer
 
 from epochlib.transformation import TransformationPipeline
 from epochlib.transformation import TransformationBlock

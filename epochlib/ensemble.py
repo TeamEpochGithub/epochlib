@@ -3,8 +3,8 @@
 from typing import Any
 
 from epochlib.caching import CacheArgs
+from epochlib.core import ParallelTrainingSystem
 from epochlib.model import ModelPipeline
-from epochlib.pipeline import ParallelTrainingSystem
 
 
 class EnsemblePipeline(ParallelTrainingSystem):

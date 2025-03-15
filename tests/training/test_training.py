@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from epochlib.pipeline import Trainer
+from epochlib.core import Trainer
 
 from epochlib.training import TrainingPipeline
 from epochlib.training import TrainingBlock
