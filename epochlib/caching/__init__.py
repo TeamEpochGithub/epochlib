@@ -1,10 +1,12 @@
 """Caching module for epochlib."""
 
 from .cacher import CacheArgs, Cacher
-from .cache_interface import CacheInterface
+from .cacher_interface import CacherInterface
+from .numpy_array_to_npy_cacher import NumpyArrayToNpyCacher
 
 __all__ = [
-    "Cacher", 
+    "Cacher",
     "CacheArgs",
-    "CacheInterface"
+    "CacherInterface",
+    "NumpyArrayToNpyCacher",
 ]
