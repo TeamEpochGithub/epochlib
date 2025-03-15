@@ -3,8 +3,7 @@
 from typing import Any
 
 
-class CacherInterface():
-
+class CacherInterface:
     def cache_exists(self, name: str) -> bool:
         """Check if a cache exists.
 

@@ -1,17 +1,17 @@
 """This module contains the NumpyToNpyCacher class."""
 
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 from numpy.typing import ArrayLike
+
 from .cacher_interface import CacherInterface
 
 
 @dataclass
 class NumpyArrayToNpyCacher(CacherInterface):
-
     storage_path: str
 
     def cache_exists(self, name: str) -> bool:
