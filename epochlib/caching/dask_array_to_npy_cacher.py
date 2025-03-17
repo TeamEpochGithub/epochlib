@@ -1,4 +1,4 @@
-"""This module contains the NumpyToNpyCacher class."""
+"""This module contains the DaskArrayToNpyCacher class."""
 
 import os
 from dataclasses import dataclass, field
@@ -6,17 +6,21 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from .cacher_interface import CacherInterface
 
+try:
+    import dask.array as da
+except ImportError:
+    """User doesn't require these packages"""
+
 
 @dataclass
-class NumpyArrayToNpyCacher(CacherInterface):
-    """The numpy array to .npy cacher.
+class DaskArrayToNpyCacher(CacherInterface):
+    """The dask array to .npy cacher.
 
     :param storage_path: The path to store the cache files.
-    :param read_args: The arguments to read the cache, np.load() extra args.
+    :param read_args: The arguments to read the cache, da.from_array() extra args.
     :param store_args: The arguments to store the cache, np.save() extra args.
 
     Methods
@@ -42,15 +46,15 @@ class NumpyArrayToNpyCacher(CacherInterface):
 
         return os.path.exists(storage_path / f"{name}.npy")
 
-    def load_cache(self, name: str) -> ArrayLike:
+    def load_cache(self, name: str) -> da.Array:
         """Load a cache.
 
         :param name: The name of the cache, cannot contain characters not in [a-zA-Z0-9_].
         :param cache_args: The cache arguments.
         """
-        return np.load(Path(self.storage_path) / f"{name}.npy", **self.read_args)
+        return da.from_array(np.load(Path(self.storage_path) / f"{name}.npy"), **self.read_args)
 
-    def store_cache(self, name: str, data: ArrayLike) -> None:
+    def store_cache(self, name: str, data: da.Array) -> None:
         """Store a cache.
 
         :param name: The name of the cache, cannot contain characters not in [a-zA-Z0-9_].
@@ -58,4 +62,4 @@ class NumpyArrayToNpyCacher(CacherInterface):
         """
         storage_path = Path(self.storage_path)
         storage_path.mkdir(parents=True, exist_ok=True)
-        np.save(storage_path / f"{name}.npy", data, **self.store_args)
+        np.save(storage_path / f"{name}.npy", data.compute(), **self.store_args)

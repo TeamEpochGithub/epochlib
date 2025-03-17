@@ -4,6 +4,18 @@ from typing import Any
 
 
 class CacherInterface:
+    """The cache interface defines the methods that a cacher must implement.
+
+    Methods
+    -------
+    .. code-block:: python
+        def cache_exists(name: str) -> bool
+
+        def load_cache(name: str) -> Any
+
+        def store_cache(name: str, data: Any) -> None
+    """
+
     def cache_exists(self, name: str) -> bool:
         """Check if a cache exists.
 
