@@ -14,7 +14,7 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
     - name: Install the latest version of Rye
@@ -34,7 +34,7 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
     - name: Check out repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Install the latest version of Rye
       uses: eifinger/setup-rye@v4.2.1
       with:
